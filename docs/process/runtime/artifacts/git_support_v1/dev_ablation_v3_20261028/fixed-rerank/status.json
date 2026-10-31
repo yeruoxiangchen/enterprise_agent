@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "fixed-rerank",
+  "split": "dev",
+  "completed": 100,
+  "total": 100,
+  "current": null,
+  "error": null,
+  "updated_at": 1793187177.765194
+}

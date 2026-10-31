@@ -1,0 +1,119 @@
+{
+  "scope": "authored_demo_smoke_cases_not_business_benchmark",
+  "mode": "agent",
+  "questions": 12,
+  "retrieval_hits_at_1": 12,
+  "retrieval_hits_at_3": 12,
+  "completed": 12,
+  "contains_expected_text": 12,
+  "results": [
+    {
+      "question": "出差住宿报销标准是多少？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "其他城市住宿每晚多少钱？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "出差结束后多久提交报销？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "出差餐饮补贴是多少？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "高铁报销什么座位？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "新员工如何申请 VPN？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "VPN 登录需要什么认证？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "临时笔记本可以借多久？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "产品保修期是多久？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "报修需要提供哪些信息？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "售后人员多久联系用户？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    },
+    {
+      "question": "无理由退货的期限是多少？",
+      "retrieval_hit_at_1": true,
+      "retrieval_hit_at_3": true,
+      "status": "answered",
+      "contains_expected_text": true,
+      "citation_count": 1,
+      "error": null
+    }
+  ]
+}

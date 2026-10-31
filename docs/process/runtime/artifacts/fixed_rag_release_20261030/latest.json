@@ -1,0 +1,17 @@
+{
+  "status": "deployed",
+  "policy": "fixed_rag_v1",
+  "backup": "/data/zjr/enterprise_kb_agent/artifacts/fixed_rag_release_20261030/deploy-1793335567144057061",
+  "verification": {
+    "pid": 3890698,
+    "url": "http://127.0.0.1:8768",
+    "workflow": "fixed_rag",
+    "reranking": true,
+    "model": "kb-qwen3-8b",
+    "bases": 1,
+    "documents": 3,
+    "login": "passed",
+    "page_http": 200
+  },
+  "at": 1793335570.5580437
+}

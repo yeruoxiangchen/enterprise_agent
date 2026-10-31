@@ -1,0 +1,121 @@
+{
+  "arms": {
+    "fixed-rerank": {
+      "completed": 34,
+      "action": 33,
+      "contract": 34,
+      "calls": 34,
+      "unknown_call_cases": 0,
+      "backup_calls": 0,
+      "median_seconds": 13.493225825950503,
+      "correct": 24,
+      "incorrect": 10,
+      "unknown": 0,
+      "followup_triggered": 0,
+      "followup_accepted": 0,
+      "extra_searches": 0,
+      "grounding_unknown": 6
+    },
+    "fixed-first": {
+      "completed": 34,
+      "action": 32,
+      "contract": 34,
+      "calls": 64,
+      "unknown_call_cases": 0,
+      "backup_calls": 0,
+      "median_seconds": 16.16682910360396,
+      "correct": 22,
+      "incorrect": 11,
+      "unknown": 1,
+      "followup_triggered": 15,
+      "followup_accepted": 15,
+      "extra_searches": 15,
+      "grounding_unknown": 5
+    }
+  },
+  "paired": {
+    "improved": [],
+    "regressed": [
+      "unknown-1-1"
+    ],
+    "same": [
+      "acl-1-1",
+      "acl-1-2",
+      "acl-1-4",
+      "aliases__1-1",
+      "aliases__1-2",
+      "bundling__1-2",
+      "clarify-1-1",
+      "clarify-1-2",
+      "clarify-1-3",
+      "clarify-1-4",
+      "first-time-setup__1-1",
+      "first-time-setup__1-2",
+      "first-time-setup__2-1",
+      "first-time-setup__2-2",
+      "first-time-setup__2-3",
+      "hooks__2-2",
+      "hooks__2-4",
+      "injection-dev-1",
+      "injection-dev-2",
+      "injection-dev-3",
+      "injection-dev-4",
+      "multi-dev-ssh-store-1",
+      "multi-dev-ssh-store-3",
+      "tagging__2-1",
+      "tagging__2-2",
+      "unknown-1-2",
+      "unknown-1-3",
+      "unknown-1-4",
+      "unknown-2-1",
+      "unknown-2-2",
+      "unknown-2-3",
+      "unknown-2-4"
+    ],
+    "unknown": [
+      "acl-1-3"
+    ]
+  },
+  "preflight": {
+    "passed": true,
+    "cases": {
+      "first-time-setup__1-1": true,
+      "first-time-setup__1-2": true,
+      "first-time-setup__2-1": true,
+      "first-time-setup__2-2": true,
+      "aliases__1-2": true,
+      "bundling__1-2": true,
+      "hooks__2-2": true,
+      "multi-dev-ssh-store-1": true,
+      "unknown-1-1": true,
+      "clarify-1-2": true,
+      "clarify-1-4": true,
+      "acl-1-1": true,
+      "injection-dev-2": true,
+      "injection-dev-4": true
+    },
+    "real_retrieval_exercised": true,
+    "quality_checks": {
+      "first-time-setup__1-1": true,
+      "first-time-setup__1-2": true,
+      "first-time-setup__2-1": true,
+      "first-time-setup__2-2": true,
+      "aliases__1-2": false,
+      "bundling__1-2": true,
+      "hooks__2-2": true,
+      "multi-dev-ssh-store-1": true,
+      "unknown-1-1": false,
+      "clarify-1-2": true,
+      "clarify-1-4": true,
+      "acl-1-1": true,
+      "injection-dev-2": true,
+      "injection-dev-4": true
+    },
+    "quality_passed": false,
+    "meaning": "offline diagnostic readiness only; output/action failures retained; no deployment approval",
+    "fingerprint": "267fbad05ffd0ad85dcea16c69654c3ae379c99623296ddb66bafc0f9451e3c3"
+  },
+  "test_used": false,
+  "human_reviewed": false,
+  "production_released": false
+}

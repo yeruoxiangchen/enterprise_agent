@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "agent-bm25",
+  "split": "dev",
+  "completed": 12,
+  "total": 12,
+  "current": null,
+  "error": null,
+  "updated_at": 1793172662.9256563
+}

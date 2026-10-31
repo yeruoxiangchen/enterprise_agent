@@ -1,0 +1,64 @@
+{
+  "protocol": "per_axis_audit_v1",
+  "source": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_agentpack_diagnostic_20261030",
+  "source_hashes": {
+    "fixed-rerank": "af962259f59b2664b6207cceb22e95eb7058e63df94d8fad3f5c3398425610e4",
+    "official-agentpack": "7c4e820998a36ae6d2466c0f110ffc12add7229c694de6d9d4b6de746912f48b"
+  },
+  "arms": {
+    "fixed-rerank": {
+      "correctness": {
+        "correct": 24,
+        "incorrect": 10,
+        "unknown": 0
+      },
+      "faithfulness": {
+        "correct": 27,
+        "incorrect": 2,
+        "unknown": 5
+      },
+      "citation_support": {
+        "correct": 27,
+        "incorrect": 2,
+        "unknown": 5
+      }
+    },
+    "official-agentpack": {
+      "correctness": {
+        "correct": 21,
+        "incorrect": 13,
+        "unknown": 0
+      },
+      "faithfulness": {
+        "correct": 26,
+        "incorrect": 7,
+        "unknown": 1
+      },
+      "citation_support": {
+        "correct": 26,
+        "incorrect": 7,
+        "unknown": 1
+      }
+    }
+  },
+  "pairs": {
+    "improved": 2,
+    "same": 27,
+    "regressed": 5
+  },
+  "failures": {
+    "answer_without_citation": 6,
+    "action_marker_missing": 3,
+    "no_evidence_after_filtered_search": 22,
+    "tool_call_leaked_as_text": 3,
+    "wrong_despite_retrieved_text": 3,
+    "step_limit_backup": 5
+  },
+  "filtered_searches": 59,
+  "empty_filtered_searches": 58,
+  "independent_human_review": false,
+  "test_used": false,
+  "review_flags": [
+    "fixed-rerank/hooks__2-2: saved content rationale treats a non-required point as failure; requires independent adjudication."
+  ]
+}

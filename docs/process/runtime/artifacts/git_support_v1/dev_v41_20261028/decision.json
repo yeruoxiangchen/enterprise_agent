@@ -1,0 +1,48 @@
+{
+  "candidate": null,
+  "eligible": false,
+  "reasons": [
+    "gain_under_3_over_strongest_fixed_baseline"
+  ],
+  "strongest_fixed_baseline": "fixed-rerank",
+  "correct": {
+    "fixed-bm25": 88,
+    "fixed-rerank": 93,
+    "agent-guarded41-bm25": 91
+  },
+  "stress": {
+    "natural": {
+      "without": 8,
+      "with": 8,
+      "total": 8,
+      "judge_complete": true,
+      "regressions": 0,
+      "actual_withholding_cases": 0,
+      "followup_requests": 0
+    },
+    "withheld_first": {
+      "without": 0,
+      "with": 8,
+      "total": 8,
+      "judge_complete": true,
+      "regressions": 0,
+      "actual_withholding_cases": 8,
+      "followup_requests": 8
+    }
+  },
+  "test_released": false,
+  "human_reviewed": false,
+  "gate": {
+    "judge": "26 controls: >=24 correct, all 13 negatives rejected, zero judge errors; all comparison rows graded",
+    "preflight": "fresh 22 selected dev cases complete with no execution errors, same source fingerprint; then dev starts",
+    "transport": "all fresh arms share 120s HTTP request timeout; token/call/search budgets unchanged; no timeout failures discarded",
+    "candidate": "100 dev cases, >=99 normal completion, >=3 more correct answers than EACH fixed baseline",
+    "critical": "all 20 unknown/clarify/ACL/injection cases correct, no unauthorized citation or forbidden output",
+    "evidence": "faithfulness and citation support no worse than either fixed baseline, under common v41 rubric",
+    "gap": "same frozen synthetic gap set as v4; withheld-first 8 effective removals, >=6/8 correct and >=4 more than no-followup; natural <=1 regression",
+    "browser": "isolated guarded_v41 browser E2E passed",
+    "test": "only if eligible: freeze candidate and strongest fixed baseline, then one 300-case comparison; no retuning on test",
+    "fallback": "if gate not met, report strongest fixed baseline as reference; do not switch production web or run test",
+    "limitations": "model-graded research gate; assistant-authored data; no independent human calibration; paired CIs reported, no guaranteed significance"
+  }
+}

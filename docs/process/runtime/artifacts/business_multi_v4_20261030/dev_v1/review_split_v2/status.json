@@ -1,0 +1,10 @@
+{
+  "pid": 677736,
+  "start_ticks": "1312691027",
+  "updated_at": 1793362576.236401,
+  "phase": null,
+  "status": "calibration_failed_pending_manual_review",
+  "completed": 8,
+  "total": 8,
+  "failed": 1
+}

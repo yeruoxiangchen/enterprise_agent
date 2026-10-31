@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "cases": {
+    "first-time-setup__2-2": true,
+    "multi-dev-ssh-store-1": true,
+    "unknown-1-1": true
+  },
+  "real_retrieval_exercised": true,
+  "quality_checks": {
+    "first-time-setup__2-2": true,
+    "multi-dev-ssh-store-1": true,
+    "unknown-1-1": true
+  },
+  "quality_passed": true,
+  "meaning": "offline diagnostic readiness only; output/action failures retained; no deployment approval",
+  "fingerprint": "fc875a3333dc84a93340d1eebdf1248c9db1da60b6391b576b00c1233729c944"
+}

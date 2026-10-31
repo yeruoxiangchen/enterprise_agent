@@ -1,0 +1,17 @@
+{
+  "pid": 458933,
+  "start_ticks": "1312086337",
+  "updated_at": 1793356578.3828752,
+  "counts": {
+    "smoke": 8
+  },
+  "totals": {
+    "smoke": 8
+  },
+  "phase": null,
+  "status": "complete_pending_review",
+  "errors": 0,
+  "engineering": null,
+  "semantic_review": null,
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v3_20261030/dev_v3/preflight/report.md"
+}

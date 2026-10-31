@@ -1,0 +1,27 @@
+{
+  "pid": 458933,
+  "start_ticks": "1312086337",
+  "updated_at": 1793358342.0003784,
+  "counts": {
+    "regression": 17,
+    "fixed": 23,
+    "single": 23,
+    "multi_v2": 23,
+    "multi_v3": 23,
+    "new_acceptance": 13
+  },
+  "totals": {
+    "regression": 17,
+    "fixed": 23,
+    "single": 23,
+    "multi_v2": 23,
+    "multi_v3": 23,
+    "new_acceptance": 13
+  },
+  "phase": null,
+  "status": "complete_with_errors",
+  "errors": 12,
+  "engineering": "failed",
+  "semantic_review": "complete",
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v3_20261030/dev_v3/report.md"
+}

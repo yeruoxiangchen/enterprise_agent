@@ -1,0 +1,1420 @@
+{
+  "left": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_ablation_v3_20261028/retrieval-bm25",
+  "right": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_ablation_v3_20261028/retrieval-rerank",
+  "direction": "right_minus_left",
+  "deltas": {
+    "all_evidence_at_1": {
+      "mean": 0.19047619047619047,
+      "ci95_family_bootstrap": [
+        0.07142857142857142,
+        0.30952380952380953
+      ],
+      "families": 21
+    },
+    "all_evidence_at_10": {
+      "mean": 0.011904761904761904,
+      "ci95_family_bootstrap": [
+        -0.047619047619047616,
+        0.07142857142857142
+      ],
+      "families": 21
+    },
+    "all_evidence_at_3": {
+      "mean": 0.05952380952380952,
+      "ci95_family_bootstrap": [
+        -0.07142857142857142,
+        0.20238095238095238
+      ],
+      "families": 21
+    },
+    "all_evidence_at_5": {
+      "mean": 0.07142857142857142,
+      "ci95_family_bootstrap": [
+        -0.023809523809523808,
+        0.17857142857142858
+      ],
+      "families": 21
+    },
+    "any_evidence_at_1": {
+      "mean": 0.15476190476190477,
+      "ci95_family_bootstrap": [
+        0.011904761904761904,
+        0.2976190476190476
+      ],
+      "families": 21
+    },
+    "any_evidence_at_10": {
+      "mean": 0.023809523809523808,
+      "ci95_family_bootstrap": [
+        -0.023809523809523808,
+        0.08333333333333333
+      ],
+      "families": 21
+    },
+    "any_evidence_at_3": {
+      "mean": 0.08333333333333333,
+      "ci95_family_bootstrap": [
+        -0.03571428571428571,
+        0.2261904761904762
+      ],
+      "families": 21
+    },
+    "any_evidence_at_5": {
+      "mean": 0.09523809523809523,
+      "ci95_family_bootstrap": [
+        0.011904761904761904,
+        0.19047619047619047
+      ],
+      "families": 21
+    },
+    "evidence_ndcg_at_10_diagnostic": {
+      "mean": 0.09124144750199796,
+      "ci95_family_bootstrap": [
+        0.014502794644644402,
+        0.18202591281991323
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_1": {
+      "mean": 0.17261904761904762,
+      "ci95_family_bootstrap": [
+        0.041666666666666664,
+        0.2976190476190476
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.017857142857142856,
+      "ci95_family_bootstrap": [
+        -0.03571428571428571,
+        0.08333333333333333
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_3": {
+      "mean": 0.07142857142857142,
+      "ci95_family_bootstrap": [
+        -0.047619047619047616,
+        0.21428571428571427
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_5": {
+      "mean": 0.08333333333333333,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.19047619047619047
+      ],
+      "families": 21
+    },
+    "mrr_at_10": {
+      "mean": 0.11892006802721089,
+      "ci95_family_bootstrap": [
+        0.020535714285714282,
+        0.2275651927437642
+      ],
+      "families": 21
+    },
+    "returned": {
+      "mean": 0.0,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.0
+      ],
+      "families": 25
+    }
+  },
+  "metric_availability": {
+    "all_evidence_at_1": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "all_evidence_at_10": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "all_evidence_at_3": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "all_evidence_at_5": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "any_evidence_at_1": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "any_evidence_at_10": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "any_evidence_at_3": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "any_evidence_at_5": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "evidence_ndcg_at_10_diagnostic": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "evidence_recall_at_1": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "evidence_recall_at_10": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "evidence_recall_at_3": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "evidence_recall_at_5": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "mrr_at_10": {
+      "total": 100,
+      "left_defined": 84,
+      "right_defined": 84,
+      "both_defined": 84,
+      "both_missing": 16,
+      "left_only": 0,
+      "right_only": 0
+    },
+    "returned": {
+      "total": 100,
+      "left_defined": 100,
+      "right_defined": 100,
+      "both_defined": 100,
+      "both_missing": 0,
+      "left_only": 0,
+      "right_only": 0
+    }
+  },
+  "unpaired_metrics": {},
+  "left_summary": {
+    "expected": 100,
+    "records": 100,
+    "complete": true,
+    "metrics": {
+      "all_evidence_at_1": {
+        "mean": 0.40476190476190477,
+        "ci95_family_bootstrap": [
+          0.2619047619047619,
+          0.5833333333333334
+        ],
+        "families": 21
+      },
+      "all_evidence_at_10": {
+        "mean": 0.9047619047619048,
+        "ci95_family_bootstrap": [
+          0.8333333333333334,
+          0.9761904761904762
+        ],
+        "families": 21
+      },
+      "all_evidence_at_3": {
+        "mean": 0.7023809523809523,
+        "ci95_family_bootstrap": [
+          0.5476190476190477,
+          0.8333333333333334
+        ],
+        "families": 21
+      },
+      "all_evidence_at_5": {
+        "mean": 0.7976190476190477,
+        "ci95_family_bootstrap": [
+          0.6785714285714286,
+          0.9047619047619048
+        ],
+        "families": 21
+      },
+      "any_evidence_at_1": {
+        "mean": 0.4642857142857143,
+        "ci95_family_bootstrap": [
+          0.3333333333333333,
+          0.6190476190476191
+        ],
+        "families": 21
+      },
+      "any_evidence_at_10": {
+        "mean": 0.9404761904761905,
+        "ci95_family_bootstrap": [
+          0.8809523809523809,
+          0.9880952380952381
+        ],
+        "families": 21
+      },
+      "any_evidence_at_3": {
+        "mean": 0.7619047619047619,
+        "ci95_family_bootstrap": [
+          0.6309523809523809,
+          0.8809523809523809
+        ],
+        "families": 21
+      },
+      "any_evidence_at_5": {
+        "mean": 0.8690476190476191,
+        "ci95_family_bootstrap": [
+          0.7619047619047619,
+          0.9523809523809523
+        ],
+        "families": 21
+      },
+      "evidence_ndcg_at_10_diagnostic": {
+        "mean": 0.6990862989316945,
+        "ci95_family_bootstrap": [
+          0.6061753969997683,
+          0.7913151863117144
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_1": {
+        "mean": 0.43452380952380953,
+        "ci95_family_bootstrap": [
+          0.2976190476190476,
+          0.6071428571428571
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_10": {
+        "mean": 0.9226190476190477,
+        "ci95_family_bootstrap": [
+          0.8630952380952381,
+          0.9761904761904762
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_3": {
+        "mean": 0.7321428571428571,
+        "ci95_family_bootstrap": [
+          0.5952380952380952,
+          0.8511904761904762
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_5": {
+        "mean": 0.8333333333333334,
+        "ci95_family_bootstrap": [
+          0.7321428571428571,
+          0.9226190476190477
+        ],
+        "families": 21
+      },
+      "mrr_at_10": {
+        "mean": 0.6306831065759637,
+        "ci95_family_bootstrap": [
+          0.5228741496598639,
+          0.7427721088435374
+        ],
+        "families": 21
+      },
+      "returned": {
+        "mean": 9.69,
+        "ci95_family_bootstrap": [
+          9.31,
+          9.96
+        ],
+        "families": 25
+      }
+    },
+    "by_category": {
+      "ambiguous": {
+        "all_evidence_at_1": null,
+        "all_evidence_at_10": null,
+        "all_evidence_at_3": null,
+        "all_evidence_at_5": null,
+        "any_evidence_at_1": null,
+        "any_evidence_at_10": null,
+        "any_evidence_at_3": null,
+        "any_evidence_at_5": null,
+        "evidence_ndcg_at_10_diagnostic": null,
+        "evidence_recall_at_1": null,
+        "evidence_recall_at_10": null,
+        "evidence_recall_at_3": null,
+        "evidence_recall_at_5": null,
+        "mrr_at_10": null,
+        "returned": {
+          "mean": 8.75,
+          "ci95_family_bootstrap": [
+            8.75,
+            8.75
+          ],
+          "families": 1
+        }
+      },
+      "document_injection": {
+        "all_evidence_at_1": {
+          "mean": 0.25,
+          "ci95_family_bootstrap": [
+            0.25,
+            0.25
+          ],
+          "families": 1
+        },
+        "all_evidence_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "all_evidence_at_3": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "all_evidence_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "any_evidence_at_1": {
+          "mean": 0.25,
+          "ci95_family_bootstrap": [
+            0.25,
+            0.25
+          ],
+          "families": 1
+        },
+        "any_evidence_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "any_evidence_at_3": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "any_evidence_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "evidence_ndcg_at_10_diagnostic": {
+          "mean": 0.6230707174295609,
+          "ci95_family_bootstrap": [
+            0.6230707174295609,
+            0.6230707174295609
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_1": {
+          "mean": 0.25,
+          "ci95_family_bootstrap": [
+            0.25,
+            0.25
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_3": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "mrr_at_10": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "returned": {
+          "mean": 10.0,
+          "ci95_family_bootstrap": [
+            10.0,
+            10.0
+          ],
+          "families": 1
+        }
+      },
+      "multi_evidence": {
+        "all_evidence_at_1": {
+          "mean": 0.0,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.0
+          ],
+          "families": 2
+        },
+        "all_evidence_at_10": {
+          "mean": 0.75,
+          "ci95_family_bootstrap": [
+            0.5,
+            1.0
+          ],
+          "families": 2
+        },
+        "all_evidence_at_3": {
+          "mean": 0.25,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.5
+          ],
+          "families": 2
+        },
+        "all_evidence_at_5": {
+          "mean": 0.375,
+          "ci95_family_bootstrap": [
+            0.25,
+            0.5
+          ],
+          "families": 2
+        },
+        "any_evidence_at_1": {
+          "mean": 0.375,
+          "ci95_family_bootstrap": [
+            0.25,
+            0.5
+          ],
+          "families": 2
+        },
+        "any_evidence_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 2
+        },
+        "any_evidence_at_3": {
+          "mean": 0.75,
+          "ci95_family_bootstrap": [
+            0.75,
+            0.75
+          ],
+          "families": 2
+        },
+        "any_evidence_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 2
+        },
+        "evidence_ndcg_at_10_diagnostic": {
+          "mean": 0.6031323275454417,
+          "ci95_family_bootstrap": [
+            0.5903916305158302,
+            0.6158730245750532
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_1": {
+          "mean": 0.1875,
+          "ci95_family_bootstrap": [
+            0.125,
+            0.25
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_10": {
+          "mean": 0.875,
+          "ci95_family_bootstrap": [
+            0.75,
+            1.0
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_3": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.375,
+            0.625
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_5": {
+          "mean": 0.6875,
+          "ci95_family_bootstrap": [
+            0.625,
+            0.75
+          ],
+          "families": 2
+        },
+        "mrr_at_10": {
+          "mean": 0.5979166666666667,
+          "ci95_family_bootstrap": [
+            0.5208333333333334,
+            0.675
+          ],
+          "families": 2
+        },
+        "returned": {
+          "mean": 10.0,
+          "ci95_family_bootstrap": [
+            10.0,
+            10.0
+          ],
+          "families": 2
+        }
+      },
+      "permission": {
+        "all_evidence_at_1": null,
+        "all_evidence_at_10": null,
+        "all_evidence_at_3": null,
+        "all_evidence_at_5": null,
+        "any_evidence_at_1": null,
+        "any_evidence_at_10": null,
+        "any_evidence_at_3": null,
+        "any_evidence_at_5": null,
+        "evidence_ndcg_at_10_diagnostic": null,
+        "evidence_recall_at_1": null,
+        "evidence_recall_at_10": null,
+        "evidence_recall_at_3": null,
+        "evidence_recall_at_5": null,
+        "mrr_at_10": null,
+        "returned": {
+          "mean": 8.25,
+          "ci95_family_bootstrap": [
+            8.25,
+            8.25
+          ],
+          "families": 1
+        }
+      },
+      "single_evidence": {
+        "all_evidence_at_1": {
+          "mean": 0.4583333333333333,
+          "ci95_family_bootstrap": [
+            0.2638888888888889,
+            0.6111111111111112
+          ],
+          "families": 18
+        },
+        "all_evidence_at_10": {
+          "mean": 0.9166666666666666,
+          "ci95_family_bootstrap": [
+            0.8333333333333334,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "all_evidence_at_3": {
+          "mean": 0.7638888888888888,
+          "ci95_family_bootstrap": [
+            0.5833333333333334,
+            0.8888888888888888
+          ],
+          "families": 18
+        },
+        "all_evidence_at_5": {
+          "mean": 0.8333333333333334,
+          "ci95_family_bootstrap": [
+            0.6944444444444444,
+            0.9305555555555556
+          ],
+          "families": 18
+        },
+        "any_evidence_at_1": {
+          "mean": 0.4861111111111111,
+          "ci95_family_bootstrap": [
+            0.3333333333333333,
+            0.6388888888888888
+          ],
+          "families": 18
+        },
+        "any_evidence_at_10": {
+          "mean": 0.9305555555555556,
+          "ci95_family_bootstrap": [
+            0.8472222222222222,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "any_evidence_at_3": {
+          "mean": 0.7777777777777778,
+          "ci95_family_bootstrap": [
+            0.5972222222222222,
+            0.9305555555555556
+          ],
+          "families": 18
+        },
+        "any_evidence_at_5": {
+          "mean": 0.8472222222222222,
+          "ci95_family_bootstrap": [
+            0.7083333333333334,
+            0.9583333333333334
+          ],
+          "families": 18
+        },
+        "evidence_ndcg_at_10_diagnostic": {
+          "mean": 0.7139709391691745,
+          "ci95_family_bootstrap": [
+            0.5956813255623511,
+            0.8074152331496084
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_1": {
+          "mean": 0.4722222222222222,
+          "ci95_family_bootstrap": [
+            0.3055555555555556,
+            0.625
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_10": {
+          "mean": 0.9236111111111112,
+          "ci95_family_bootstrap": [
+            0.8402777777777778,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_3": {
+          "mean": 0.7708333333333334,
+          "ci95_family_bootstrap": [
+            0.5972222222222222,
+            0.9097222222222222
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_5": {
+          "mean": 0.8402777777777778,
+          "ci95_family_bootstrap": [
+            0.7083333333333334,
+            0.9375
+          ],
+          "families": 18
+        },
+        "mrr_at_10": {
+          "mean": 0.6415839947089947,
+          "ci95_family_bootstrap": [
+            0.5205026455026455,
+            0.7467923280423281
+          ],
+          "families": 18
+        },
+        "returned": {
+          "mean": 9.944444444444445,
+          "ci95_family_bootstrap": [
+            9.833333333333334,
+            10.0
+          ],
+          "families": 18
+        }
+      },
+      "unanswerable": {
+        "all_evidence_at_1": null,
+        "all_evidence_at_10": null,
+        "all_evidence_at_3": null,
+        "all_evidence_at_5": null,
+        "any_evidence_at_1": null,
+        "any_evidence_at_10": null,
+        "any_evidence_at_3": null,
+        "any_evidence_at_5": null,
+        "evidence_ndcg_at_10_diagnostic": null,
+        "evidence_recall_at_1": null,
+        "evidence_recall_at_10": null,
+        "evidence_recall_at_3": null,
+        "evidence_recall_at_5": null,
+        "mrr_at_10": null,
+        "returned": {
+          "mean": 8.125,
+          "ci95_family_bootstrap": [
+            6.25,
+            10.0
+          ],
+          "families": 2
+        }
+      }
+    },
+    "latency_seconds": {
+      "p50": 0.015743562020361423,
+      "p95": 0.01818869821727276
+    },
+    "model_calls": 0,
+    "tool_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "semantic_scores": "not_scored_pending_independent_judge_or_human_review"
+  },
+  "right_summary": {
+    "expected": 100,
+    "records": 100,
+    "complete": true,
+    "metrics": {
+      "all_evidence_at_1": {
+        "mean": 0.5952380952380952,
+        "ci95_family_bootstrap": [
+          0.4523809523809524,
+          0.75
+        ],
+        "families": 21
+      },
+      "all_evidence_at_10": {
+        "mean": 0.9166666666666666,
+        "ci95_family_bootstrap": [
+          0.8452380952380952,
+          0.9761904761904762
+        ],
+        "families": 21
+      },
+      "all_evidence_at_3": {
+        "mean": 0.7619047619047619,
+        "ci95_family_bootstrap": [
+          0.6071428571428571,
+          0.8809523809523809
+        ],
+        "families": 21
+      },
+      "all_evidence_at_5": {
+        "mean": 0.8690476190476191,
+        "ci95_family_bootstrap": [
+          0.7380952380952381,
+          0.9642857142857143
+        ],
+        "families": 21
+      },
+      "any_evidence_at_1": {
+        "mean": 0.6190476190476191,
+        "ci95_family_bootstrap": [
+          0.4642857142857143,
+          0.7738095238095238
+        ],
+        "families": 21
+      },
+      "any_evidence_at_10": {
+        "mean": 0.9642857142857143,
+        "ci95_family_bootstrap": [
+          0.9285714285714286,
+          1.0
+        ],
+        "families": 21
+      },
+      "any_evidence_at_3": {
+        "mean": 0.8452380952380952,
+        "ci95_family_bootstrap": [
+          0.75,
+          0.9285714285714286
+        ],
+        "families": 21
+      },
+      "any_evidence_at_5": {
+        "mean": 0.9642857142857143,
+        "ci95_family_bootstrap": [
+          0.9285714285714286,
+          1.0
+        ],
+        "families": 21
+      },
+      "evidence_ndcg_at_10_diagnostic": {
+        "mean": 0.7903277464336925,
+        "ci95_family_bootstrap": [
+          0.7072477092164293,
+          0.872091481951932
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_1": {
+        "mean": 0.6071428571428571,
+        "ci95_family_bootstrap": [
+          0.4642857142857143,
+          0.7619047619047619
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_10": {
+        "mean": 0.9404761904761905,
+        "ci95_family_bootstrap": [
+          0.8928571428571429,
+          0.9761904761904762
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_3": {
+        "mean": 0.8035714285714286,
+        "ci95_family_bootstrap": [
+          0.6964285714285714,
+          0.8928571428571429
+        ],
+        "families": 21
+      },
+      "evidence_recall_at_5": {
+        "mean": 0.9166666666666666,
+        "ci95_family_bootstrap": [
+          0.8452380952380952,
+          0.9761904761904762
+        ],
+        "families": 21
+      },
+      "mrr_at_10": {
+        "mean": 0.7496031746031746,
+        "ci95_family_bootstrap": [
+          0.6492063492063492,
+          0.848015873015873
+        ],
+        "families": 21
+      },
+      "returned": {
+        "mean": 9.69,
+        "ci95_family_bootstrap": [
+          9.31,
+          9.96
+        ],
+        "families": 25
+      }
+    },
+    "by_category": {
+      "ambiguous": {
+        "all_evidence_at_1": null,
+        "all_evidence_at_10": null,
+        "all_evidence_at_3": null,
+        "all_evidence_at_5": null,
+        "any_evidence_at_1": null,
+        "any_evidence_at_10": null,
+        "any_evidence_at_3": null,
+        "any_evidence_at_5": null,
+        "evidence_ndcg_at_10_diagnostic": null,
+        "evidence_recall_at_1": null,
+        "evidence_recall_at_10": null,
+        "evidence_recall_at_3": null,
+        "evidence_recall_at_5": null,
+        "mrr_at_10": null,
+        "returned": {
+          "mean": 8.75,
+          "ci95_family_bootstrap": [
+            8.75,
+            8.75
+          ],
+          "families": 1
+        }
+      },
+      "document_injection": {
+        "all_evidence_at_1": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "all_evidence_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "all_evidence_at_3": {
+          "mean": 0.75,
+          "ci95_family_bootstrap": [
+            0.75,
+            0.75
+          ],
+          "families": 1
+        },
+        "all_evidence_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "any_evidence_at_1": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "any_evidence_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "any_evidence_at_3": {
+          "mean": 0.75,
+          "ci95_family_bootstrap": [
+            0.75,
+            0.75
+          ],
+          "families": 1
+        },
+        "any_evidence_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "evidence_ndcg_at_10_diagnostic": {
+          "mean": 0.7217132018086354,
+          "ci95_family_bootstrap": [
+            0.7217132018086354,
+            0.7217132018086354
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_1": {
+          "mean": 0.5,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.5
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_3": {
+          "mean": 0.75,
+          "ci95_family_bootstrap": [
+            0.75,
+            0.75
+          ],
+          "families": 1
+        },
+        "evidence_recall_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 1
+        },
+        "mrr_at_10": {
+          "mean": 0.6333333333333333,
+          "ci95_family_bootstrap": [
+            0.6333333333333333,
+            0.6333333333333333
+          ],
+          "families": 1
+        },
+        "returned": {
+          "mean": 10.0,
+          "ci95_family_bootstrap": [
+            10.0,
+            10.0
+          ],
+          "families": 1
+        }
+      },
+      "multi_evidence": {
+        "all_evidence_at_1": {
+          "mean": 0.0,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.0
+          ],
+          "families": 2
+        },
+        "all_evidence_at_10": {
+          "mean": 0.625,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.75
+          ],
+          "families": 2
+        },
+        "all_evidence_at_3": {
+          "mean": 0.0,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.0
+          ],
+          "families": 2
+        },
+        "all_evidence_at_5": {
+          "mean": 0.125,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.25
+          ],
+          "families": 2
+        },
+        "any_evidence_at_1": {
+          "mean": 0.0,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.0
+          ],
+          "families": 2
+        },
+        "any_evidence_at_10": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 2
+        },
+        "any_evidence_at_3": {
+          "mean": 0.75,
+          "ci95_family_bootstrap": [
+            0.5,
+            1.0
+          ],
+          "families": 2
+        },
+        "any_evidence_at_5": {
+          "mean": 1.0,
+          "ci95_family_bootstrap": [
+            1.0,
+            1.0
+          ],
+          "families": 2
+        },
+        "evidence_ndcg_at_10_diagnostic": {
+          "mean": 0.4445838082901312,
+          "ci95_family_bootstrap": [
+            0.3726314379754458,
+            0.5165361786048166
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_1": {
+          "mean": 0.0,
+          "ci95_family_bootstrap": [
+            0.0,
+            0.0
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_10": {
+          "mean": 0.8125,
+          "ci95_family_bootstrap": [
+            0.75,
+            0.875
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_3": {
+          "mean": 0.375,
+          "ci95_family_bootstrap": [
+            0.25,
+            0.5
+          ],
+          "families": 2
+        },
+        "evidence_recall_at_5": {
+          "mean": 0.5625,
+          "ci95_family_bootstrap": [
+            0.5,
+            0.625
+          ],
+          "families": 2
+        },
+        "mrr_at_10": {
+          "mean": 0.3625,
+          "ci95_family_bootstrap": [
+            0.26666666666666666,
+            0.4583333333333333
+          ],
+          "families": 2
+        },
+        "returned": {
+          "mean": 10.0,
+          "ci95_family_bootstrap": [
+            10.0,
+            10.0
+          ],
+          "families": 2
+        }
+      },
+      "permission": {
+        "all_evidence_at_1": null,
+        "all_evidence_at_10": null,
+        "all_evidence_at_3": null,
+        "all_evidence_at_5": null,
+        "any_evidence_at_1": null,
+        "any_evidence_at_10": null,
+        "any_evidence_at_3": null,
+        "any_evidence_at_5": null,
+        "evidence_ndcg_at_10_diagnostic": null,
+        "evidence_recall_at_1": null,
+        "evidence_recall_at_10": null,
+        "evidence_recall_at_3": null,
+        "evidence_recall_at_5": null,
+        "mrr_at_10": null,
+        "returned": {
+          "mean": 8.25,
+          "ci95_family_bootstrap": [
+            8.25,
+            8.25
+          ],
+          "families": 1
+        }
+      },
+      "single_evidence": {
+        "all_evidence_at_1": {
+          "mean": 0.6666666666666666,
+          "ci95_family_bootstrap": [
+            0.5277777777777778,
+            0.8055555555555556
+          ],
+          "families": 18
+        },
+        "all_evidence_at_10": {
+          "mean": 0.9444444444444444,
+          "ci95_family_bootstrap": [
+            0.9027777777777778,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "all_evidence_at_3": {
+          "mean": 0.8472222222222222,
+          "ci95_family_bootstrap": [
+            0.7361111111111112,
+            0.9166666666666666
+          ],
+          "families": 18
+        },
+        "all_evidence_at_5": {
+          "mean": 0.9444444444444444,
+          "ci95_family_bootstrap": [
+            0.9027777777777778,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "any_evidence_at_1": {
+          "mean": 0.6944444444444444,
+          "ci95_family_bootstrap": [
+            0.5555555555555556,
+            0.8333333333333334
+          ],
+          "families": 18
+        },
+        "any_evidence_at_10": {
+          "mean": 0.9583333333333334,
+          "ci95_family_bootstrap": [
+            0.9166666666666666,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "any_evidence_at_3": {
+          "mean": 0.8611111111111112,
+          "ci95_family_bootstrap": [
+            0.7638888888888888,
+            0.9444444444444444
+          ],
+          "families": 18
+        },
+        "any_evidence_at_5": {
+          "mean": 0.9583333333333334,
+          "ci95_family_bootstrap": [
+            0.9166666666666666,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "evidence_ndcg_at_10_diagnostic": {
+          "mean": 0.8325556587065914,
+          "ci95_family_bootstrap": [
+            0.7572247747941312,
+            0.8980337347978589
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_1": {
+          "mean": 0.6805555555555556,
+          "ci95_family_bootstrap": [
+            0.5416666666666666,
+            0.8055555555555556
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_10": {
+          "mean": 0.9513888888888888,
+          "ci95_family_bootstrap": [
+            0.9097222222222222,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_3": {
+          "mean": 0.8541666666666666,
+          "ci95_family_bootstrap": [
+            0.7569444444444444,
+            0.9375
+          ],
+          "families": 18
+        },
+        "evidence_recall_at_5": {
+          "mean": 0.9513888888888888,
+          "ci95_family_bootstrap": [
+            0.9097222222222222,
+            0.9861111111111112
+          ],
+          "families": 18
+        },
+        "mrr_at_10": {
+          "mean": 0.799074074074074,
+          "ci95_family_bootstrap": [
+            0.7048611111111112,
+            0.8854166666666666
+          ],
+          "families": 18
+        },
+        "returned": {
+          "mean": 9.944444444444445,
+          "ci95_family_bootstrap": [
+            9.833333333333334,
+            10.0
+          ],
+          "families": 18
+        }
+      },
+      "unanswerable": {
+        "all_evidence_at_1": null,
+        "all_evidence_at_10": null,
+        "all_evidence_at_3": null,
+        "all_evidence_at_5": null,
+        "any_evidence_at_1": null,
+        "any_evidence_at_10": null,
+        "any_evidence_at_3": null,
+        "any_evidence_at_5": null,
+        "evidence_ndcg_at_10_diagnostic": null,
+        "evidence_recall_at_1": null,
+        "evidence_recall_at_10": null,
+        "evidence_recall_at_3": null,
+        "evidence_recall_at_5": null,
+        "mrr_at_10": null,
+        "returned": {
+          "mean": 8.125,
+          "ci95_family_bootstrap": [
+            6.25,
+            10.0
+          ],
+          "families": 2
+        }
+      }
+    },
+    "latency_seconds": {
+      "p50": 11.434874569997191,
+      "p95": 12.057179640978575
+    },
+    "model_calls": 0,
+    "tool_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "semantic_scores": "not_scored_pending_independent_judge_or_human_review"
+  },
+  "inference_source_fingerprint": "9c2bc3c31b651170db10e83875fdbb131d4760bfd43946564b8668beb1e12726",
+  "reporting_source_fingerprint": "063ecc24b1dddea8f3145d2c104e5d459b3ba6b0c1050fa2c1ebcc1ddf167c17",
+  "note": "Paired by task id, resampled by family. Automatic diagnostics, not semantic accuracy."
+}

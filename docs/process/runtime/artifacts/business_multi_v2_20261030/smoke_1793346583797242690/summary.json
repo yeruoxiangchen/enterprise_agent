@@ -1,0 +1,44 @@
+{
+  "fixed": {
+    "turns": 1,
+    "completed": 1,
+    "status_match": 1,
+    "route_match": 0,
+    "route_applicable": 0,
+    "service_action_pass": 0,
+    "service_action_applicable": 0,
+    "probe_all_pass": 1,
+    "probe_applicable": 1,
+    "safety_failures": 0,
+    "model_calls": 1,
+    "elapsed_seconds": 4.05
+  },
+  "regression": {
+    "turns": 4,
+    "completed": 4,
+    "status_match": 4,
+    "route_match": 4,
+    "route_applicable": 4,
+    "service_action_pass": 0,
+    "service_action_applicable": 0,
+    "probe_all_pass": 3,
+    "probe_applicable": 3,
+    "safety_failures": 0,
+    "model_calls": 13,
+    "elapsed_seconds": 117.84
+  },
+  "single": {
+    "turns": 1,
+    "completed": 1,
+    "status_match": 1,
+    "route_match": 0,
+    "route_applicable": 0,
+    "service_action_pass": 0,
+    "service_action_applicable": 0,
+    "probe_all_pass": 1,
+    "probe_applicable": 1,
+    "safety_failures": 0,
+    "model_calls": 1,
+    "elapsed_seconds": 5.18
+  }
+}

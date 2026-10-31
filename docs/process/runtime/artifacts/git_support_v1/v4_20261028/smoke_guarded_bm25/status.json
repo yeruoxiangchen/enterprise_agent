@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "agent-guarded-bm25",
+  "split": "dev",
+  "completed": 12,
+  "total": 12,
+  "current": null,
+  "error": null,
+  "updated_at": 1793191383.7127647
+}

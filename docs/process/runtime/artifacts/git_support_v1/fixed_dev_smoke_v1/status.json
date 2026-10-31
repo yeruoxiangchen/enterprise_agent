@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "fixed-bm25",
+  "split": "dev",
+  "completed": 8,
+  "total": 8,
+  "current": null,
+  "error": null,
+  "updated_at": 1793168173.5469613
+}

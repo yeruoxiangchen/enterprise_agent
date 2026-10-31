@@ -1,0 +1,10 @@
+# Experimental environment only; never install into the live app/vLLM environment.
+haystack-ai==3.4.1
+httpx==0.28.1
+openai==2.6.1
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+python-multipart>=0.0.20,<1
+pypdf>=5,<7
+python-docx>=1.1,<2
+pytest>=8,<10

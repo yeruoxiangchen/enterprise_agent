@@ -1,0 +1,164 @@
+{
+  "repair_business": {
+    "records": 7,
+    "metrics": {
+      "execution": {
+        "passed": 7,
+        "applicable": 7
+      },
+      "service_complete": {
+        "passed": 1,
+        "applicable": 1
+      },
+      "draft_user_quote_integrity": {
+        "passed": 1,
+        "applicable": 1
+      },
+      "permission_checks": {
+        "passed": 7,
+        "applicable": 7
+      },
+      "no_auto_submission": {
+        "passed": 7,
+        "applicable": 7
+      }
+    },
+    "model_calls": 11,
+    "elapsed_seconds": 123.61393681541085,
+    "p50_seconds": 19.11249430477619,
+    "p95_seconds": 24.97975768893957,
+    "conversation_execution_complete": 6,
+    "conversations": 6,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 7
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 7
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 7
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 7
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  },
+  "repair_regression": {
+    "records": 3,
+    "metrics": {
+      "execution": {
+        "passed": 3,
+        "applicable": 3
+      },
+      "service_complete": {
+        "passed": 0,
+        "applicable": 0
+      },
+      "draft_user_quote_integrity": {
+        "passed": 0,
+        "applicable": 0
+      },
+      "permission_checks": {
+        "passed": 3,
+        "applicable": 3
+      },
+      "no_auto_submission": {
+        "passed": 3,
+        "applicable": 3
+      }
+    },
+    "model_calls": 3,
+    "elapsed_seconds": 32.76340232603252,
+    "p50_seconds": 8.342957373708487,
+    "p95_seconds": 17.42110049724579,
+    "conversation_execution_complete": 3,
+    "conversations": 3,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 3
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 3
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 3
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 3
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  },
+  "repair_versions": {
+    "records": 2,
+    "metrics": {
+      "execution": {
+        "passed": 2,
+        "applicable": 2
+      },
+      "service_complete": {
+        "passed": 0,
+        "applicable": 0
+      },
+      "draft_user_quote_integrity": {
+        "passed": 0,
+        "applicable": 0
+      },
+      "permission_checks": {
+        "passed": 2,
+        "applicable": 2
+      },
+      "no_auto_submission": {
+        "passed": 2,
+        "applicable": 2
+      }
+    },
+    "model_calls": 2,
+    "elapsed_seconds": 24.617343144491315,
+    "p50_seconds": 12.308671572245657,
+    "p95_seconds": 13.058599028736353,
+    "conversation_execution_complete": 1,
+    "conversations": 1,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 2
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 2
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 2
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 2
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  }
+}

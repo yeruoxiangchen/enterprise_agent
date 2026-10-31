@@ -1,0 +1,36 @@
+{
+  "protocol": "95% standard evidence span coverage; Hit=any; MRR=first cumulative evidence hit",
+  "split": "dev",
+  "source_files": {
+    "retrieval-bm25": {
+      "path": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_ablation_v3_20261028/retrieval-bm25/predictions.jsonl",
+      "sha256": "e40925411f4223993ddd8002142c574608b9b9b08501d5227710888f567a4363"
+    },
+    "retrieval-rerank": {
+      "path": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_ablation_v3_20261028/retrieval-rerank/predictions.jsonl",
+      "sha256": "5d0a8ff0aaa480556de11660d554e67567f7baf6f29a543dcedb83b212d154ed"
+    }
+  },
+  "arms": {
+    "retrieval-bm25": {
+      "evaluable": 84,
+      "evidence_recall_at_5": 0.8333333333333334,
+      "hit_at_5": 0.8690476190476191,
+      "mrr_at_5": 0.6208333333333333,
+      "all_evidence_at_5": 0.7976190476190477
+    },
+    "retrieval-rerank": {
+      "evaluable": 84,
+      "evidence_recall_at_5": 0.9166666666666666,
+      "hit_at_5": 0.9642857142857143,
+      "mrr_at_5": 0.7496031746031746,
+      "all_evidence_at_5": 0.8690476190476191
+    }
+  },
+  "rerank_minus_bm25": {
+    "evidence_recall_at_5": 0.08333333333333326,
+    "hit_at_5": 0.09523809523809523,
+    "mrr_at_5": 0.12876984126984126,
+    "all_evidence_at_5": 0.0714285714285714
+  }
+}

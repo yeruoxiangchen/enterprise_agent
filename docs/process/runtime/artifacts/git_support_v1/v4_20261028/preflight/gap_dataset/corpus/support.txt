@@ -1,0 +1,1 @@
+合成演练文档指定的测试联系邮箱为 support42@example.invalid，仅用于测试。

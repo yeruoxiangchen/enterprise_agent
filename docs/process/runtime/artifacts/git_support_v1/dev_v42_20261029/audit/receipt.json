@@ -1,0 +1,8 @@
+{
+  "pilot_count": 34,
+  "citation_cases": 2,
+  "frozen_test_used": false,
+  "origin": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_v41_20261028",
+  "agent_predictions_sha256": "7ddc2cffb8b4826e2b9b753afd7949a94498b8ef76a500f4ce76598f3ff9137d",
+  "selection": "dev failures, paired disagreements, all20 critical cases,3 unchanged positives; diagnostic not representative accuracy"
+}

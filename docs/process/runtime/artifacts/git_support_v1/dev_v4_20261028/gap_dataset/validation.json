@@ -1,0 +1,25 @@
+{
+  "status": "valid",
+  "documents": 18,
+  "questions": 48,
+  "families": 12,
+  "by_split": {
+    "dev": 48
+  },
+  "families_by_split": {
+    "dev": 12
+  },
+  "by_category": {
+    "multi_evidence": 32,
+    "single_evidence": 8,
+    "clarify": 4,
+    "insufficient": 4
+  },
+  "by_action": {
+    "answered": 40,
+    "clarify": 4,
+    "insufficient": 4
+  },
+  "independent_human_review": false,
+  "note": "Four correlated variants per family. Confidence intervals must resample families, not individual variants."
+}

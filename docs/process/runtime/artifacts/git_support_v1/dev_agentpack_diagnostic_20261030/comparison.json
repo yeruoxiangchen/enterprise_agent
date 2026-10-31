@@ -1,0 +1,54 @@
+{
+  "arms": {
+    "fixed-rerank": {
+      "completed": 34,
+      "action": 33,
+      "contract": 34,
+      "calls": 34,
+      "unknown_call_cases": 0,
+      "backup_calls": 0,
+      "median_seconds": 13.273053742945194,
+      "correct": 21,
+      "incorrect": 7,
+      "unknown": 6
+    },
+    "official-agentpack": {
+      "completed": 34,
+      "action": 24,
+      "contract": 25,
+      "calls": 151,
+      "unknown_call_cases": 0,
+      "backup_calls": 5,
+      "median_seconds": 17.128867300227284,
+      "correct": 21,
+      "incorrect": 12,
+      "unknown": 1
+    }
+  },
+  "preflight": {
+    "passed": true,
+    "cases": {
+      "first-time-setup__1-1": true,
+      "hooks__2-2": true,
+      "unknown-1-1": true,
+      "clarify-1-2": true,
+      "acl-1-1": true,
+      "injection-dev-4": true
+    },
+    "real_retrieval_exercised": true,
+    "quality_checks": {
+      "first-time-setup__1-1": true,
+      "hooks__2-2": true,
+      "unknown-1-1": true,
+      "clarify-1-2": true,
+      "acl-1-1": true,
+      "injection-dev-4": false
+    },
+    "quality_passed": false,
+    "meaning": "offline diagnostic readiness only; output/action failures retained; no deployment approval",
+    "fingerprint": "0ff704655355dbbe930d6eeb34e75dd4db804b392136b16961d74c11d5af6da8"
+  },
+  "test_used": false,
+  "human_reviewed": false,
+  "production_released": false
+}

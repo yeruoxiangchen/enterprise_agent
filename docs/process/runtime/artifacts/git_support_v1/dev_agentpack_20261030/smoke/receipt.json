@@ -1,0 +1,13 @@
+{
+  "passed": false,
+  "cases": {
+    "first-time-setup__1-1": false,
+    "hooks__2-2": false,
+    "unknown-1-1": true,
+    "clarify-1-2": true,
+    "acl-1-1": true,
+    "injection-dev-4": false
+  },
+  "fingerprint": "46054174dfbe2d04de8eeae0594ad1e49a23e5e6ec1a9db39a7759117b6863b2",
+  "meaning": "engineering, citations and refusal actions; not semantic quality acceptance"
+}

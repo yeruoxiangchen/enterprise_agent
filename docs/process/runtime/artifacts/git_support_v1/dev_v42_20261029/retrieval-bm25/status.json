@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "retrieval-bm25",
+  "split": "dev",
+  "completed": 34,
+  "total": 34,
+  "current": null,
+  "error": null,
+  "updated_at": 1793249502.357436
+}

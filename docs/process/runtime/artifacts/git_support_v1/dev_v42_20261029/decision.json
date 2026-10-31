@@ -1,0 +1,30 @@
+{
+  "eligible": false,
+  "reasons": [
+    "incomplete_pilot_or_judge",
+    "candidate_execution_errors",
+    "correctness_below_control",
+    "critical_cases_not_all_correct"
+  ],
+  "test_released": false,
+  "human_reviewed": false,
+  "gate": {
+    "calibration": "30 controls >=28 correct, all 15 negatives rejected, both citation/answer separation controls passed, zero missing grades",
+    "pilot": "34 preselected dev diagnostics; candidate zero execution errors, all 20 critical correct, zero unauthorized/forbidden output",
+    "quality": "candidate correct >= each control; false refusals strictly fewer than old Agent with the same reranker",
+    "browser": "isolated new policy web E2E passed",
+    "release": "only if pilot passes, run three matched arms on all100 dev; otherwise stop with diagnostic report",
+    "test": "no test or training in this queue; no production-web switch",
+    "limitations": "diagnostic subset intentionally enriched for failures; model grades and small differences require review"
+  },
+  "correct": {
+    "fixed42-rerank": 24,
+    "agent-guarded41-rerank": 23,
+    "agent-guarded42-rerank": 20
+  },
+  "false_refusals": {
+    "fixed42-rerank": 0,
+    "agent-guarded41-rerank": 4,
+    "agent-guarded42-rerank": 1
+  }
+}

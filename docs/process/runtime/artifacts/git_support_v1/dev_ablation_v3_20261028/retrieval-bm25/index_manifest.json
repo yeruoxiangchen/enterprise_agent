@@ -1,0 +1,8 @@
+{
+  "chunks": 305,
+  "documents": 48,
+  "embedding_profile": null,
+  "chunk_size": 900,
+  "overlap": 120,
+  "text_only": true
+}

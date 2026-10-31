@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "agent-evidence-bm25",
+  "split": "dev",
+  "completed": 12,
+  "total": 12,
+  "current": null,
+  "error": null,
+  "updated_at": 1793179213.374225
+}

@@ -1,0 +1,322 @@
+{
+  "failures": [
+    {
+      "arm": "agent-guarded-bm25",
+      "id": "branch-management__2-2",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-bm25",
+      "id": "branch-management__2-4",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-bm25",
+      "id": "credentials__2-3",
+      "error": "模型服务返回 HTTP 400，请检查模型配置",
+      "validation_errors": []
+    },
+    {
+      "arm": "agent-guarded-bm25",
+      "id": "bundling__1-4",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-bm25",
+      "id": "multi-dev-ssh-store-2",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-bm25",
+      "id": "unknown-1-1",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        },
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        },
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        },
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "aliases__1-3",
+      "error": "模型服务返回 HTTP 400，请检查模型配置",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "tagging__1-1",
+      "error": "模型服务返回 HTTP 400，请检查模型配置",
+      "validation_errors": []
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "tagging__1-3",
+      "error": "模型服务返回 HTTP 400，请检查模型配置",
+      "validation_errors": []
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "tagging__2-1",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "tagging__2-4",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "branch-management__2-4",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "generating-ssh-key__1-3",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "credentials__2-1",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "bundling__2-3",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "bundling__2-4",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "multi-dev-ssh-store-3",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        },
+        {
+          "error": "请选择1至16个已有原文片段编号，如S1:3，不能编造编号"
+        }
+      ]
+    },
+    {
+      "arm": "agent-guarded-rerank",
+      "id": "unknown-1-1",
+      "error": "达到四次模型调用上限，未提交有效答案",
+      "validation_errors": [
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        },
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        },
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        },
+        {
+          "error": "澄清只能询问条件，不能给出命令或先操作的建议"
+        }
+      ]
+    }
+  ],
+  "failed_rows": 18,
+  "unique_failed_ids": 16,
+  "grading_errors": [
+    {
+      "correctness": null,
+      "faithfulness": null,
+      "citation_support": null,
+      "claims": [],
+      "rationale": "evidence_ids必须来自候选引用中的原文行号，例如S1:3，不能使用整份来源编号S1",
+      "judgment_status": "error",
+      "prompt_tokens": 7408,
+      "completion_tokens": 1404,
+      "model_calls": 3,
+      "origin": "model",
+      "id": "bundling__1-3",
+      "reviewer": "kb-judge-qwen3-vl-8b",
+      "reviewer_type": "model",
+      "at": 1793195792.8137558
+    }
+  ],
+  "originals_sha256": {
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_v4_20261028/semantic/v4_agent-guarded-bm25/scored_predictions.jsonl": "a00de21ff3f5802729881ce0233a4b05b037a5f114780bf0002408dd3834ee9c",
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_v4_20261028/semantic/v4_agent-guarded-rerank/scored_predictions.jsonl": "bb56c3b2f7705d6a33a7617a94d0fc6b7a11981e7eae44297c3966b8dfedb1b2"
+  }
+}

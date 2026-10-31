@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "source_fingerprint": "29d16d357352bb545df91b3c5428638eedd17bf84336b4a24bec1aff2187df10",
+  "cases": [
+    "multi-dev-ssh-store-1",
+    "clarify-1-2",
+    "acl-1-1",
+    "injection-dev-1"
+  ],
+  "records": 8,
+  "meaning": "integration/access/output smoke, not semantic quality approval"
+}

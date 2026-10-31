@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "agent-guarded41-no-followup-bm25",
+  "split": "dev",
+  "completed": 12,
+  "total": 12,
+  "current": null,
+  "error": null,
+  "updated_at": 1793243105.1887078
+}

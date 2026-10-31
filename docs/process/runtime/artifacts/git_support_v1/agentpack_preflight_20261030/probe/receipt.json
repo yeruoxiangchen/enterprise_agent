@@ -1,0 +1,10 @@
+{
+  "passed": false,
+  "cases": {
+    "first-time-setup__1-1": true,
+    "unknown-1-1": false,
+    "clarify-1-2": true
+  },
+  "fingerprint": "5e2e3405427e799c12fa16f23444626d930fa946349ab4f93609cfc47b1616dd",
+  "meaning": "engineering, citations and refusal actions; not semantic quality acceptance"
+}

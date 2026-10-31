@@ -1,0 +1,272 @@
+{
+  "multi_v3": {
+    "records": 23,
+    "metrics": {
+      "execution": {
+        "passed": 20,
+        "applicable": 23
+      },
+      "service_complete": {
+        "passed": 4,
+        "applicable": 4
+      },
+      "draft_user_quote_integrity": {
+        "passed": 2,
+        "applicable": 2
+      },
+      "permission_checks": {
+        "passed": 23,
+        "applicable": 23
+      },
+      "no_auto_submission": {
+        "passed": 23,
+        "applicable": 23
+      }
+    },
+    "model_calls": 36,
+    "elapsed_seconds": 129.57413239218295,
+    "p50_seconds": 5.1681454088538885,
+    "p95_seconds": 9.075706783682108,
+    "conversation_execution_complete": 17,
+    "conversations": 20,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  },
+  "multi_v4": {
+    "records": 23,
+    "metrics": {
+      "execution": {
+        "passed": 23,
+        "applicable": 23
+      },
+      "service_complete": {
+        "passed": 4,
+        "applicable": 4
+      },
+      "draft_user_quote_integrity": {
+        "passed": 2,
+        "applicable": 2
+      },
+      "permission_checks": {
+        "passed": 23,
+        "applicable": 23
+      },
+      "no_auto_submission": {
+        "passed": 23,
+        "applicable": 23
+      }
+    },
+    "model_calls": 29,
+    "elapsed_seconds": 346.2192046139389,
+    "p50_seconds": 14.637996759265661,
+    "p95_seconds": 26.22167019173503,
+    "conversation_execution_complete": 20,
+    "conversations": 20,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  },
+  "new_acceptance": {
+    "records": 13,
+    "metrics": {
+      "execution": {
+        "passed": 13,
+        "applicable": 13
+      },
+      "service_complete": {
+        "passed": 4,
+        "applicable": 4
+      },
+      "draft_user_quote_integrity": {
+        "passed": 2,
+        "applicable": 2
+      },
+      "permission_checks": {
+        "passed": 13,
+        "applicable": 13
+      },
+      "no_auto_submission": {
+        "passed": 13,
+        "applicable": 13
+      }
+    },
+    "model_calls": 19,
+    "elapsed_seconds": 136.8760299347341,
+    "p50_seconds": 9.873582661151886,
+    "p95_seconds": 24.53877175413072,
+    "conversation_execution_complete": 10,
+    "conversations": 10,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 13
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 13
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 13
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 13
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  },
+  "regression": {
+    "records": 17,
+    "metrics": {
+      "execution": {
+        "passed": 17,
+        "applicable": 17
+      },
+      "service_complete": {
+        "passed": 1,
+        "applicable": 1
+      },
+      "draft_user_quote_integrity": {
+        "passed": 1,
+        "applicable": 1
+      },
+      "permission_checks": {
+        "passed": 17,
+        "applicable": 17
+      },
+      "no_auto_submission": {
+        "passed": 17,
+        "applicable": 17
+      }
+    },
+    "model_calls": 22,
+    "elapsed_seconds": 228.65024020336568,
+    "p50_seconds": 14.024704109877348,
+    "p95_seconds": 25.813030675053596,
+    "conversation_execution_complete": 17,
+    "conversations": 17,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 17
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 17
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 17
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 17
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  },
+  "single": {
+    "records": 23,
+    "metrics": {
+      "execution": {
+        "passed": 23,
+        "applicable": 23
+      },
+      "service_complete": {
+        "passed": 3,
+        "applicable": 4
+      },
+      "draft_user_quote_integrity": {
+        "passed": 0,
+        "applicable": 0
+      },
+      "permission_checks": {
+        "passed": 23,
+        "applicable": 23
+      },
+      "no_auto_submission": {
+        "passed": 23,
+        "applicable": 23
+      }
+    },
+    "model_calls": 26,
+    "elapsed_seconds": 123.48937302827835,
+    "p50_seconds": 4.925216194242239,
+    "p95_seconds": 8.032633693888783,
+    "conversation_execution_complete": 20,
+    "conversations": 20,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 23
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  }
+}

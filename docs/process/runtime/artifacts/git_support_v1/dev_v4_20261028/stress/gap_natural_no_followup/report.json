@@ -1,0 +1,441 @@
+{
+  "expected": 12,
+  "records": 12,
+  "complete": true,
+  "metrics": {
+    "action_correct": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 12
+    },
+    "all_required_facts_diagnostic": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 10
+    },
+    "citation_format_valid": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 12
+    },
+    "citation_gold_evidence_precision": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 10
+    },
+    "citation_gold_evidence_recall": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 10
+    },
+    "correct_abstention": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 1
+    },
+    "correct_clarification": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 1
+    },
+    "failed": {
+      "mean": 0.0,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.0
+      ],
+      "families": 12
+    },
+    "false_refusal": {
+      "mean": 0.0,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.0
+      ],
+      "families": 10
+    },
+    "required_fact_match_diagnostic": {
+      "mean": 1.0,
+      "ci95_family_bootstrap": [
+        1.0,
+        1.0
+      ],
+      "families": 10
+    },
+    "unauthorized_citation": {
+      "mean": 0.0,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.0
+      ],
+      "families": 12
+    },
+    "unsupported_answer": {
+      "mean": 0.0,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.0
+      ],
+      "families": 2
+    }
+  },
+  "by_category": {
+    "clarify": {
+      "action_correct": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 1
+      },
+      "all_required_facts_diagnostic": null,
+      "citation_format_valid": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 1
+      },
+      "citation_gold_evidence_precision": null,
+      "citation_gold_evidence_recall": null,
+      "correct_abstention": null,
+      "correct_clarification": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 1
+      },
+      "failed": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 1
+      },
+      "false_refusal": null,
+      "required_fact_match_diagnostic": null,
+      "unauthorized_citation": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 1
+      },
+      "unsupported_answer": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 1
+      }
+    },
+    "insufficient": {
+      "action_correct": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 1
+      },
+      "all_required_facts_diagnostic": null,
+      "citation_format_valid": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 1
+      },
+      "citation_gold_evidence_precision": null,
+      "citation_gold_evidence_recall": null,
+      "correct_abstention": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 1
+      },
+      "correct_clarification": null,
+      "failed": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 1
+      },
+      "false_refusal": null,
+      "required_fact_match_diagnostic": null,
+      "unauthorized_citation": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 1
+      },
+      "unsupported_answer": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 1
+      }
+    },
+    "multi_evidence": {
+      "action_correct": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 8
+      },
+      "all_required_facts_diagnostic": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 8
+      },
+      "citation_format_valid": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 8
+      },
+      "citation_gold_evidence_precision": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 8
+      },
+      "citation_gold_evidence_recall": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 8
+      },
+      "correct_abstention": null,
+      "correct_clarification": null,
+      "failed": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 8
+      },
+      "false_refusal": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 8
+      },
+      "required_fact_match_diagnostic": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 8
+      },
+      "unauthorized_citation": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 8
+      },
+      "unsupported_answer": null
+    },
+    "single_evidence": {
+      "action_correct": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 2
+      },
+      "all_required_facts_diagnostic": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 2
+      },
+      "citation_format_valid": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 2
+      },
+      "citation_gold_evidence_precision": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 2
+      },
+      "citation_gold_evidence_recall": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 2
+      },
+      "correct_abstention": null,
+      "correct_clarification": null,
+      "failed": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 2
+      },
+      "false_refusal": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 2
+      },
+      "required_fact_match_diagnostic": {
+        "mean": 1.0,
+        "ci95_family_bootstrap": [
+          1.0,
+          1.0
+        ],
+        "families": 2
+      },
+      "unauthorized_citation": {
+        "mean": 0.0,
+        "ci95_family_bootstrap": [
+          0.0,
+          0.0
+        ],
+        "families": 2
+      },
+      "unsupported_answer": null
+    }
+  },
+  "latency_seconds": {
+    "p50": 13.288244516588748,
+    "p95": 14.386491576209664
+  },
+  "model_calls": 22,
+  "tool_calls": 71,
+  "prompt_tokens": 25356,
+  "completion_tokens": 2513,
+  "semantic_scores": "not_scored_pending_independent_judge_or_human_review",
+  "config": {
+    "dataset": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_v4_20261028/gap_dataset",
+    "dataset_receipt": {
+      "documents.jsonl": "567e07788022f3557a3e76f912def3114ad960157561c9b3762c271d2a6c5ce7",
+      "dev.jsonl": "6c0a2726389e69301c8db947776ce3d7fc7558e0a0cfb2bf2bb5a64523a0bc5b",
+      "test.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "catalog.jsonl": "47f6c969baeb4f88ad328e11b6d178b630b7f1f312f5bfc03aaa60e7343b21db",
+      "source_manifest.json": "4ca4081a7cafc018f6d594b54d53a81ba8325266eff0880799c6446433f63549",
+      "authoring_spec.json": "a58602545f33cf36d35824b00178c2c933dcc2040f836608b5ae7060aecc5fb9"
+    },
+    "arm": "agent-guarded-no-followup-bm25",
+    "split": "dev",
+    "case_ids": [
+      "control-archive-1",
+      "control-clarify-1",
+      "control-contact-1",
+      "control-unknown-1",
+      "gap-00-1",
+      "gap-01-1",
+      "gap-02-1",
+      "gap-03-1",
+      "gap-04-1",
+      "gap-05-1",
+      "gap-06-1",
+      "gap-07-1"
+    ],
+    "source_fingerprint": "f954b0b376c37d81cdbefe63f7de57cae9ddea17486db41503713ba5917bb5de",
+    "llm_model": "kb-qwen3-8b",
+    "llm_url": "http://127.0.0.1:18768/v1",
+    "reranker_receipt": null,
+    "reranker_candidates": null,
+    "embedding_model": "",
+    "embedding_url": "",
+    "max_turns": 6,
+    "max_tool_calls": 12,
+    "context_tokens": 8192,
+    "agent_policy": "guarded_v4",
+    "guarded_followup": false,
+    "evaluation_profile": "natural",
+    "effective_max_model_calls": 4,
+    "output_tokens": 1400,
+    "temperature": 0,
+    "enable_thinking": false,
+    "retrieval_top_k": 5,
+    "seed": 0,
+    "limit": 12,
+    "model_receipt": {
+      "model_physical_path": "/home/zjr/Tracker/internship_project_lab/chart_verification_vlm/models/Qwen3-8B",
+      "dtype": "bfloat16",
+      "environment": "/data/zjr/deepsearch_rl/venv/bin/python",
+      "gpu_memory_fraction": 0.78,
+      "context": 8192,
+      "concurrency": 1,
+      "small_metadata_sha256": {
+        "config.json": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+        "tokenizer_config.json": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+        "model.safetensors.index.json": "f9fdbcb91c23971c13ec5d5f2573d2349e8f61f2f049371ec699281748fdb1bc"
+      }
+    },
+    "latency_scope": "shared_server_observed_latency_not_dedicated_gpu_throughput"
+  }
+}

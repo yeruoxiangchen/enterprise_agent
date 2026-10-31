@@ -1,0 +1,63 @@
+{
+  "dataset": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_v4_20261028/gap_dataset",
+  "dataset_receipt": {
+    "documents.jsonl": "567e07788022f3557a3e76f912def3114ad960157561c9b3762c271d2a6c5ce7",
+    "dev.jsonl": "6c0a2726389e69301c8db947776ce3d7fc7558e0a0cfb2bf2bb5a64523a0bc5b",
+    "test.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog.jsonl": "47f6c969baeb4f88ad328e11b6d178b630b7f1f312f5bfc03aaa60e7343b21db",
+    "source_manifest.json": "4ca4081a7cafc018f6d594b54d53a81ba8325266eff0880799c6446433f63549",
+    "authoring_spec.json": "a58602545f33cf36d35824b00178c2c933dcc2040f836608b5ae7060aecc5fb9"
+  },
+  "arm": "agent-guarded41-bm25",
+  "split": "dev",
+  "case_ids": [
+    "control-archive-1",
+    "control-clarify-1",
+    "control-contact-1",
+    "control-unknown-1",
+    "gap-00-1",
+    "gap-01-1",
+    "gap-02-1",
+    "gap-03-1",
+    "gap-04-1",
+    "gap-05-1",
+    "gap-06-1",
+    "gap-07-1"
+  ],
+  "source_fingerprint": "b8084407849bbff6523adba5722bd53c46a71bc628036a37dbb126396df5738e",
+  "llm_model": "kb-qwen3-8b",
+  "llm_url": "http://127.0.0.1:18768/v1",
+  "reranker_receipt": null,
+  "reranker_candidates": null,
+  "embedding_model": "",
+  "embedding_url": "",
+  "max_turns": 6,
+  "max_tool_calls": 12,
+  "context_tokens": 8192,
+  "agent_policy": "guarded_v41",
+  "guarded_followup": true,
+  "evaluation_profile": "withheld_first",
+  "effective_max_model_calls": 4,
+  "tool_choice_protocol": "single_named_v41",
+  "output_tokens": 1400,
+  "temperature": 0,
+  "enable_thinking": false,
+  "request_timeout_seconds": 120.0,
+  "retrieval_top_k": 5,
+  "seed": 0,
+  "limit": 12,
+  "model_receipt": {
+    "model_physical_path": "/home/zjr/Tracker/internship_project_lab/chart_verification_vlm/models/Qwen3-8B",
+    "dtype": "bfloat16",
+    "environment": "/data/zjr/deepsearch_rl/venv/bin/python",
+    "gpu_memory_fraction": 0.78,
+    "context": 8192,
+    "concurrency": 1,
+    "small_metadata_sha256": {
+      "config.json": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+      "tokenizer_config.json": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+      "model.safetensors.index.json": "f9fdbcb91c23971c13ec5d5f2573d2349e8f61f2f049371ec699281748fdb1bc"
+    }
+  },
+  "latency_scope": "shared_server_observed_latency_not_dedicated_gpu_throughput"
+}

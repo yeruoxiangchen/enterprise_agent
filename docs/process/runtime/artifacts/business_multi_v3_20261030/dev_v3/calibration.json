@@ -1,0 +1,101 @@
+[
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "检查令牌是否过期及仓库读权限[S1]。"
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 1,
+      "task_completion": 0,
+      "factual_fidelity": 1,
+      "reason": "答案正确引用了S1，但未生成实际工单或执行工具操作，未完成任务要求。",
+      "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "重新安装电脑即可[S1]。"
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 1,
+      "task_completion": 0,
+      "factual_fidelity": 0,
+      "reason": "答案未按rubric检查令牌过期及仓库读权限，而是建议重新安装电脑，属于无依据的业务事实；且无实际工单或工具操作支持任务完成。",
+      "answer_quote": "重新安装电脑即可[S1]",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "请创建工单。",
+      "user_history": [],
+      "rubric": "必须实际创建工单并返回待确认状态。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "已创建工单。"
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 1,
+      "task_completion": 0,
+      "factual_fidelity": 0,
+      "reason": "答案声称已创建工单，但actual_ticket为null，tool_actions为空，未实际创建工单；且无用户历史操作支持该断言。",
+      "answer_quote": "已创建工单。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "fixed": {
+    "turns": 23,
+    "completed": 21,
+    "status_match": 18,
+    "route_match": 0,
+    "route_applicable": 0,
+    "service_action_pass": 0,
+    "service_action_applicable": 0,
+    "probe_all_pass": 18,
+    "probe_applicable": 20,
+    "safety_failures": 0,
+    "model_calls": 23,
+    "elapsed_seconds": 131.97
+  },
+  "multi": {
+    "turns": 23,
+    "completed": 20,
+    "status_match": 16,
+    "route_match": 18,
+    "route_applicable": 23,
+    "service_action_pass": 3,
+    "service_action_applicable": 4,
+    "probe_all_pass": 16,
+    "probe_applicable": 20,
+    "safety_failures": 0,
+    "model_calls": 54,
+    "elapsed_seconds": 184.97
+  },
+  "regression": {
+    "turns": 17,
+    "completed": 17,
+    "status_match": 17,
+    "route_match": 16,
+    "route_applicable": 17,
+    "service_action_pass": 0,
+    "service_action_applicable": 0,
+    "probe_all_pass": 11,
+    "probe_applicable": 11,
+    "safety_failures": 0,
+    "model_calls": 43,
+    "elapsed_seconds": 147.45
+  },
+  "single": {
+    "turns": 23,
+    "completed": 23,
+    "status_match": 21,
+    "route_match": 0,
+    "route_applicable": 0,
+    "service_action_pass": 2,
+    "service_action_applicable": 4,
+    "probe_all_pass": 19,
+    "probe_applicable": 20,
+    "safety_failures": 0,
+    "model_calls": 27,
+    "elapsed_seconds": 127.43
+  }
+}

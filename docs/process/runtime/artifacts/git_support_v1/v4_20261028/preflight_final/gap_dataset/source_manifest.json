@@ -1,0 +1,7 @@
+{
+  "kind": "synthetic_gap_v1",
+  "design_revision": 2,
+  "human_verified": false,
+  "not_business_data": true,
+  "revision_reason": "Include tenant on both pages so natural retrieval can contain both; measure actual withholding instead of assuming intervention removed evidence."
+}

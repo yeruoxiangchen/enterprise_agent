@@ -1,0 +1,48 @@
+{
+  "status": "failed",
+  "url": "http://127.0.0.1:8773",
+  "load": [
+    {
+      "concurrency": 1,
+      "requests": 24,
+      "success": 24,
+      "p50_seconds": 0.034731450490653515,
+      "p95_seconds": 0.044931283220648766,
+      "observed_rps": 27.074901877476034,
+      "scope": "authenticated read APIs, client creation included; not model generation throughput"
+    },
+    {
+      "concurrency": 4,
+      "requests": 24,
+      "success": 24,
+      "p50_seconds": 0.12467748951166868,
+      "p95_seconds": 0.1428682692348957,
+      "observed_rps": 31.294053015764547,
+      "scope": "authenticated read APIs, client creation included; not model generation throughput"
+    },
+    {
+      "concurrency": 8,
+      "requests": 24,
+      "success": 24,
+      "p50_seconds": 0.30670368298888206,
+      "p95_seconds": 0.41165340691804886,
+      "observed_rps": 24.554326552447684,
+      "scope": "authenticated read APIs, client creation included; not model generation throughput"
+    }
+  ],
+  "real_questions": [
+    {
+      "run_id": "57a8fa64f0624deebb6600c1d84f2576",
+      "status": "answered",
+      "seconds": 18.635770885273814,
+      "has_citations": true
+    },
+    {
+      "run_id": "fa25f290b3bc4995914418c9983a8b78",
+      "status": "error",
+      "seconds": 26.97445496544242,
+      "has_citations": false
+    }
+  ],
+  "error": "真实并发问答未全部正常返回"
+}

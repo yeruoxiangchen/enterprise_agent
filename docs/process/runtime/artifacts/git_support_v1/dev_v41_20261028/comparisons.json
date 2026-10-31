@@ -1,0 +1,123 @@
+{
+  "fixed-bm25": {
+    "full_judge_coverage": true,
+    "semantic_paired_difference": {
+      "mean": 0.03,
+      "ci95_family_bootstrap": [
+        -0.03,
+        0.09
+      ],
+      "families": 25
+    },
+    "faithfulness_paired_difference": {
+      "mean": 0.1,
+      "ci95_family_bootstrap": [
+        0.04,
+        0.17
+      ],
+      "families": 25
+    },
+    "wins": [
+      "first-time-setup__1-3",
+      "branch-management__2-2",
+      "multi-dev-ssh-store-4",
+      "clarify-1-1",
+      "clarify-1-3"
+    ],
+    "losses": [
+      "tagging__2-2",
+      "hooks__2-2"
+    ]
+  },
+  "fixed-rerank": {
+    "full_judge_coverage": true,
+    "semantic_paired_difference": {
+      "mean": -0.02,
+      "ci95_family_bootstrap": [
+        -0.1,
+        0.05
+      ],
+      "families": 25
+    },
+    "faithfulness_paired_difference": {
+      "mean": 0.04,
+      "ci95_family_bootstrap": [
+        -0.01,
+        0.09
+      ],
+      "families": 25
+    },
+    "wins": [
+      "first-time-setup__1-2",
+      "aliases__1-2",
+      "unknown-1-3",
+      "clarify-1-1",
+      "clarify-1-3"
+    ],
+    "losses": [
+      "first-time-setup__1-1",
+      "first-time-setup__2-2",
+      "first-time-setup__2-3",
+      "tagging__2-2",
+      "bundling__1-2",
+      "hooks__2-2",
+      "hooks__2-4"
+    ]
+  },
+  "policy_vs_saved_v4_common_rubric": {
+    "full_judge_coverage": true,
+    "semantic_paired_difference": {
+      "mean": 0.06,
+      "ci95_family_bootstrap": [
+        -0.01,
+        0.13
+      ],
+      "families": 25
+    },
+    "faithfulness_paired_difference": {
+      "mean": 0.05,
+      "ci95_family_bootstrap": [
+        0.01,
+        0.1
+      ],
+      "families": 25
+    },
+    "wins": [
+      "first-time-setup__1-3",
+      "branch-management__2-2",
+      "branch-management__2-4",
+      "credentials__2-3",
+      "bundling__1-4",
+      "multi-dev-ssh-store-2",
+      "multi-dev-ssh-store-4",
+      "unknown-1-1"
+    ],
+    "losses": [
+      "first-time-setup__2-3",
+      "tagging__2-2"
+    ]
+  },
+  "rubric_only_on_saved_v4": {
+    "full_judge_coverage": true,
+    "semantic_paired_difference": {
+      "mean": 0.01,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.03
+      ],
+      "families": 25
+    },
+    "faithfulness_paired_difference": {
+      "mean": 0.01,
+      "ci95_family_bootstrap": [
+        0.0,
+        0.03
+      ],
+      "families": 25
+    },
+    "wins": [
+      "branch-management__2-3"
+    ],
+    "losses": []
+  }
+}

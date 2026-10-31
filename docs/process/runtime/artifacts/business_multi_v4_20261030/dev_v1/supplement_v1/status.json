@@ -1,0 +1,13 @@
+{
+  "pid": 743234,
+  "start_ticks": "1312885727",
+  "updated_at": 1793365704.573705,
+  "phase": null,
+  "status": "complete_with_review_items",
+  "completed": 113,
+  "total": 113,
+  "review_items": 2,
+  "repeat_completed": 14,
+  "repeat_total": 14,
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v4_20261030/dev_v1/supplement_v1/report.md"
+}

@@ -1,0 +1,16 @@
+{
+  "pid": 942793,
+  "start_ticks": "1294391138",
+  "arms": [
+    "retrieval-bm25",
+    "fixed-bm25",
+    "agent-bm25",
+    "agent-native-bm25",
+    "agent-evidence-bm25",
+    "retrieval-rerank",
+    "fixed-rerank",
+    "agent-evidence-rerank"
+  ],
+  "limit": null,
+  "started_at": 1793179522.604042
+}

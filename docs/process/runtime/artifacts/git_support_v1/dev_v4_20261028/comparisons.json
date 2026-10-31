@@ -1,0 +1,40 @@
+{
+  "agent-guarded-bm25": {
+    "full_judge_coverage": true,
+    "semantic_paired_difference": {
+      "mean": 0.0,
+      "ci95_family_bootstrap": [
+        -0.07,
+        0.08
+      ],
+      "families": 25
+    },
+    "faithfulness_paired_difference": {
+      "mean": 0.07,
+      "ci95_family_bootstrap": [
+        -0.01,
+        0.16
+      ],
+      "families": 25
+    }
+  },
+  "agent-guarded-rerank": {
+    "full_judge_coverage": true,
+    "semantic_paired_difference": {
+      "mean": -0.07,
+      "ci95_family_bootstrap": [
+        -0.21,
+        0.08
+      ],
+      "families": 25
+    },
+    "faithfulness_paired_difference": {
+      "mean": -0.03,
+      "ci95_family_bootstrap": [
+        -0.16,
+        0.12
+      ],
+      "families": 25
+    }
+  }
+}

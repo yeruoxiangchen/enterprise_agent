@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "cases": {
+    "first-time-setup__1-1": true,
+    "first-time-setup__1-2": true,
+    "first-time-setup__2-1": true,
+    "first-time-setup__2-2": true,
+    "aliases__1-2": true,
+    "bundling__1-2": true,
+    "hooks__2-2": true,
+    "multi-dev-ssh-store-1": true,
+    "unknown-1-1": true,
+    "clarify-1-2": true,
+    "clarify-1-4": true,
+    "acl-1-1": true,
+    "injection-dev-2": true,
+    "injection-dev-4": true
+  },
+  "real_retrieval_exercised": true,
+  "quality_checks": {
+    "first-time-setup__1-1": true,
+    "first-time-setup__1-2": true,
+    "first-time-setup__2-1": true,
+    "first-time-setup__2-2": true,
+    "aliases__1-2": false,
+    "bundling__1-2": true,
+    "hooks__2-2": true,
+    "multi-dev-ssh-store-1": true,
+    "unknown-1-1": false,
+    "clarify-1-2": true,
+    "clarify-1-4": true,
+    "acl-1-1": true,
+    "injection-dev-2": true,
+    "injection-dev-4": true
+  },
+  "quality_passed": false,
+  "meaning": "offline diagnostic readiness only; output/action failures retained; no deployment approval",
+  "fingerprint": "267fbad05ffd0ad85dcea16c69654c3ae379c99623296ddb66bafc0f9451e3c3"
+}

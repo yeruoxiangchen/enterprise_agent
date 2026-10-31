@@ -1,0 +1,73 @@
+{
+  "original_protocol": {
+    "arms": [
+      "retrieval-bm25",
+      "fixed-bm25",
+      "agent-bm25",
+      "agent-native-bm25",
+      "agent-evidence-bm25",
+      "retrieval-rerank",
+      "fixed-rerank",
+      "agent-evidence-rerank"
+    ],
+    "limit": null,
+    "split": "dev",
+    "source_fingerprint": "9c2bc3c31b651170db10e83875fdbb131d4760bfd43946564b8668beb1e12726",
+    "queue_sha256": "9d6e4647e171f0788088166e2d48bf7cfd571e851c564632c371ebc9701face2"
+  },
+  "reporting_protocol": {
+    "arms": [
+      "retrieval-bm25",
+      "fixed-bm25",
+      "agent-bm25",
+      "agent-native-bm25",
+      "agent-evidence-bm25",
+      "retrieval-rerank",
+      "fixed-rerank",
+      "agent-evidence-rerank"
+    ],
+    "limit": null,
+    "split": "dev",
+    "source_fingerprint": "063ecc24b1dddea8f3145d2c104e5d459b3ba6b0c1050fa2c1ebcc1ddf167c17",
+    "queue_sha256": "369c720d9833ed97b90630d01372e3ca9c087d9ccfce372373ba2c7749aec5db"
+  },
+  "inputs_sha256": {
+    "protocol.json": "f23977742060e3907b3a39231c5512e73cbe4dd5f1d160cc2f94c77da748b0cf",
+    "retrieval-bm25/config.json": "5b50ed2bf89a0b9b05ed97f7c9aa7c1ab4535505a8a1c90d467352ff2c64c14a",
+    "retrieval-bm25/predictions.jsonl": "e40925411f4223993ddd8002142c574608b9b9b08501d5227710888f567a4363",
+    "retrieval-bm25/report.json": "7c0a44e5bba45afb9b7ed5065ca1cba199a92afae6a1cc3d12486f4f796c6a96",
+    "retrieval-bm25/grading.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fixed-bm25/config.json": "c32bbe05aae63b7592e4e228e80f6287396e324f1249cf555a0e5fff5a210525",
+    "fixed-bm25/predictions.jsonl": "505b61acaea7812ebb05116dc6fcf154832fde78b5fa5aaf62f034c5eef9cc0a",
+    "fixed-bm25/report.json": "5c310bea07648d2cc684abba533a88d808551dc77a339ff132e9b30d020bb591",
+    "fixed-bm25/grading.jsonl": "3128bbd401e6c136fc5f2a643a26ea1ecbc8594ad815a30b68e90bd499b8af10",
+    "agent-bm25/config.json": "b869d9f6d12084cd2b37f766dbbd01a018a103afa779e648c2333e5a772a15be",
+    "agent-bm25/predictions.jsonl": "fc7b7b5eb3bb1d6eeb736c10fed59742e9b2fd32b381f0c36ffaa13afae2d0fc",
+    "agent-bm25/report.json": "073ee94d24d57cc54215cb1139dc2f9717fa08b061cd8014839f441b82e42650",
+    "agent-bm25/grading.jsonl": "7b268c3e9ce629744d383c782788695860bd4d90fdb93cb53a8520e685264e2f",
+    "agent-native-bm25/config.json": "cfb791a8c435309d05d5beb2c386062ffb1aab984268380b0b018ad596668672",
+    "agent-native-bm25/predictions.jsonl": "fd263ef66c4ee4716334882e38c93f6d5312074f23cb2022a3178ea1f1ddfb9d",
+    "agent-native-bm25/report.json": "f547969172a650d04632a786d618894b8e42e5e84cdbb40acd7dec4aa2785b79",
+    "agent-native-bm25/grading.jsonl": "b76990bcfc1fd3cf051da247c381ab6fd6bb6d33c4c848cc03ef153a52c0f055",
+    "agent-evidence-bm25/config.json": "d2e8c53dbdffd0d190f5c798ed8cf35f8685083200031ed8673fdaf75f11d3ab",
+    "agent-evidence-bm25/predictions.jsonl": "a41aeeaaf64fe63de2d9eac132eccfe65d28998cd1fff5d314a7415822b4742f",
+    "agent-evidence-bm25/report.json": "28b4c9d666661ca645d058dc65dbe3d02fd03198f55daee5d8ba4757158c6a7c",
+    "agent-evidence-bm25/grading.jsonl": "a5d9448a28f29a4feb0de0b847d768bc0a3129d6d2c3cd26fe1614e0df28727a",
+    "retrieval-rerank/config.json": "5882eb8a83e290864f355e0b2036f26c21753948b13bae5a218a4af48b8341aa",
+    "retrieval-rerank/predictions.jsonl": "5d0a8ff0aaa480556de11660d554e67567f7baf6f29a543dcedb83b212d154ed",
+    "retrieval-rerank/report.json": "3cf2e77d300f4eeb29f8d1dbcb7bd6c0ad2efdd4199d1247a1b0ef36837abc0e",
+    "retrieval-rerank/grading.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fixed-rerank/config.json": "081a63a0fefbedbef756cc1c7056cbcff7063f7fec80d1def91ed566c15bfdce",
+    "fixed-rerank/predictions.jsonl": "eedde2314042c5861a029cf30f922188468e5015629ff7c9750df87ba3a22abf",
+    "fixed-rerank/report.json": "a695c6fd169b6f3a9794c6e603f64f3b54fcbf2c75db9a57ff40d3ee853677af",
+    "fixed-rerank/grading.jsonl": "1b0896f198d1a10a59e11b71b711267d179ac68fe6997b2b1410b2c0f831930b",
+    "agent-evidence-rerank/config.json": "39164f9956309a2e5a2cfb190e6d41062b219fe5067236a86086578c5cd9ce1c",
+    "agent-evidence-rerank/predictions.jsonl": "c48b2947c42a4c75cff61325bbd39755f55b03ea31f0ff617bfa86aac468b60a",
+    "agent-evidence-rerank/report.json": "e65dcb4c73ba622f21c25816682cb8452d6bd39226c7be01253ec27acfd72bdc",
+    "agent-evidence-rerank/grading.jsonl": "889e7e036d1f05e427a4dadd77ca8854cf9665f6556d41c3c9b1b1ce3ea5780f"
+  },
+  "note": "Report-only recovery. Original inference protocol and all arm files remain unchanged.",
+  "started_at": 1793189126.5293024,
+  "completed_at": 1793189135.9332757,
+  "original_inputs_unchanged": true
+}

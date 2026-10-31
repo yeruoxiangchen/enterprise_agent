@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "url": "http://127.0.0.1:8774",
+  "ticket_id": "76e45608a3464c9bbd4cc7ed7b36f304",
+  "checks": [
+    "login",
+    "business_badge",
+    "real_model_draft",
+    "trace",
+    "confirm",
+    "accept",
+    "resolve"
+  ],
+  "page_errors": [],
+  "at": 1793361387.8339355
+}

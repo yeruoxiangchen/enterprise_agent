@@ -1,0 +1,10 @@
+{
+  "status": "complete",
+  "arm": "agent-guarded41-rerank",
+  "split": "dev",
+  "completed": 34,
+  "total": 34,
+  "current": null,
+  "error": null,
+  "updated_at": 1793253075.5613627
+}

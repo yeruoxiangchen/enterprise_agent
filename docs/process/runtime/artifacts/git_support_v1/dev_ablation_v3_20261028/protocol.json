@@ -1,0 +1,16 @@
+{
+  "arms": [
+    "retrieval-bm25",
+    "fixed-bm25",
+    "agent-bm25",
+    "agent-native-bm25",
+    "agent-evidence-bm25",
+    "retrieval-rerank",
+    "fixed-rerank",
+    "agent-evidence-rerank"
+  ],
+  "limit": null,
+  "split": "dev",
+  "source_fingerprint": "9c2bc3c31b651170db10e83875fdbb131d4760bfd43946564b8668beb1e12726",
+  "queue_sha256": "9d6e4647e171f0788088166e2d48bf7cfd571e851c564632c371ebc9701face2"
+}

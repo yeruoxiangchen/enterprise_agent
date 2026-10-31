@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": {
+    "same_source": true,
+    "all_22_cases": true,
+    "no_execution_errors": true,
+    "judge_calibration": true,
+    "same_judge_code": true
+  },
+  "path": "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/v41_preflight_20261028",
+  "predictions_sha256": "6609173a666adc7f0914799863520bebcd16cc44b43c652bf8332b17d156d165",
+  "config_sha256": "9bbf76cb7a586ea45130efd396500c8f7b4a9cf8aa0ecf192e0ac76ca38853aa",
+  "not_semantic_accuracy_claim": true
+}

@@ -1,0 +1,23 @@
+{
+  "pid": 598526,
+  "start_ticks": "1312455415",
+  "updated_at": 1793361405.405739,
+  "counts": {
+    "regression": 17,
+    "single": 23,
+    "multi_v3": 23,
+    "multi_v4": 23,
+    "new_acceptance": 13
+  },
+  "totals": {
+    "regression": 17,
+    "single": 23,
+    "multi_v3": 23,
+    "multi_v4": 23,
+    "new_acceptance": 13
+  },
+  "phase": null,
+  "status": "complete_with_errors",
+  "errors": 3,
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v4_20261030/dev_v1/report.md"
+}

@@ -1,0 +1,35 @@
+{
+  "fixed42-rerank": {
+    "full_judge_coverage": false,
+    "semantic_paired_difference": null,
+    "faithfulness_paired_difference": null,
+    "wins": [
+      "hooks__2-2"
+    ],
+    "losses": [
+      "first-time-setup__2-2",
+      "tagging__2-2",
+      "hooks__2-4",
+      "clarify-1-2",
+      "clarify-1-4",
+      "injection-dev-1",
+      "injection-dev-3"
+    ]
+  },
+  "agent-guarded41-rerank": {
+    "full_judge_coverage": false,
+    "semantic_paired_difference": null,
+    "faithfulness_paired_difference": null,
+    "wins": [
+      "hooks__2-2",
+      "unknown-1-4"
+    ],
+    "losses": [
+      "first-time-setup__2-2",
+      "clarify-1-1",
+      "clarify-1-2",
+      "clarify-1-4",
+      "injection-dev-1"
+    ]
+  }
+}

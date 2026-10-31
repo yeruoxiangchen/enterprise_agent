@@ -1,0 +1,18 @@
+{
+  "pid": 65477,
+  "start_ticks": "1311097241",
+  "updated_at": 1793346755.6340394,
+  "status": "complete_pending_review",
+  "stage": null,
+  "completed": {
+    "regression": 4,
+    "single": 1,
+    "fixed": 1
+  },
+  "totals": {
+    "regression": 4,
+    "single": 1,
+    "fixed": 1
+  },
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v2_20261030/smoke_1793346583797242690/report.md"
+}

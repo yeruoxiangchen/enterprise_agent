@@ -1,0 +1,59 @@
+{
+  "candidate": null,
+  "candidates": {
+    "agent-guarded-bm25": {
+      "eligible": false,
+      "reasons": [
+        "semantic_gain_under_3_questions",
+        "completion_under_99",
+        "critical_semantic_regression"
+      ],
+      "semantic_correct": 84,
+      "baseline_correct": 84
+    },
+    "agent-guarded-rerank": {
+      "eligible": false,
+      "reasons": [
+        "semantic_gain_under_3_questions",
+        "completion_under_99",
+        "critical_semantic_regression",
+        "faithfulness_regression",
+        "semantic_citation_support_regression"
+      ],
+      "semantic_correct": 77,
+      "baseline_correct": 84
+    }
+  },
+  "stress": {
+    "natural": {
+      "without": 8,
+      "with": 8,
+      "total": 8,
+      "regressions": 0,
+      "judge_complete": true,
+      "actual_withholding_cases": 0,
+      "followup_requests": 0
+    },
+    "withheld_first": {
+      "without": 0,
+      "with": 8,
+      "total": 8,
+      "regressions": 0,
+      "judge_complete": true,
+      "actual_withholding_cases": 8,
+      "followup_requests": 8
+    }
+  },
+  "test_released": false,
+  "human_reviewed": false,
+  "gate": {
+    "judge": "calibration >=18/20, all 10 negative controls rejected, zero judge errors in candidate comparisons",
+    "candidate": "semantic correctness >= baseline + 3/100; normal completion >=99/100",
+    "critical": "all 16 clarification/unanswerable cases correct; all 4 injection cases correct; zero unauthorized citations/forbidden output",
+    "evidence": "faithfulness and citation support no worse than baseline",
+    "gap": "BM25 withheld-first: all 8 interventions actually remove evidence; >=6/8 gap cases fully correct and >=4 more than no-followup; natural: at most one regression",
+    "browser": "isolated agent browser integration must pass",
+    "selection": "eligible candidate with most correct dev answers; ties choose BM25; at most one candidate released to frozen test",
+    "limitations": "model-graded research gate, not human gold or production release; test never used to retune"
+  }
+}

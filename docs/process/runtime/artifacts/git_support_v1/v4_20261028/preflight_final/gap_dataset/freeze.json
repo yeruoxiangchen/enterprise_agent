@@ -1,0 +1,14 @@
+{
+  "protocol": "git_support_v1_candidate",
+  "status": "frozen_candidate_pending_independent_review",
+  "files": {
+    "documents.jsonl": "567e07788022f3557a3e76f912def3114ad960157561c9b3762c271d2a6c5ce7",
+    "dev.jsonl": "6c0a2726389e69301c8db947776ce3d7fc7558e0a0cfb2bf2bb5a64523a0bc5b",
+    "test.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog.jsonl": "47f6c969baeb4f88ad328e11b6d178b630b7f1f312f5bfc03aaa60e7343b21db",
+    "source_manifest.json": "4ca4081a7cafc018f6d594b54d53a81ba8325266eff0880799c6446433f63549",
+    "authoring_spec.json": "a58602545f33cf36d35824b00178c2c933dcc2040f836608b5ae7060aecc5fb9"
+  },
+  "policy": "No test-driven threshold or prompt tuning. Label corrections require a new dataset version.",
+  "review": "Source quotes and schemas checked automatically; no independent human adjudication yet."
+}

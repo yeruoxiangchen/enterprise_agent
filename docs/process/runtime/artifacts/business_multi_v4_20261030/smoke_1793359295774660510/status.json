@@ -1,0 +1,19 @@
+{
+  "pid": 563311,
+  "start_ticks": "1312368434",
+  "updated_at": 1793359583.6595106,
+  "counts": {
+    "repair_regression": 3,
+    "repair_business": 7,
+    "repair_versions": 2
+  },
+  "totals": {
+    "repair_regression": 3,
+    "repair_business": 7,
+    "repair_versions": 2
+  },
+  "phase": null,
+  "status": "complete_pending_review",
+  "errors": 0,
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v4_20261030/smoke_1793359295774660510/report.md"
+}

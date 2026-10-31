@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "mode": "agent",
+  "policy": "guarded_v4",
+  "isolated_workspace": true,
+  "checks": [
+    "login",
+    "create_knowledge_base",
+    "upload_and_ingest",
+    "ask_and_answer",
+    "citations",
+    "source_preview",
+    "feedback",
+    "session_reload",
+    "history",
+    "mobile_layout"
+  ],
+  "page_errors": []
+}

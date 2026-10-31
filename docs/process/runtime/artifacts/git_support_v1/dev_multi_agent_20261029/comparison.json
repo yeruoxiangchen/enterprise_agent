@@ -1,0 +1,57 @@
+{
+  "semantic": {
+    "fixed-rerank": {
+      "correct": 21,
+      "incorrect": 6,
+      "unknown": 7,
+      "status": "graded_pending_review"
+    },
+    "single-agent": {
+      "correct": 11,
+      "incorrect": 23,
+      "unknown": 0,
+      "status": "graded_pending_review"
+    },
+    "multi-no-skills": {
+      "correct": 8,
+      "incorrect": 24,
+      "unknown": 2,
+      "status": "graded_pending_review"
+    },
+    "multi-skills": {
+      "correct": 8,
+      "incorrect": 22,
+      "unknown": 4,
+      "status": "graded_pending_review"
+    }
+  },
+  "paired_action_deltas": {
+    "single-agent": {
+      "mean": -0.22916666666666666,
+      "ci95_family_bootstrap": [
+        -0.5,
+        0.020833333333333332
+      ],
+      "families": 12
+    },
+    "multi-no-skills": {
+      "mean": -0.3402777777777778,
+      "ci95_family_bootstrap": [
+        -0.6041666666666666,
+        -0.09027777777777778
+      ],
+      "families": 12
+    },
+    "multi-skills": {
+      "mean": -0.2708333333333333,
+      "ci95_family_bootstrap": [
+        -0.5416666666666666,
+        0.0
+      ],
+      "families": 12
+    }
+  },
+  "test_used": false,
+  "human_reviewed": false,
+  "production_released": false
+}

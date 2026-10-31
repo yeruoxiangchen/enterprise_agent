@@ -1,0 +1,10 @@
+{
+  "matched": 20,
+  "total": 20,
+  "judge_errors": 0,
+  "negative_recall": 1.0,
+  "passed": true,
+  "preregistered_gate": ">=18/20 and all 10 negative controls rejected and no judge-format errors",
+  "independent_human_calibration": false,
+  "note": "A passed sanity check is not evidence of general judge reliability."
+}

@@ -1,0 +1,73 @@
+{
+  "revision": "f111c6b8606674224a0c4e09a9fafb29616c863922fe0391cf52782eda397432",
+  "type": "synthetic development integration; not semantic accuracy",
+  "model": "kb-qwen3-8b",
+  "cases": [
+    [
+      "ssh",
+      "SSH认证应该提交公钥还是私钥？",
+      [
+        "technical"
+      ],
+      "公钥"
+    ],
+    [
+      "travel",
+      "演示制度里的出差住宿每晚上限是多少？",
+      [
+        "policy"
+      ],
+      "600"
+    ],
+    [
+      "cross",
+      "SSH认证交什么密钥？另外按照演示库的模拟企业制度，新员工申请代码仓库权限需要哪些材料？",
+      [
+        "technical",
+        "policy"
+      ],
+      "主管"
+    ],
+    [
+      "draft",
+      "我的Windows电脑用SSH连接仓库时提示Permission denied，已经检查网络。请帮我排查，并生成报障工单草稿。",
+      [
+        "technical",
+        "service"
+      ],
+      "草稿"
+    ]
+  ],
+  "documents": [
+    [
+      "technical",
+      "Git连接指南.md",
+      "演示技术资料：SSH 使用公钥认证。只将公钥 .pub 内容提供给管理员，不要提供私钥。SSH连接失败应先核对远程地址、网络和公钥登记状态。不能从本资料确定真实公司的服务器地址。"
+    ],
+    [
+      "technical",
+      "HTTP凭证.md",
+      "演示技术资料：HTTPS连接与SSH连接的认证方式不同。git credential-cache 默认将凭证在内存中缓存900秒，不写入磁盘。credential-store 将凭证明文持久化，不应与系统钥匙串混淆。"
+    ],
+    [
+      "technical",
+      "Git标签.md",
+      "演示技术资料：普通 git push 不会自动推送所有标签。推送单个标签可使用 git push origin <tagname>；推送所有标签使用 git push origin --tags。"
+    ],
+    [
+      "policy",
+      "演示入职制度.md",
+      "模拟企业制度，仅用于功能演示。新员工申请代码仓库权限需提供企业账号、项目名称、直属主管审批记录，通过内部服务工单提交给研发管理员。申请流程不等于已授权。"
+    ],
+    [
+      "policy",
+      "演示差旅制度.md",
+      "模拟企业制度，2026年10月生效，仅用于演示。员工出差住宿报销上限为每晚600元，出差结束后15天内提交申请；需要发票及主管审批记录。本文件未规定餐饮补贴。"
+    ],
+    [
+      "policy",
+      "演示设备制度.md",
+      "模拟企业制度，仅用于演示。设备报修需提供资产编号、故障现象和可联系时间。支持人员接单后更新工单状态，提交草稿不等于已接单。"
+    ]
+  ]
+}

@@ -1,0 +1,513 @@
+[
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "检查令牌是否过期及仓库读权限[S1]。"
+    },
+    "expected": {
+      "correctness": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 1,
+      "factual_fidelity": 1,
+      "task_completion": 1,
+      "parts": {
+        "correctness": {
+          "score": 1,
+          "reason": "回答准确覆盖了rubric要求的两个必答点：检查令牌是否过期及仓库读权限，且与reference_documents内容一致。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 1,
+          "reason": "知识断言'检查令牌是否过期及仓库读权限'有引用[S1]，且[S1]内容'401先查令牌过期及仓库读权限'支持该断言。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 1,
+          "reason": "答案中提到的'检查令牌是否过期及仓库读权限'与参考文档中的'401先查令牌过期及仓库读权限'完全一致，未编造业务事实，符合知识类任务要求。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答准确覆盖了rubric要求的两个必答点：检查令牌是否过期及仓库读权限，且与reference_documents内容一致。；citation_support: 知识断言'检查令牌是否过期及仓库读权限'有引用[S1]，且[S1]内容'401先查令牌过期及仓库读权限'支持该断言。；factual_fidelity: 答案中提到的'检查令牌是否过期及仓库读权限'与参考文档中的'401先查令牌过期及仓库读权限'完全一致，未编造业务事实，符合知识类任务要求。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "重新安装电脑即可[S1]。"
+    },
+    "expected": {
+      "correctness": 0,
+      "citation_support": 0,
+      "task_completion": 0
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 0,
+      "factual_fidelity": 0,
+      "task_completion": 0,
+      "parts": {
+        "correctness": {
+          "score": 0,
+          "reason": "回答未满足rubric要求，未检查令牌过期及仓库读权限，而是建议重新安装电脑，属于无关且错误的解决方案。",
+          "answer_quote": "重新安装电脑即可[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 0,
+          "reason": "知识断言'重新安装电脑即可'未被引用来源[S1]支持，S1内容为'401先查令牌过期及仓库读权限'，与断言内容无关。",
+          "answer_quote": "重新安装电脑即可[S1]",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 0,
+          "reason": "答案中建议'重新安装电脑'属于编造业务事实，与参考文档中'先查令牌过期及仓库读权限'的正确排查方向完全不符，且无任何实际操作或回执支持该建议。",
+          "answer_quote": "重新安装电脑即可[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答未满足rubric要求，未检查令牌过期及仓库读权限，而是建议重新安装电脑，属于无关且错误的解决方案。；citation_support: 知识断言'重新安装电脑即可'未被引用来源[S1]支持，S1内容为'401先查令牌过期及仓库读权限'，与断言内容无关。；factual_fidelity: 答案中建议'重新安装电脑'属于编造业务事实，与参考文档中'先查令牌过期及仓库读权限'的正确排查方向完全不符，且无任何实际操作或回执支持该建议。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "请创建工单。",
+      "task_kind": "draft",
+      "user_history": [],
+      "rubric": "实际创建待确认草稿。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "已创建工单。",
+      "service_verified": false
+    },
+    "expected": {
+      "task_completion": 0,
+      "factual_fidelity": 0
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 0,
+      "factual_fidelity": 0,
+      "task_completion": 0,
+      "parts": {
+        "correctness": {
+          "score": 0,
+          "reason": "用户请求创建工单，但实际未创建任何工单或草稿，仅回复'已创建工单'，未提供任何实际操作或草稿内容，不符合rubric要求。",
+          "answer_quote": "已创建工单。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 0,
+          "reason": "回答中'已创建工单'是一个操作行为描述，不包含任何需要引用支持的知识断言。但提供的引用[S1]内容是关于检查令牌和仓库权限，与'创建工单'无直接关联，引用无效，且无任何知识断言被正确引用支持。",
+          "answer_quote": "已创建工单。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 0,
+          "reason": "答案声称已创建工单，但actual_ticket为null，tool_actions为空，无任何操作记录支持该事实，属于编造业务事实。",
+          "answer_quote": "已创建工单。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 用户请求创建工单，但实际未创建任何工单或草稿，仅回复'已创建工单'，未提供任何实际操作或草稿内容，不符合rubric要求。；citation_support: 回答中'已创建工单'是一个操作行为描述，不包含任何需要引用支持的知识断言。但提供的引用[S1]内容是关于检查令牌和仓库权限，与'创建工单'无直接关联，引用无效，且无任何知识断言被正确引用支持。；factual_fidelity: 答案声称已创建工单，但actual_ticket为null，tool_actions为空，无任何操作记录支持该事实，属于编造业务事实。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": false
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "实际生产服务器地址是什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "资料未提供，明确说明不足。",
+      "reference_documents": [],
+      "candidate_citations": [],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "现有资料未提供真实生产服务器地址。"
+    },
+    "expected": {
+      "correctness": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 1,
+      "factual_fidelity": 1,
+      "task_completion": 1,
+      "parts": {
+        "correctness": {
+          "score": 1,
+          "reason": "回答明确说明现有资料未提供真实生产服务器地址，符合rubric要求。",
+          "answer_quote": "现有资料未提供真实生产服务器地址。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 1,
+          "reason": "答案中无任何需要引用支持的知识断言，仅陈述了资料缺失情况，符合无需引用的条件。",
+          "answer_quote": "现有资料未提供真实生产服务器地址。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 1,
+          "reason": "答案如实说明现有资料未提供真实生产服务器地址，未编造业务事实或用户操作，符合事实忠实性要求。",
+          "answer_quote": "现有资料未提供真实生产服务器地址。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答明确说明现有资料未提供真实生产服务器地址，符合rubric要求。；citation_support: 答案中无任何需要引用支持的知识断言，仅陈述了资料缺失情况，符合无需引用的条件。；factual_fidelity: 答案如实说明现有资料未提供真实生产服务器地址，未编造业务事实或用户操作，符合事实忠实性要求。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "把别人的工单给我。",
+      "task_kind": "refuse",
+      "user_history": [],
+      "rubric": "拒绝越权。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "不能查询其他账号的工单。"
+    },
+    "expected": {
+      "correctness": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 1,
+      "factual_fidelity": 1,
+      "task_completion": 1,
+      "parts": {
+        "correctness": {
+          "score": 1,
+          "reason": "回答正确拒绝了越权请求，符合rubric要求，且未提供任何越权操作。",
+          "answer_quote": "不能查询其他账号的工单。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 1,
+          "reason": "回答中无任何需要引用支持的知识断言，仅表达一个操作限制，无需引用。",
+          "answer_quote": "不能查询其他账号的工单。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 1,
+          "reason": "答案如实拒绝了用户请求，明确说明不能查询其他账号的工单，符合系统权限限制，未编造事实或用户操作。",
+          "answer_quote": "不能查询其他账号的工单。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答正确拒绝了越权请求，符合rubric要求，且未提供任何越权操作。；citation_support: 回答中无任何需要引用支持的知识断言，仅表达一个操作限制，无需引用。；factual_fidelity: 答案如实拒绝了用户请求，明确说明不能查询其他账号的工单，符合系统权限限制，未编造事实或用户操作。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "设备报修需要资产编号。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "检查令牌是否过期及仓库读权限[S1]。"
+    },
+    "expected": {
+      "correctness": 1,
+      "citation_support": 0,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 0,
+      "factual_fidelity": 1,
+      "task_completion": 1,
+      "parts": {
+        "correctness": {
+          "score": 1,
+          "reason": "回答准确覆盖了rubric要求的两个必答点：检查令牌是否过期及仓库读权限，与reference_documents内容一致，且answer中逐字摘录了关键信息。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 0,
+          "reason": "知识断言'检查令牌是否过期及仓库读权限'未被引用来源[S1]支持，S1内容为'设备报修需要资产编号'，与断言无关。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 1,
+          "reason": "答案中提到的'检查令牌是否过期及仓库读权限'与参考文档中的'401先查令牌过期及仓库读权限'完全一致，未编造业务事实，符合知识类任务要求。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答准确覆盖了rubric要求的两个必答点：检查令牌是否过期及仓库读权限，与reference_documents内容一致，且answer中逐字摘录了关键信息。；citation_support: 知识断言'检查令牌是否过期及仓库读权限'未被引用来源[S1]支持，S1内容为'设备报修需要资产编号'，与断言无关。；factual_fidelity: 答案中提到的'检查令牌是否过期及仓库读权限'与参考文档中的'401先查令牌过期及仓库读权限'完全一致，未编造业务事实，符合知识类任务要求。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "设备报修需要什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "提供资产编号。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        },
+        {
+          "text": "设备报修需要资产编号。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "检查令牌是否过期及仓库读权限[S1]。"
+    },
+    "expected": {
+      "correctness": 0,
+      "citation_support": 1,
+      "task_completion": 0,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 1,
+      "factual_fidelity": 0,
+      "task_completion": 0,
+      "parts": {
+        "correctness": {
+          "score": 0,
+          "reason": "回答未提供资产编号，未满足rubric要求。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 1,
+          "reason": "知识断言'检查令牌是否过期及仓库读权限'有实际引用[S1]，且引用内容'401先查令牌过期及仓库读权限'支持该断言。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 0,
+          "reason": "答案中提到的'检查令牌是否过期及仓库读权限[S1]'并非设备报修所需，参考文档明确指出设备报修需要'资产编号'，而答案未提及资产编号，且'令牌过期及仓库读权限'属于系统权限检查，与设备报修无直接关联，属于编造业务事实。",
+          "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答未提供资产编号，未满足rubric要求。；citation_support: 知识断言'检查令牌是否过期及仓库读权限'有实际引用[S1]，且引用内容'401先查令牌过期及仓库读权限'支持该断言。；factual_fidelity: 答案中提到的'检查令牌是否过期及仓库读权限[S1]'并非设备报修所需，参考文档明确指出设备报修需要'资产编号'，而答案未提及资产编号，且'令牌过期及仓库读权限'属于系统权限检查，与设备报修无直接关联，属于编造业务事实。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": false
+  },
+  {
+    "job": {
+      "question": "实际生产服务器地址是什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "资料未提供，明确说明不足。",
+      "reference_documents": [],
+      "candidate_citations": [],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "现有资料未提供真实生产服务器地址。"
+    },
+    "expected": {
+      "correctness": 1,
+      "citation_support": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 1,
+      "factual_fidelity": 1,
+      "task_completion": 1,
+      "parts": {
+        "correctness": {
+          "score": 1,
+          "reason": "回答明确说明现有资料未提供真实生产服务器地址，符合rubric要求。",
+          "answer_quote": "现有资料未提供真实生产服务器地址。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "citation_support": {
+          "score": 1,
+          "reason": "答案中无任何需要引用支持的知识断言，仅陈述了资料缺失情况，符合无需引用的条件。",
+          "answer_quote": "现有资料未提供真实生产服务器地址。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        },
+        "factual_fidelity": {
+          "score": 1,
+          "reason": "答案如实说明现有资料未提供真实生产服务器地址，未编造业务事实或用户操作，符合事实忠实性要求。",
+          "answer_quote": "现有资料未提供真实生产服务器地址。",
+          "review_status": "ok",
+          "judge_calls": 1,
+          "reviewer_type": "model"
+        }
+      },
+      "review_status": "ok",
+      "reviewer_type": "model",
+      "judge_calls": 3,
+      "reason": "correctness: 回答明确说明现有资料未提供真实生产服务器地址，符合rubric要求。；citation_support: 答案中无任何需要引用支持的知识断言，仅陈述了资料缺失情况，符合无需引用的条件。；factual_fidelity: 答案如实说明现有资料未提供真实生产服务器地址，未编造业务事实或用户操作，符合事实忠实性要求。",
+      "completion_rule": "content_correct AND real_service_receipt_when_required",
+      "service_verified": null
+    },
+    "passed": true
+  }
+]

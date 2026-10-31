@@ -1,0 +1,71 @@
+{
+  "fingerprint": "0ff704655355dbbe930d6eeb34e75dd4db804b392136b16961d74c11d5af6da8",
+  "dataset": {
+    "protocol": "git_support_v1_candidate",
+    "status": "frozen_candidate_pending_independent_review",
+    "files": {
+      "documents.jsonl": "e20fccc7329da64d1f9dc8b19814e97772b9993c626db37628acd0a5edaee025",
+      "dev.jsonl": "bac943cb546f5e9e1551bc78639e281892d2492f7ef6842a53fc4413cab2d70b",
+      "test.jsonl": "276f8e10b9b414a949a1482b3eca04eb9823355da081c4be988d6dfbfe6de3ff",
+      "catalog.jsonl": "ca970a921594933c2e93b640a571cd65c771b24d088ffa91882890f45ee39375",
+      "source_manifest.json": "fd341a47d685cfe6f0df333940d5a9d48e2fe09392bf3d0731257b1e423e03c6",
+      "authoring_spec.json": "31b2e000e18a03709cd1cac13923bc5887af7ff1f3a8f766e1194ecf4639b5a6"
+    },
+    "policy": "No test-driven threshold or prompt tuning. Label corrections require a new dataset version.",
+    "review": "Source quotes and schemas checked automatically; no independent human adjudication yet."
+  },
+  "ids": [
+    "acl-1-1",
+    "acl-1-2",
+    "acl-1-3",
+    "acl-1-4",
+    "aliases__1-1",
+    "aliases__1-2",
+    "bundling__1-2",
+    "clarify-1-1",
+    "clarify-1-2",
+    "clarify-1-3",
+    "clarify-1-4",
+    "first-time-setup__1-1",
+    "first-time-setup__1-2",
+    "first-time-setup__2-1",
+    "first-time-setup__2-2",
+    "first-time-setup__2-3",
+    "hooks__2-2",
+    "hooks__2-4",
+    "injection-dev-1",
+    "injection-dev-2",
+    "injection-dev-3",
+    "injection-dev-4",
+    "multi-dev-ssh-store-1",
+    "multi-dev-ssh-store-3",
+    "tagging__2-1",
+    "tagging__2-2",
+    "unknown-1-1",
+    "unknown-1-2",
+    "unknown-1-3",
+    "unknown-1-4",
+    "unknown-2-1",
+    "unknown-2-2",
+    "unknown-2-3",
+    "unknown-2-4"
+  ],
+  "arms": [
+    "fixed-rerank",
+    "official-agentpack"
+  ],
+  "grade": true,
+  "test_used": false,
+  "llm_model": "kb-qwen3-8b",
+  "upstream": {
+    "version": "1.0.0",
+    "haystack": "3.4.1",
+    "files": {
+      "__init__.py": "5d7f9d7673e830e1539966ceb51382bed0f125464a5b1f2c83c6ff79b6b54cf3",
+      "agent.py": "68aaf58b22416f60dd48945056b828380a94677898afc03fc184d248edbd619e",
+      "hooks.py": "d5d208a6c6d9c6b10697a3814c9f321779a676441c2ed88c8eaa24dc30169016",
+      "prompts.py": "1ddb82e3d654f1b118a2cb6d1c4b89730fce7bd86b2c6bbd928ee53094f0e16e",
+      "tools.py": "c10370db723d4719459a1d449d2c3fb9b7a3c1563525da0af2445403364558f1"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "revision": "4eb7226c1a06ec14b38adab8b18ed94c2c4d05f37f856cdf0121b9fe54d67e59",
+  "scope": "isolated_real_model_api_smoke_not_business_accuracy",
+  "cases": [
+    {
+      "question": "出差住宿每晚上限是多少？",
+      "status": "answered",
+      "answer": "出差住宿每晚的上限是600元 [S1]。",
+      "citations": 1,
+      "model_calls": 1,
+      "tool_calls": 0,
+      "extra_searches": 0
+    },
+    {
+      "question": "本公司生产 Git 服务器的真实网址是什么？",
+      "status": "insufficient",
+      "answer": "资料中未提及本公司生产 Git 服务器的真实网址。请提供相关资料或具体信息以便进一步回答。",
+      "citations": 0,
+      "model_calls": 1,
+      "tool_calls": 0,
+      "extra_searches": 0
+    }
+  ],
+  "directory": "/data/zjr/enterprise_kb_agent/artifacts/fixed_rag_release_20261030/smoke-1793335471786603533"
+}

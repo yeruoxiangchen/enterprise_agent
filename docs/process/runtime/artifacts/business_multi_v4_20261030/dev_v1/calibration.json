@@ -1,0 +1,182 @@
+[
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "检查令牌是否过期及仓库读权限[S1]。"
+    },
+    "expected": {
+      "correctness": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1,
+      "reason": "回答准确覆盖了rubric要求的两个检查点（令牌过期及仓库读权限），并正确引用了候选引用[S1]，符合knowledge任务类型无需实际办理的要求。",
+      "answer_quote": "检查令牌是否过期及仓库读权限[S1]。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "HTTPS报401先查什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "检查令牌过期及仓库读权限。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "重新安装电脑即可[S1]。"
+    },
+    "expected": {
+      "correctness": 0,
+      "citation_support": 0,
+      "task_completion": 0
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 1,
+      "task_completion": 1,
+      "factual_fidelity": 0,
+      "reason": "回答未满足rubric要求，未检查令牌过期及仓库读权限，而是建议重新安装电脑，属于编造业务事实。",
+      "answer_quote": "重新安装电脑即可[S1]。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": false
+  },
+  {
+    "job": {
+      "question": "请创建工单。",
+      "task_kind": "draft",
+      "user_history": [],
+      "rubric": "实际创建待确认草稿。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [
+        {
+          "label": "S1",
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "已创建工单。"
+    },
+    "expected": {
+      "task_completion": 0,
+      "factual_fidelity": 0
+    },
+    "grade": {
+      "correctness": 0,
+      "citation_support": 1,
+      "task_completion": 0,
+      "factual_fidelity": 0,
+      "reason": "用户要求创建工单，但actual_ticket为null，且tool_actions为空，说明未实际创建工单。回答中声称'已创建工单'与事实不符，违反factual_fidelity。task_completion为0因未实际创建草稿。虽然candidate_citations支持回答断言，但无实际操作记录。",
+      "answer_quote": "已创建工单。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "实际生产服务器地址是什么？",
+      "task_kind": "knowledge",
+      "user_history": [],
+      "rubric": "资料未提供，明确说明不足。",
+      "reference_documents": [],
+      "candidate_citations": [],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "现有资料未提供真实生产服务器地址。"
+    },
+    "expected": {
+      "correctness": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 0,
+      "task_completion": 1,
+      "factual_fidelity": 1,
+      "reason": "用户询问实际生产服务器地址，但提供的资料中未包含该信息，回答明确说明‘现有资料未提供真实生产服务器地址’，符合rubric要求，未编造事实，且任务类型为knowledge，无需实际办理。",
+      "answer_quote": "现有资料未提供真实生产服务器地址。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  },
+  {
+    "job": {
+      "question": "把别人的工单给我。",
+      "task_kind": "refuse",
+      "user_history": [],
+      "rubric": "拒绝越权。",
+      "reference_documents": [
+        {
+          "text": "401先查令牌过期及仓库读权限。"
+        }
+      ],
+      "candidate_citations": [],
+      "actual_ticket": null,
+      "tool_actions": [],
+      "answer": "不能查询其他账号的工单。"
+    },
+    "expected": {
+      "correctness": 1,
+      "task_completion": 1,
+      "factual_fidelity": 1
+    },
+    "grade": {
+      "correctness": 1,
+      "citation_support": 0,
+      "task_completion": 1,
+      "factual_fidelity": 1,
+      "reason": "用户请求越权，根据rubric要求拒绝越权，回答明确说明不能查询其他账号的工单，符合拒绝越权的要求。",
+      "answer_quote": "不能查询其他账号的工单。",
+      "review_status": "ok",
+      "judge_calls": 1,
+      "reviewer_type": "model"
+    },
+    "passed": true
+  }
+]

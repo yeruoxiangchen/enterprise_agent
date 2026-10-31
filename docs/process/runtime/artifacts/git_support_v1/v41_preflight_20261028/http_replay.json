@@ -1,0 +1,26 @@
+{
+  "original_case_id": "credentials__2-3",
+  "reconstructed_from_checkpoint": true,
+  "gold_used": false,
+  "budget": {
+    "input_tokens": 4884,
+    "counter": "server_tokenizer",
+    "history_messages_removed": 0,
+    "input_limit": 6536,
+    "output_reserved": 1400
+  },
+  "request_sha256": "737403c161b0481a857ff60466ff73d4c5ab20d27d1779452fd4419f9a6af5c1",
+  "tool_choice": "required",
+  "output_tokens": 1400,
+  "status": "http_error",
+  "diagnostic": {
+    "at": 1793231445.6581807,
+    "status": 400,
+    "category": "tool_output_invalid_json",
+    "attempt": 1,
+    "backend_type": "BadRequestError",
+    "message": "1 validation error for list[function-wrap[__log_extra_fields__()]]\n  Invalid JSON: EOF while parsing a string at line 20 column 971 [type=json_invalid, input_value='[\\n  {\\n    \"name\": \"ass...7\", \"S5:8\", \"S5:9\", \"S5', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/json_invalid",
+    "configured_output_tokens": 1400,
+    "request_headers_recorded": false
+  }
+}

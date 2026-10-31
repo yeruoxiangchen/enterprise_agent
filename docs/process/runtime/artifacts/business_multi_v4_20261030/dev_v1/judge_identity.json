@@ -1,0 +1,22 @@
+{
+  "models": {
+    "judge": {
+      "path": "/data/zjr/models/Qwen3-VL-8B-Instruct",
+      "metadata_sha256": {
+        "config.json": "5cd452860dc1e9c29dd71cc3cef7f39b338b7a40793f7a260655c2d3568f3661",
+        "model.safetensors.index.json": "520b2e05079402e9468a8701d03d1154d14b2599593afb6effa7fb60c1bff070",
+        "tokenizer_config.json": "c2da771801886ad9ae98181793ffd3dfb7f1af30f6f7c6a4e15d7dbba52e2399"
+      }
+    },
+    "answer": {
+      "path": "/data/zjr/enterprise_kb_agent/models/Qwen3-8B",
+      "metadata_sha256": {
+        "config.json": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+        "model.safetensors.index.json": "f9fdbcb91c23971c13ec5d5f2573d2349e8f61f2f049371ec699281748fdb1bc",
+        "tokenizer_config.json": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101"
+      }
+    }
+  },
+  "different_weight_files": true,
+  "limitation": "Same Qwen family; different checkpoints are not independent human gold."
+}

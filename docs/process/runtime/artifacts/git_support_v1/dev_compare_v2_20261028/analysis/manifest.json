@@ -1,0 +1,126 @@
+{
+  "generated_at": "2026-10-28T08:17:22.802161+00:00",
+  "inputs": {
+    "/data/zjr/enterprise_kb_agent/datasets/git_support_zh_v1/dev.jsonl": {
+      "bytes": 150512,
+      "sha256": "bac943cb546f5e9e1551bc78639e281892d2492f7ef6842a53fc4413cab2d70b",
+      "mtime_ns": 1793167433839169075
+    },
+    "/data/zjr/enterprise_kb_agent/datasets/git_support_zh_v1/freeze.json": {
+      "bytes": 873,
+      "sha256": "22324b9e7f49573ebcc12bf7ba2715ed16c90310b09f224b4166d1bcdc2d40da",
+      "mtime_ns": 1793167472443194745
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/fixed-bm25/predictions.jsonl": {
+      "bytes": 1633505,
+      "sha256": "9771dde522960fad539c9ddba035a6d004908466bebd85cf27b024b38a59e474",
+      "mtime_ns": 1793169066400254655
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/fixed-bm25/config.json": {
+      "bytes": 4168,
+      "sha256": "4f03105d8c25c3db5681042eb049ea36d63334190036c7ede550f991a4f48500",
+      "mtime_ns": 1793168507491883006
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/fixed-bm25/report.json": {
+      "bytes": 15919,
+      "sha256": "39428e85cfe4b82f2ce64a41a41887a1f9159fb7c87dfb958dd8ba1593a58c1d",
+      "mtime_ns": 1793169066724254871
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/fixed-bm25/status.json": {
+      "bytes": 176,
+      "sha256": "4e6e7ccbc53a84dce2e3f8d6e9216c2022c1ad868e1584ffe4d8fc499f680cd9",
+      "mtime_ns": 1793169066736254879
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/agent-bm25/predictions.jsonl": {
+      "bytes": 1751819,
+      "sha256": "783a20f25913967050593bc00d7aa35007fceeb47bce30f4c17ac2eaf28af4e5",
+      "mtime_ns": 1793170214017017770
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/agent-bm25/config.json": {
+      "bytes": 4168,
+      "sha256": "71476f97e3671c4b04e52b2cf88abafb66587aebd8c2d872eb36996cf72062e8",
+      "mtime_ns": 1793169067016255065
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/agent-bm25/report.json": {
+      "bytes": 16188,
+      "sha256": "5701f22c1d622b0b02b29cefed7c681e687248b6049a29b68b14cd1b0979538d",
+      "mtime_ns": 1793170214349017991
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_20261028/agent-bm25/status.json": {
+      "bytes": 176,
+      "sha256": "30f27ddb4b0bc6c106ea22e65b1470c80cc5ea6950eaf28bd8ca717973fe422d",
+      "mtime_ns": 1793170214353017993
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/fixed-bm25/predictions.jsonl": {
+      "bytes": 1642065,
+      "sha256": "0843aae666b9d6c9ee9fe779e00aadbe0837739ea5368941d40df735a77c1f36",
+      "mtime_ns": 1793173273531052213
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/fixed-bm25/config.json": {
+      "bytes": 4192,
+      "sha256": "391dfec67aed8b05e7f68f51848786a3329bfd552d60bb50f32818b4521c8e21",
+      "mtime_ns": 1793172746066701472
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/fixed-bm25/report.json": {
+      "bytes": 15967,
+      "sha256": "330d609a962307204ef381869f03afd8743495f0273f4fb2969af480290919e0",
+      "mtime_ns": 1793173273815052402
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/fixed-bm25/status.json": {
+      "bytes": 176,
+      "sha256": "aab6bad34683ad2d11239c76b2439c09a4bf1d84a10be215171d7989f2b08e9e",
+      "mtime_ns": 1793173273827052410
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/agent-bm25/predictions.jsonl": {
+      "bytes": 1677799,
+      "sha256": "9d183d1eb728d3d99c862b775a8136be1c1a4bcece188bed5abd3d6a1a4d86c3",
+      "mtime_ns": 1793174727396018961
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/agent-bm25/config.json": {
+      "bytes": 4200,
+      "sha256": "122f4bbc76df176c7b9b42bc8a7c21a7492dca303045324ff17e23cb83e9973f",
+      "mtime_ns": 1793173274083052580
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/agent-bm25/report.json": {
+      "bytes": 15978,
+      "sha256": "c6316efed685d139e16fc0e59d6e9bc9479e27bb72f06d993ee2994e682f45aa",
+      "mtime_ns": 1793174727720019176
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/agent-bm25/status.json": {
+      "bytes": 176,
+      "sha256": "0fd2c0a2a8775b890cc64046351d2d6d2bfda8d5a59309b500e4fc807d2b0648",
+      "mtime_ns": 1793174727732019183
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/comparison/comparison.json": {
+      "bytes": 30574,
+      "sha256": "a1a4a7e84ac53661f4e49dfc39144ac88bb30b685b55225cfe05a06547379607",
+      "mtime_ns": 1793174728880019948
+    },
+    "/data/zjr/enterprise_kb_agent/artifacts/git_support_v1/dev_compare_v2_20261028/queue_state.json": {
+      "bytes": 97,
+      "sha256": "60361a24bedfbd5dca6250d3faf2b5fb8eddbaa99e65f0900da4b55ba8c41516",
+      "mtime_ns": 1793174728908019966
+    },
+    "/data/zjr/enterprise_kb_agent/datasets/git_support_zh_v1/documents.jsonl": {
+      "bytes": 31578,
+      "sha256": "e20fccc7329da64d1f9dc8b19814e97772b9993c626db37628acd0a5edaee025",
+      "mtime_ns": 1793166030886236172
+    },
+    "/data/zjr/enterprise_kb_agent/datasets/git_support_zh_v1/catalog.jsonl": {
+      "bytes": 131011,
+      "sha256": "ca970a921594933c2e93b640a571cd65c771b24d088ffa91882890f45ee39375",
+      "mtime_ns": 1793167433667168961
+    }
+  },
+  "script": "/home/zjr/Tracker/internship_project_lab/enterprise_kb_agent/scripts/review_eval_v2_20261028.py",
+  "script_sha256": "79f580027776199f3965da5001babcbed283b04b786812e23cb80c336fb9c00c",
+  "outputs": [
+    "report.md",
+    "analysis.json",
+    "case_audit.jsonl",
+    "case_examples.json"
+  ],
+  "inference_calls": 0,
+  "gold_labels_modified": false,
+  "independent_grading_performed": false
+}

@@ -1,0 +1,20 @@
+{
+  "pid": 75845,
+  "start_ticks": "1311124872",
+  "updated_at": 1793347626.6345527,
+  "status": "complete_with_errors",
+  "stage": null,
+  "completed": {
+    "regression": 17,
+    "fixed": 23,
+    "single": 23,
+    "multi": 23
+  },
+  "totals": {
+    "regression": 17,
+    "fixed": 23,
+    "single": 23,
+    "multi": 23
+  },
+  "report": "/data/zjr/enterprise_kb_agent/artifacts/business_multi_v2_20261030/dev_v1/report.md"
+}

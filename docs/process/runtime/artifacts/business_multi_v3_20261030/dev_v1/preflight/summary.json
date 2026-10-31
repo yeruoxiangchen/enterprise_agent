@@ -1,0 +1,56 @@
+{
+  "smoke": {
+    "records": 8,
+    "metrics": {
+      "execution": {
+        "passed": 0,
+        "applicable": 8
+      },
+      "service_complete": {
+        "passed": 0,
+        "applicable": 2
+      },
+      "draft_user_quote_integrity": {
+        "passed": 0,
+        "applicable": 0
+      },
+      "permission_checks": {
+        "passed": 8,
+        "applicable": 8
+      },
+      "no_auto_submission": {
+        "passed": 8,
+        "applicable": 8
+      }
+    },
+    "model_calls": 8,
+    "elapsed_seconds": 81.57892907597125,
+    "p50_seconds": 6.8317839885130525,
+    "p95_seconds": 34.10941302962601,
+    "conversation_execution_complete": 0,
+    "conversations": 6,
+    "semantic_model_review": {
+      "correctness": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 8
+      },
+      "citation_support": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 8
+      },
+      "task_completion": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 8
+      },
+      "factual_fidelity": {
+        "pass": 0,
+        "fail": 0,
+        "unknown": 8
+      }
+    },
+    "semantic_note": "model review, not independent human accuracy"
+  }
+}

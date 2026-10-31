@@ -1,0 +1,63 @@
+{
+  "status": "passed",
+  "url": "http://127.0.0.1:8774",
+  "load": [
+    {
+      "concurrency": 1,
+      "requests": 24,
+      "success": 24,
+      "p50_seconds": 0.03470973018556833,
+      "p95_seconds": 0.058165499940514565,
+      "observed_rps": 25.594266827862977,
+      "scope": "authenticated read APIs, client creation included; not model generation throughput"
+    },
+    {
+      "concurrency": 4,
+      "requests": 24,
+      "success": 24,
+      "p50_seconds": 0.12019506189972162,
+      "p95_seconds": 0.145054267719388,
+      "observed_rps": 33.05223928881957,
+      "scope": "authenticated read APIs, client creation included; not model generation throughput"
+    },
+    {
+      "concurrency": 8,
+      "requests": 24,
+      "success": 24,
+      "p50_seconds": 0.24439659900963306,
+      "p95_seconds": 0.2732255030423403,
+      "observed_rps": 31.040381531183595,
+      "scope": "authenticated read APIs, client creation included; not model generation throughput"
+    }
+  ],
+  "real_questions": [
+    {
+      "run_id": "188ea736681349498976ffaa0ecc373b",
+      "status": "answered",
+      "seconds": 18.451157415285707,
+      "has_citations": true
+    },
+    {
+      "run_id": "b442157a6b27410db47945d967d40066",
+      "status": "answered",
+      "seconds": 28.673608860000968,
+      "has_citations": true
+    }
+  ],
+  "browser": {
+    "status": "passed",
+    "url": "http://127.0.0.1:8774",
+    "ticket_id": "76e45608a3464c9bbd4cc7ed7b36f304",
+    "checks": [
+      "login",
+      "business_badge",
+      "real_model_draft",
+      "trace",
+      "confirm",
+      "accept",
+      "resolve"
+    ],
+    "page_errors": [],
+    "at": 1793361387.8339355
+  }
+}
