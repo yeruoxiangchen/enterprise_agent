@@ -65,7 +65,7 @@ function showEvidence(run) {
     if (e.kind === 'business_worker') { title=domains[e.payload.domain]+' Agent'; detail=e.payload.question; }
     if (e.kind === 'business_search') { title='领域检索'; detail=domains[e.payload.domain]+' · '+e.payload.query+' · '+e.payload.sources.length+'条证据'; }
     if (e.kind === 'business_skill') { title='加载业务规范'; detail=domains[e.payload.domain]; }
-    if (e.kind === 'business_experience') { title='参考处理经验'; detail=e.payload.ids.join('、'); }
+    if (e.kind === 'business_experience') { title='参考处理经验'; detail=domains[e.payload.domain]+' · '+e.payload.ids.length+'条相关经验'; }
     if (e.kind === 'business_completed') { title='领域处理完成'; detail=domains[e.payload.domain]+' · '+(statuses[e.payload.status]||e.payload.status); }
     if (e.kind === 'business_model') { title='模型处理'; detail='累计 '+e.payload.calls+' 次请求'; }
     if (e.kind === 'ticket_draft') { title='工单草稿待确认'; detail=e.payload.title; }

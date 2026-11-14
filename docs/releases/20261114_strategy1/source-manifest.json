@@ -503,8 +503,8 @@
     },
     {
       "path": "kb/web/app.js",
-      "bytes": 19867,
-      "sha256": "fb23df1a5970a5a71e2de979b97a86b644caff9f340d1a245ecf5275e05497e0"
+      "bytes": 19913,
+      "sha256": "1302a37e1e34e2b27d0a6121152e91d80ddcc6adcbff16f59a10a569ad403b36"
     },
     {
       "path": "kb/web/incidents.css",
