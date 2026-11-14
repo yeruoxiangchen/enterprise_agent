@@ -20,6 +20,10 @@ class Settings:
     max_turns: int = 6
     max_tool_calls: int = 12
     agent_policy: str = field(default_factory=lambda: os.getenv("KB_AGENT_POLICY", "fixed_rag_v1"))
+    supervisor_strategy: str = field(default_factory=lambda: os.getenv('KB_SUPERVISOR_STRATEGY', 'baseline'))
+    experience_path: str = field(default_factory=lambda: os.getenv('KB_EXPERIENCE_PATH', ''))
+    incident_ocr_bin: str = field(default_factory=lambda: os.getenv('KB_INCIDENT_OCR_BIN', '/data/zjr/enterprise_kb_agent/tools/tesseract/usr/bin/tesseract'))
+    incident_ocr_languages: str = field(default_factory=lambda: os.getenv('KB_INCIDENT_OCR_LANGUAGES', 'eng+chi_sim'))
     reranker_path: str = field(default_factory=lambda: os.getenv("KB_RERANKER_PATH", ""))
     reranker_python: str = field(default_factory=lambda: os.getenv("KB_RERANK_PYTHON", "/data/zjr/deepsearch_rl/venv/bin/python"))
     reranker_candidates: int = 20

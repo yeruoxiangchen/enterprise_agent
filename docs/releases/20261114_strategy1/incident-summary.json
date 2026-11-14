@@ -1,0 +1,15 @@
+{
+  "identical_inputs_r1_r3": true,
+  "fixtures": 12,
+  "field_recall": 1.0,
+  "field_precision": 1.0,
+  "grounded_cases": 12,
+  "ticket_lifecycles_passed": 12,
+  "timing_method": "linear percentile, inclusive endpoints",
+  "log_analysis_seconds_p50": 0.0010999999999999998,
+  "log_analysis_seconds_p95": 0.0022,
+  "screenshot_analysis_seconds_p50": 0.38134999999999997,
+  "screenshot_analysis_seconds_p95": 0.40287500000000004,
+  "full_lifecycle_seconds_p50": 4.123708714731038,
+  "full_lifecycle_seconds_p95": 7.860562362987548
+}

@@ -16,6 +16,14 @@ export NO_PROXY="127.0.0.1,localhost,::1${NO_PROXY:+,$NO_PROXY}" no_proxy="127.0
 export PYTHONPATH="$CRM_DATA_ROOT/business-packages-v2:$CRM_DATA_ROOT/benchmarks/crm-agent-bench/src:$PROJECT_DIR:$PROJECT_DIR/scripts"
 umask 077
 cd "$PROJECT_DIR"
+if [[ "${1:-status}" == experience ]]; then
+  shift
+  exec "$CRM_DATA_ROOT/venv-agentpack/bin/python" -B "$PROJECT_DIR/scripts/experience_memory.py" "$@"
+fi
+if [[ "${1:-status}" == incident-acceptance ]]; then
+  shift
+  exec "$CRM_DATA_ROOT/venv-agentpack/bin/python" -B -u "$PROJECT_DIR/scripts/incident_acceptance.py" "$@"
+fi
 if [[ "${1:-status}" == acceptance ]]; then
   shift
   if [[ "${1:-status}" == watch ]]; then

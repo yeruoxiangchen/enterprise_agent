@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "page_errors": [],
+  "lookup_run_id": "637bf9befdbd4121af0e63c8073bdb10",
+  "ticket_id": "29f1abb0edea4f8fb00eb5ed651a8324",
+  "transitions": [
+    "submitted",
+    "processing",
+    "resolved"
+  ],
+  "scope": "real browser and authenticated backend; CPU OCR and extractive knowledge lookup",
+  "artifacts": "/data/zjr/enterprise_kb_agent/artifacts/strategy1_20261114/incidents_r3/browser"
+}

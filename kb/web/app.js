@@ -18,7 +18,7 @@ async function enter() {
   document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', me.role !== 'admin'));
   $('#mode-badge').textContent = me.workflow === 'business_multi' ? '多 Agent 企业服务' : me.workflow === 'fixed_rag' ? '知识库问答' : me.mode === 'agent' ? '模型问答' : '原文检索';
   $('#mode-hint').textContent = me.workflow === 'business_multi' ? '技术支持 · 制度流程 · 服务办理；工单需确认提交' : me.workflow === 'fixed_rag' ? '先检索相关资料，再生成带来源的回答；资料不足时说明不足' : me.mode === 'agent' ? '根据已读取的文档生成回答' : '当前提供原文摘录，未启用模型生成';
-  $('#ticket-nav').classList.toggle('hidden', me.workflow !== 'business_multi');
+  $('#ticket-nav').classList.remove('hidden');
   await Promise.all([refreshBases(), refreshHistory()]);
 }
 async function refreshBases() {
@@ -65,6 +65,7 @@ function showEvidence(run) {
     if (e.kind === 'business_worker') { title=domains[e.payload.domain]+' Agent'; detail=e.payload.question; }
     if (e.kind === 'business_search') { title='领域检索'; detail=domains[e.payload.domain]+' · '+e.payload.query+' · '+e.payload.sources.length+'条证据'; }
     if (e.kind === 'business_skill') { title='加载业务规范'; detail=domains[e.payload.domain]; }
+    if (e.kind === 'business_experience') { title='参考处理经验'; detail=e.payload.ids.join('、'); }
     if (e.kind === 'business_completed') { title='领域处理完成'; detail=domains[e.payload.domain]+' · '+(statuses[e.payload.status]||e.payload.status); }
     if (e.kind === 'business_model') { title='模型处理'; detail='累计 '+e.payload.calls+' 次请求'; }
     if (e.kind === 'ticket_draft') { title='工单草稿待确认'; detail=e.payload.title; }

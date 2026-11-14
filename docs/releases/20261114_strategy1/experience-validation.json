@@ -1,0 +1,10 @@
+{
+  "feedback_idempotent": true,
+  "processed_outcomes": 1,
+  "observed_helpful_total": 1,
+  "note": "observed outcomes, not a causal attribution",
+  "unreviewed_repeated_updates_stay_quarantined": true,
+  "explicit_review_activates_entry": true,
+  "incremental_update_preserves_feedback": true,
+  "entries_after_incremental_update": 8
+}

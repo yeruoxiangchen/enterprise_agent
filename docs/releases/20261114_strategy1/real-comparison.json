@@ -1,0 +1,132 @@
+{
+  "scope": "four previously seen public ITSM development tasks; shared Qwen3-8B actor/user/judge; one trial per mode; same GPU1",
+  "runs": {
+    "strategy1_baseline4_20261114_r1": {
+      "passed": 2,
+      "completed": 4,
+      "unknown": 0,
+      "known_harness_failures": 0,
+      "total_tokens": 76314,
+      "model_calls": 52,
+      "tool_calls": 8,
+      "task_active_seconds_p50": 13.627072520554066,
+      "task_active_seconds_p95": 35.62417638907208,
+      "tokens_per_success": 38157.0,
+      "committed_write_calls": 3,
+      "resources_released": true,
+      "runtime_seconds": 294.785852432251
+    },
+    "strategy1_experience4_20261114_r1": {
+      "passed": 3,
+      "completed": 4,
+      "unknown": 0,
+      "known_harness_failures": 0,
+      "total_tokens": 40719,
+      "model_calls": 30,
+      "tool_calls": 5,
+      "task_active_seconds_p50": 10.891399114392698,
+      "task_active_seconds_p95": 12.102687531989067,
+      "tokens_per_success": 13573.0,
+      "committed_write_calls": 4,
+      "resources_released": true,
+      "runtime_seconds": 180.81819987297058
+    },
+    "strategy1_experience4_20261114_r2": {
+      "passed": 4,
+      "completed": 4,
+      "unknown": 0,
+      "known_harness_failures": 0,
+      "total_tokens": 61742,
+      "model_calls": 40,
+      "tool_calls": 11,
+      "task_active_seconds_p50": 12.75698369462043,
+      "task_active_seconds_p95": 22.182871397584673,
+      "tokens_per_success": 15435.5,
+      "committed_write_calls": 5,
+      "resources_released": true,
+      "runtime_seconds": 264.2796277999878
+    }
+  },
+  "pairs": [
+    {
+      "task": "itsm_hours_011_comment_then_status_resolved",
+      "baseline_passed": true,
+      "strategy_passed": true,
+      "same_opening": true,
+      "baseline_tokens": 10234,
+      "strategy_tokens": 12158,
+      "strategy_events": {
+        "strategy_experience": 4,
+        "strategy_outcome": 2
+      },
+      "strategy_backend_checks": {
+        "state_passed": true,
+        "args_passed": true,
+        "order_passed": true,
+        "collateral_passed": null,
+        "forbidden_passed": null
+      }
+    },
+    {
+      "task": "itsm_hours_019_ambiguous_ticket_close",
+      "baseline_passed": false,
+      "strategy_passed": true,
+      "same_opening": true,
+      "baseline_tokens": 19752,
+      "strategy_tokens": 30495,
+      "strategy_events": {
+        "strategy_experience": 8,
+        "strategy_outcome": 4,
+        "strategy_stall_hint": 1
+      },
+      "strategy_backend_checks": {
+        "state_passed": true,
+        "args_passed": true,
+        "order_passed": null,
+        "collateral_passed": null,
+        "forbidden_passed": null
+      }
+    },
+    {
+      "task": "itsm_hours_022_precise_multiturn_comment_and_status",
+      "baseline_passed": false,
+      "strategy_passed": true,
+      "same_opening": true,
+      "baseline_tokens": 41662,
+      "strategy_tokens": 13960,
+      "strategy_events": {
+        "strategy_experience": 2,
+        "strategy_outcome": 2
+      },
+      "strategy_backend_checks": {
+        "state_passed": true,
+        "args_passed": true,
+        "order_passed": true,
+        "collateral_passed": null,
+        "forbidden_passed": true
+      }
+    },
+    {
+      "task": "itsm_ops_001_lookup_ticket_by_id",
+      "baseline_passed": true,
+      "strategy_passed": true,
+      "same_opening": true,
+      "baseline_tokens": 4666,
+      "strategy_tokens": 5129,
+      "strategy_events": {
+        "strategy_outcome": 1
+      },
+      "strategy_backend_checks": {
+        "state_passed": null,
+        "args_passed": true,
+        "order_passed": null,
+        "collateral_passed": null,
+        "forbidden_passed": null
+      }
+    }
+  ],
+  "same_openings": 4,
+  "token_reduction_percent": 19.094792567549856,
+  "model_call_reduction_percent": 23.076923076923073,
+  "tokens_per_success_reduction_percent": 59.54739628377492
+}

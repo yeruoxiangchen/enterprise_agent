@@ -96,6 +96,9 @@ class Database:
               run_id TEXT REFERENCES runs(id), user_id TEXT REFERENCES users(id),
               rating INTEGER CHECK(rating IN (-1,1)), comment TEXT, created_at REAL,
               PRIMARY KEY(run_id,user_id));
+            CREATE TABLE IF NOT EXISTS incident_evidence(
+              id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
+              payload TEXT NOT NULL, run_id TEXT REFERENCES runs(id), created_at REAL NOT NULL);
             CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
             CREATE INDEX IF NOT EXISTS idx_events_run ON events(run_id,id);
             CREATE INDEX IF NOT EXISTS idx_runs_pending ON runs(status,created_at);

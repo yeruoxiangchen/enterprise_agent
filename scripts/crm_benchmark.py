@@ -34,6 +34,7 @@ REQUESTED_TASK_IDS = ()
 SHARED_EVAL_MODEL = False
 USER_STRATEGY = 'verified'
 FULL_ITSM = False
+SUPERVISOR_STRATEGY = 'baseline'
 
 
 def read(path):
@@ -49,7 +50,8 @@ def source_fingerprints():
     files += [PROJECT/'scripts'/name for name in ('crm_benchmark.py', 'crm_bench_services.py',
                                                 'crm_bench_control.py', 'crm_bench_run.sh', 'crm_bench_resume.py',
                                                 'crm_acceptance.py', 'crm_small_check.py',
-                                                'crm_latency_probe.py', 'crm_latency_profile.py')]
+                                                'crm_latency_probe.py', 'crm_latency_profile.py',
+                                                'experience_memory.py', 'incident_acceptance.py', 'setup_incident_ocr.sh')]
     files += [p for p in (UPSTREAM/'src/harness').rglob('*.py')]
     files += [UPSTREAM/p for p in ('src/tasks/itsm.yaml', 'src/agents/itsm.yaml',
                                  'src/tasks/policies/itsm_policy.md', 'benchmark/benchmark.yaml',
@@ -175,6 +177,7 @@ async def preflight(target, gpus, resume_from=None):
                         skip_duplicate_integration_trials=True,
                         score_scope='complete public ITSM 66-task catalogue; local evaluation protocol')
     protocol['shared_evaluation_model'] = SHARED_EVAL_MODEL
+    protocol['supervisor_strategy'] = SUPERVISOR_STRATEGY
     if SHARED_EVAL_MODEL:
         protocol.update(independent_actor_and_judge_weights=False,
                         user_model=protocol['actor'], judge_model=protocol['actor'],
@@ -311,7 +314,8 @@ async def evaluate_trial(target, protocol, services, task, trial, arm, *, smoke=
     settings = Settings(root=folder, mode='agent', llm_url=actor['url']+'/v1',
                         llm_model=actor['model'], llm_key='local', tokenize_url=actor['url']+'/tokenize',
                         context_tokens=protocol['context_tokens'], output_tokens=protocol['output_tokens'],
-                        timeout=protocol['http_timeout_seconds'])
+                        timeout=protocol['http_timeout_seconds'],
+                        supervisor_strategy=protocol.get('supervisor_strategy', 'baseline'))
     adapter = create_trial_adapter(arm, create_environment('itsm', task.initial_state), settings, protocol, seed, folder)
     # These clients and task assertions remain exclusively on the evaluation side.
     user_client = LocalEvalClient(aux['url'], aux['model'], folder/'user-model.jsonl', seed,
@@ -645,7 +649,7 @@ async def live_probe(target, gpus, accept=False):
 
 
 def main():
-    global ARMS, HARNESS_VERSION, RUN_TRIALS, MAX_RUN_HOURS, EXECUTION_ADAPTER, REQUESTED_TASK_IDS, SHARED_EVAL_MODEL, USER_STRATEGY, FULL_ITSM
+    global ARMS, HARNESS_VERSION, RUN_TRIALS, MAX_RUN_HOURS, EXECUTION_ADAPTER, REQUESTED_TASK_IDS, SHARED_EVAL_MODEL, USER_STRATEGY, FULL_ITSM, SUPERVISOR_STRATEGY
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=('launch', 'run', 'status', 'stop', 'preflight', 'report', 'probe'))
     parser.add_argument('--tag', default='itsm66_v10')
@@ -656,6 +660,7 @@ def main():
     parser.add_argument('--harness-version', choices=('v5', 'v6'), default='v5')
     parser.add_argument('--trials', type=int, choices=(1, 2, 3), default=3)
     parser.add_argument('--execution-adapter', choices=('v2', 'v3', 'v4'), default='v3')
+    parser.add_argument('--supervisor-strategy', choices=('baseline', 'recovery', 'experience'), default='baseline')
     parser.add_argument('--arms', nargs='+', choices=('single', 'multi_v5', 'single_v6', 'multi_v6', 'official_graph'),
                         help='Explicit arms for a small run; defaults to the paired protocol')
     parser.add_argument('--task-ids', help='Comma-separated public task IDs for a small diagnostic run')
@@ -671,11 +676,14 @@ def main():
         parser.error('--max-hours must be positive and at most 72')
     RUN_TRIALS, MAX_RUN_HOURS = args.trials, args.max_hours
     EXECUTION_ADAPTER = args.execution_adapter
+    SUPERVISOR_STRATEGY = args.supervisor_strategy
     REQUESTED_TASK_IDS = tuple(item.strip() for item in (args.task_ids or '').split(',') if item.strip())
     HARNESS_VERSION = args.harness_version
     SHARED_EVAL_MODEL = args.shared_eval_model
     USER_STRATEGY = args.user_strategy
     FULL_ITSM = args.full_itsm
+    if SUPERVISOR_STRATEGY != 'baseline' and (HARNESS_VERSION != 'v6' or EXECUTION_ADAPTER != 'v4'):
+        parser.error('--supervisor-strategy requires v6/v4')
     shared_scope_ok = ((0 < len(REQUESTED_TASK_IDS) <= 4 and not FULL_ITSM)
                        or (FULL_ITSM and not REQUESTED_TASK_IDS))
     if SHARED_EVAL_MODEL and (HARNESS_VERSION != 'v6' or EXECUTION_ADAPTER != 'v4'
@@ -735,7 +743,8 @@ def main():
         if args.action == 'launch':
             command = [sys.executable, '-B', '-u', __file__, 'run', '--tag', args.tag, '--gpus', args.gpus,
                        '--harness-version', HARNESS_VERSION, '--trials', str(RUN_TRIALS),
-                       '--execution-adapter', EXECUTION_ADAPTER]
+                       '--execution-adapter', EXECUTION_ADAPTER,
+                       '--supervisor-strategy', SUPERVISOR_STRATEGY]
             if REQUESTED_TASK_IDS:
                 command += ['--task-ids', ','.join(REQUESTED_TASK_IDS)]
             if args.arms:

@@ -63,7 +63,7 @@ class ConversationReads(ReadProgress):
         return result
 
 
-def pending_context(pending, question, last_reply=''):
+def pending_context(pending, question, last_reply='', preserve_clarification=False):
     if not pending:
         return None, False
     clean = mask_quoted(question)
@@ -95,7 +95,10 @@ def pending_context(pending, question, last_reply=''):
     followup = re.search(r'\b(?:confirm|confirmation|complete|completed|finish|finished|proceed|continue|again|retry|still|done|reassigned|assigned|resolved|updated|authorization)\b|继续|确认|完成|重试', clean, re.I)
     field_reply = requested_field and (new_ids or re.search(
         r'\b(?:my (?:user\s*id|username|id)|(?:the )?(?:assignee|user\s*id|username) (?:is|:))\b', clean, re.I))
-    if is_continuation(question) or (bare and (requested_field or re.search(r'[.@]', question))) or field_reply or current or followup:
+    clarification = preserve_clarification and re.search(
+        r'\b(?:which|what)\b[^\n?.]{0,70}\b(?:ticket|request|action|step|closing|deleting|changing|doing)\b'
+        r'|\b(?:the|that|same)\s+\w+[\w -]{0,25}\s+one\b|哪个(?:工单|任务)|刚才(?:那个|的)', clean, re.I)
+    if is_continuation(question) or (bare and (requested_field or re.search(r'[.@]', question))) or field_reply or current or followup or clarification:
         return pending, False
     return None, False
 

@@ -58,6 +58,13 @@ class Feedback(BaseModel):
     comment: str = Field(default="", max_length=2000)
 
 
+class IncidentDraft(BaseModel):
+    digest: str = Field(pattern=r'^[0-9a-f]{64}$')
+    title: str = Field(min_length=1, max_length=120)
+    description: str = Field(min_length=1, max_length=2700)
+    confirmed: bool = False
+
+
 def create_app(settings=None, start_workers=True):
     cfg = settings or Settings()
     db = Database(cfg.db_path)
@@ -216,6 +223,47 @@ def create_app(settings=None, start_workers=True):
             raise HTTPException(404, str(exc)) from None
         except PermissionError as exc:
             raise HTTPException(403, str(exc)) from None
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.post('/api/incident-evidence', status_code=201)
+    async def incident_upload(file: UploadFile = File(...), user=Depends(current_user)):
+        from .incidents import analyze, MAX_BYTES
+        try:
+            data = await file.read(MAX_BYTES + 1)
+            return await asyncio.to_thread(analyze, db, cfg, user, file.filename or '', data)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from None
+        finally:
+            await file.close()
+
+    @app.get('/api/incident-evidence/{evidence_id}')
+    def incident_detail(evidence_id: str, user=Depends(current_user)):
+        from .incidents import owned
+        try:
+            return json.loads(owned(db, user, evidence_id)['payload'])
+        except LookupError as exc:
+            raise HTTPException(404, str(exc)) from None
+
+    @app.get('/api/incident-evidence/{evidence_id}/image')
+    def incident_image(evidence_id: str, user=Depends(current_user)):
+        from .incidents import owned
+        try:
+            row = owned(db, user, evidence_id)
+        except LookupError as exc:
+            raise HTTPException(404, str(exc)) from None
+        if json.loads(row['payload'])['kind'] != 'screenshot':
+            raise HTTPException(404, '此材料不是截图')
+        return FileResponse(cfg.root/'uploads/incidents'/(row['id']+'.png'), media_type='image/png',
+                            headers={'Cache-Control': 'no-store'})
+
+    @app.post('/api/incident-evidence/{evidence_id}/draft', status_code=201)
+    def incident_draft(evidence_id: str, payload: IncidentDraft, user=Depends(current_user)):
+        from .incidents import confirm_draft
+        try:
+            return confirm_draft(db, user, evidence_id, **payload.model_dump())
+        except LookupError as exc:
+            raise HTTPException(404, str(exc)) from None
         except ValueError as exc:
             raise HTTPException(409, str(exc)) from None
 

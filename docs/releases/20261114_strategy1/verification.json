@@ -1,0 +1,21 @@
+{
+  "status": "complete",
+  "supervisor_preserved": true,
+  "post_training_used": false,
+  "unique_tests_passed": 228,
+  "real_task_baseline": "2/4",
+  "real_task_strategy": "4/4",
+  "same_openings": "4/4",
+  "real_unknown": 0,
+  "token_reduction_percent": 19.094792567549856,
+  "model_call_reduction_percent": 23.076923076923073,
+  "synthetic_incident_cases": 12,
+  "synthetic_incident_fields": "40/40",
+  "browser_passed": true,
+  "experience_review_gate_verified": true,
+  "gpu_resources_released": true,
+  "online_app_pid": 3413437,
+  "online_url": "http://127.0.0.1:8768",
+  "isolated_preview_stopped": true,
+  "evidence_root": "/data/zjr/enterprise_kb_agent/artifacts/strategy1_20261114"
+}

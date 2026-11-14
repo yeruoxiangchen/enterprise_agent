@@ -1,0 +1,1271 @@
+{
+  "scope": "12 synthetic log/rendered-screenshot fixtures; actual CPU OCR, extractive retrieval and real authenticated ticket state transitions",
+  "natural_screenshot_benchmark": false,
+  "llm_calls": 0,
+  "gpu_required": false,
+  "cases": 12,
+  "field_recall": 1.0,
+  "field_precision": 1.0,
+  "all_fields_correct_cases": 12,
+  "grounded_cases": 12,
+  "ticket_lifecycles_passed": 12,
+  "lookup_with_citations": 12,
+  "case_seconds_p50": 4.123708714731038,
+  "case_seconds_p95": 7.843497531488538,
+  "records": [
+    {
+      "case": "ssh",
+      "kind": "log",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "d16b146376fb4d38b8c5814ed3d84708",
+      "lifecycle_passed": true,
+      "seconds": 4.176437625661492,
+      "evidence": {
+        "id": "e6c4c456d2084963b670ae4101dc4a6e",
+        "filename": "ssh.log",
+        "digest": "0d9c2c4ea1827af0b4569dff10d1c0a32d2f4bd1709a3d147419e2a5b0b919a6",
+        "kind": "log",
+        "dimensions": null,
+        "lines": [
+          {
+            "number": 1,
+            "text": "Ubuntu 24.04",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 2,
+            "text": "SSH connection failed",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 3,
+            "text": "Permission denied",
+            "confidence": null,
+            "box": null
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Ubuntu 24.04",
+            "source_line": 1,
+            "span": [
+              0,
+              12
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "software",
+            "value": "SSH",
+            "source_line": 2,
+            "span": [
+              0,
+              3
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "symptom",
+            "value": "Permission denied",
+            "source_line": 3,
+            "span": [
+              0,
+              17
+            ],
+            "box": null,
+            "confidence": null
+          }
+        ],
+        "suggested_title": "SSH / Permission denied",
+        "suggested_description": "第1行 · environment：Ubuntu 24.04\n第2行 · software：SSH\n第3行 · symptom：Permission denied",
+        "analysis_seconds": 0.0025
+      }
+    },
+    {
+      "case": "ssh",
+      "kind": "screenshot",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "1125a994f5eb46f887fbce54efbaecd3",
+      "lifecycle_passed": true,
+      "seconds": 4.926096059381962,
+      "evidence": {
+        "id": "4c7adae3f8f74d9e9754b036b0373781",
+        "filename": "ssh.png",
+        "digest": "2d9e612e24b78830d7663af884d5e4005e7581d4364e3b99426b136eda53c5ce",
+        "kind": "screenshot",
+        "dimensions": [
+          1150,
+          360
+        ],
+        "lines": [
+          {
+            "number": 1,
+            "text": "Ubuntu 24.04",
+            "box": [
+              35,
+              35,
+              235,
+              58
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 2,
+            "text": "SSH connection failed",
+            "box": [
+              34,
+              81,
+              357,
+              104
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 3,
+            "text": "Permission denied",
+            "box": [
+              35,
+              127,
+              303,
+              150
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Ubuntu 24.04",
+            "source_line": 1,
+            "span": [
+              0,
+              12
+            ],
+            "box": [
+              35,
+              35,
+              235,
+              58
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "software",
+            "value": "SSH",
+            "source_line": 2,
+            "span": [
+              0,
+              3
+            ],
+            "box": [
+              34,
+              81,
+              357,
+              104
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "symptom",
+            "value": "Permission denied",
+            "source_line": 3,
+            "span": [
+              0,
+              17
+            ],
+            "box": [
+              35,
+              127,
+              303,
+              150
+            ],
+            "confidence": 96.0
+          }
+        ],
+        "suggested_title": "SSH / Permission denied",
+        "suggested_description": "第1行 · environment：Ubuntu 24.04\n第2行 · software：SSH\n第3行 · symptom：Permission denied",
+        "analysis_seconds": 0.3926
+      }
+    },
+    {
+      "case": "vpn",
+      "kind": "log",
+      "expected_fields": 4,
+      "correct_fields": 4,
+      "predicted_fields": 4,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "43eeba8425864c2a94172e4dbc8985e0",
+      "lifecycle_passed": true,
+      "seconds": 5.752811202779412,
+      "evidence": {
+        "id": "57193361f9444b8ab00606346dc86a80",
+        "filename": "vpn.log",
+        "digest": "d0aef311612abefe14c4c4ebb9ac7e8bb3380f3a46ad08126ed583356f0ee0bc",
+        "kind": "log",
+        "dimensions": null,
+        "lines": [
+          {
+            "number": 1,
+            "text": "Windows 11",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 2,
+            "text": "VPN",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 3,
+            "text": "Authentication failed",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 4,
+            "text": "HTTP 403",
+            "confidence": null,
+            "box": null
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Windows 11",
+            "source_line": 1,
+            "span": [
+              0,
+              10
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "software",
+            "value": "VPN",
+            "source_line": 2,
+            "span": [
+              0,
+              3
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "symptom",
+            "value": "Authentication failed",
+            "source_line": 3,
+            "span": [
+              0,
+              21
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "error_code",
+            "value": "HTTP 403",
+            "source_line": 4,
+            "span": [
+              0,
+              8
+            ],
+            "box": null,
+            "confidence": null
+          }
+        ],
+        "suggested_title": "VPN / HTTP 403",
+        "suggested_description": "第1行 · environment：Windows 11\n第2行 · software：VPN\n第3行 · symptom：Authentication failed\n第4行 · error_code：HTTP 403",
+        "analysis_seconds": 0.0009
+      }
+    },
+    {
+      "case": "vpn",
+      "kind": "screenshot",
+      "expected_fields": 4,
+      "correct_fields": 4,
+      "predicted_fields": 4,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "5984d70c73d34ae990a73befe561c490",
+      "lifecycle_passed": true,
+      "seconds": 7.843497531488538,
+      "evidence": {
+        "id": "fb4478eb0f614fb1b45a0f09989e226c",
+        "filename": "vpn.png",
+        "digest": "18e92cf34d9d3f6dd7e6bf2bf599925b2353d4dcb827e5c11531a10746342f2f",
+        "kind": "screenshot",
+        "dimensions": [
+          1150,
+          360
+        ],
+        "lines": [
+          {
+            "number": 1,
+            "text": "Windows 11",
+            "box": [
+              33,
+              36,
+              222,
+              60
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 2,
+            "text": "VPN",
+            "box": [
+              32,
+              85,
+              94,
+              108
+            ],
+            "ocr_pass": "primary",
+            "confidence": 95.0
+          },
+          {
+            "number": 3,
+            "text": "Authentication failed",
+            "box": [
+              32,
+              132,
+              362,
+              156
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 4,
+            "text": "HTTP 403",
+            "box": [
+              35,
+              181,
+              183,
+              204
+            ],
+            "ocr_pass": "primary",
+            "confidence": 94.0
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Windows 11",
+            "source_line": 1,
+            "span": [
+              0,
+              10
+            ],
+            "box": [
+              33,
+              36,
+              222,
+              60
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "software",
+            "value": "VPN",
+            "source_line": 2,
+            "span": [
+              0,
+              3
+            ],
+            "box": [
+              32,
+              85,
+              94,
+              108
+            ],
+            "confidence": 95.0
+          },
+          {
+            "kind": "symptom",
+            "value": "Authentication failed",
+            "source_line": 3,
+            "span": [
+              0,
+              21
+            ],
+            "box": [
+              32,
+              132,
+              362,
+              156
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "error_code",
+            "value": "HTTP 403",
+            "source_line": 4,
+            "span": [
+              0,
+              8
+            ],
+            "box": [
+              35,
+              181,
+              183,
+              204
+            ],
+            "confidence": 94.0
+          }
+        ],
+        "suggested_title": "VPN / HTTP 403",
+        "suggested_description": "第1行 · environment：Windows 11\n第2行 · software：VPN\n第3行 · symptom：Authentication failed\n第4行 · error_code：HTTP 403",
+        "analysis_seconds": 0.3873
+      }
+    },
+    {
+      "case": "docker",
+      "kind": "log",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "b69529719f4345e2a0361b12a8a22b03",
+      "lifecycle_passed": true,
+      "seconds": 4.070979803800583,
+      "evidence": {
+        "id": "d7ac9d24e0dd4701bcb694bad9d6ea9b",
+        "filename": "docker.log",
+        "digest": "edbd20a1194f9127b95a917225da2914315c5685bc2666e71dfe341403e37702",
+        "kind": "log",
+        "dimensions": null,
+        "lines": [
+          {
+            "number": 1,
+            "text": "Ubuntu 22.04",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 2,
+            "text": "Docker daemon",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 3,
+            "text": "Connection refused",
+            "confidence": null,
+            "box": null
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Ubuntu 22.04",
+            "source_line": 1,
+            "span": [
+              0,
+              12
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "software",
+            "value": "Docker",
+            "source_line": 2,
+            "span": [
+              0,
+              6
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "symptom",
+            "value": "Connection refused",
+            "source_line": 3,
+            "span": [
+              0,
+              18
+            ],
+            "box": null,
+            "confidence": null
+          }
+        ],
+        "suggested_title": "Docker / Connection refused",
+        "suggested_description": "第1行 · environment：Ubuntu 22.04\n第2行 · software：Docker\n第3行 · symptom：Connection refused",
+        "analysis_seconds": 0.0009
+      }
+    },
+    {
+      "case": "docker",
+      "kind": "screenshot",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "a0f02f8909bf4e13a1ad5f7e9cdfc17f",
+      "lifecycle_passed": true,
+      "seconds": 7.881419379264116,
+      "evidence": {
+        "id": "6b594391d8e847f08bc724c41f7a1320",
+        "filename": "docker.png",
+        "digest": "6210720383310bc4443cadaa8859f5d51fa1553a06212409cac5543ec184041e",
+        "kind": "screenshot",
+        "dimensions": [
+          1150,
+          360
+        ],
+        "lines": [
+          {
+            "number": 1,
+            "text": "Ubuntu 22.04",
+            "box": [
+              35,
+              36,
+              263,
+              62
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 2,
+            "text": "Docker daemon",
+            "box": [
+              35,
+              86,
+              298,
+              112
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 3,
+            "text": "Connection refused",
+            "box": [
+              34,
+              136,
+              360,
+              162
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Ubuntu 22.04",
+            "source_line": 1,
+            "span": [
+              0,
+              12
+            ],
+            "box": [
+              35,
+              36,
+              263,
+              62
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "software",
+            "value": "Docker",
+            "source_line": 2,
+            "span": [
+              0,
+              6
+            ],
+            "box": [
+              35,
+              86,
+              298,
+              112
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "symptom",
+            "value": "Connection refused",
+            "source_line": 3,
+            "span": [
+              0,
+              18
+            ],
+            "box": [
+              34,
+              136,
+              360,
+              162
+            ],
+            "confidence": 96.0
+          }
+        ],
+        "suggested_title": "Docker / Connection refused",
+        "suggested_description": "第1行 · environment：Ubuntu 22.04\n第2行 · software：Docker\n第3行 · symptom：Connection refused",
+        "analysis_seconds": 0.4063
+      }
+    },
+    {
+      "case": "python",
+      "kind": "log",
+      "expected_fields": 4,
+      "correct_fields": 4,
+      "predicted_fields": 4,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "3f240560468c40438c378ffc23135abc",
+      "lifecycle_passed": true,
+      "seconds": 3.0552241280674934,
+      "evidence": {
+        "id": "ba6bb4ac1ab04f1ea3db51f3c3d35f4a",
+        "filename": "python.log",
+        "digest": "638251cd62ca1e0d00265a117e71bfef93e04a35a00d92a7bd2d8b309ddb5648",
+        "kind": "log",
+        "dimensions": null,
+        "lines": [
+          {
+            "number": 1,
+            "text": "Linux",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 2,
+            "text": "Python",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 3,
+            "text": "MemoryError",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 4,
+            "text": "Out of memory",
+            "confidence": null,
+            "box": null
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Linux",
+            "source_line": 1,
+            "span": [
+              0,
+              5
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "software",
+            "value": "Python",
+            "source_line": 2,
+            "span": [
+              0,
+              6
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "error_code",
+            "value": "MemoryError",
+            "source_line": 3,
+            "span": [
+              0,
+              11
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "symptom",
+            "value": "Out of memory",
+            "source_line": 4,
+            "span": [
+              0,
+              13
+            ],
+            "box": null,
+            "confidence": null
+          }
+        ],
+        "suggested_title": "Python / MemoryError",
+        "suggested_description": "第1行 · environment：Linux\n第2行 · software：Python\n第3行 · error_code：MemoryError\n第4行 · symptom：Out of memory",
+        "analysis_seconds": 0.0013
+      }
+    },
+    {
+      "case": "python",
+      "kind": "screenshot",
+      "expected_fields": 4,
+      "correct_fields": 4,
+      "predicted_fields": 4,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "ff151be241624cb8829d905c442a87bf",
+      "lifecycle_passed": true,
+      "seconds": 3.9619306828826666,
+      "evidence": {
+        "id": "56dec337d29c4cdcb62ee86a596b63bf",
+        "filename": "python.png",
+        "digest": "ab17daad677bf4fd1ff31e1410f16271ca8ad63ecee022ebf280a5a260b123f3",
+        "kind": "screenshot",
+        "dimensions": [
+          1150,
+          360
+        ],
+        "lines": [
+          {
+            "number": 1,
+            "text": "Linux",
+            "box": [
+              35,
+              35,
+              111,
+              58
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 2,
+            "text": "Python",
+            "box": [
+              35,
+              81,
+              134,
+              110
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 3,
+            "text": "MemoryError",
+            "box": [
+              35,
+              128,
+              227,
+              156
+            ],
+            "ocr_pass": "primary",
+            "confidence": 91.0
+          },
+          {
+            "number": 4,
+            "text": "Out of memory",
+            "box": [
+              34,
+              173,
+              259,
+              202
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Linux",
+            "source_line": 1,
+            "span": [
+              0,
+              5
+            ],
+            "box": [
+              35,
+              35,
+              111,
+              58
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "software",
+            "value": "Python",
+            "source_line": 2,
+            "span": [
+              0,
+              6
+            ],
+            "box": [
+              35,
+              81,
+              134,
+              110
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "error_code",
+            "value": "MemoryError",
+            "source_line": 3,
+            "span": [
+              0,
+              11
+            ],
+            "box": [
+              35,
+              128,
+              227,
+              156
+            ],
+            "confidence": 91.0
+          },
+          {
+            "kind": "symptom",
+            "value": "Out of memory",
+            "source_line": 4,
+            "span": [
+              0,
+              13
+            ],
+            "box": [
+              34,
+              173,
+              259,
+              202
+            ],
+            "confidence": 96.0
+          }
+        ],
+        "suggested_title": "Python / MemoryError",
+        "suggested_description": "第1行 · environment：Linux\n第2行 · software：Python\n第3行 · error_code：MemoryError\n第4行 · symptom：Out of memory",
+        "analysis_seconds": 0.3754
+      }
+    },
+    {
+      "case": "nginx",
+      "kind": "log",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "54b546a9f46e48a1bb0f53f5e6a7c547",
+      "lifecycle_passed": true,
+      "seconds": 3.9604367446154356,
+      "evidence": {
+        "id": "202ad60f431442f0abb448a86ac47815",
+        "filename": "nginx.log",
+        "digest": "5617ea45a29070d343efb19cc7dc1d515a8bee816c92d5a317433fabc6cce5eb",
+        "kind": "log",
+        "dimensions": null,
+        "lines": [
+          {
+            "number": 1,
+            "text": "Nginx",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 2,
+            "text": "HTTP 502",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 3,
+            "text": "Connection timed out",
+            "confidence": null,
+            "box": null
+          }
+        ],
+        "fields": [
+          {
+            "kind": "software",
+            "value": "Nginx",
+            "source_line": 1,
+            "span": [
+              0,
+              5
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "error_code",
+            "value": "HTTP 502",
+            "source_line": 2,
+            "span": [
+              0,
+              8
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "symptom",
+            "value": "Connection timed out",
+            "source_line": 3,
+            "span": [
+              0,
+              20
+            ],
+            "box": null,
+            "confidence": null
+          }
+        ],
+        "suggested_title": "Nginx / HTTP 502",
+        "suggested_description": "第1行 · software：Nginx\n第2行 · error_code：HTTP 502\n第3行 · symptom：Connection timed out",
+        "analysis_seconds": 0.0012
+      }
+    },
+    {
+      "case": "nginx",
+      "kind": "screenshot",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "fab7bda5e7324519aa12a454bfb07bf2",
+      "lifecycle_passed": true,
+      "seconds": 3.8212906271219254,
+      "evidence": {
+        "id": "cc620813d87e455883d23b93f203ba8f",
+        "filename": "nginx.png",
+        "digest": "3e723c814aed7fce3b1c9322756c4628a2abfb7e17825fd1bfa5b078340a25a6",
+        "kind": "screenshot",
+        "dimensions": [
+          1150,
+          360
+        ],
+        "lines": [
+          {
+            "number": 1,
+            "text": "Nginx",
+            "box": [
+              35,
+              36,
+              123,
+              67
+            ],
+            "ocr_pass": "primary",
+            "confidence": 92.0
+          },
+          {
+            "number": 2,
+            "text": "HTTP 502",
+            "box": [
+              35,
+              85,
+              182,
+              108
+            ],
+            "ocr_pass": "primary",
+            "confidence": 94.0
+          },
+          {
+            "number": 3,
+            "text": "Connection timed out",
+            "box": [
+              34,
+              132,
+              378,
+              156
+            ],
+            "ocr_pass": "primary",
+            "confidence": 95.33
+          }
+        ],
+        "fields": [
+          {
+            "kind": "software",
+            "value": "Nginx",
+            "source_line": 1,
+            "span": [
+              0,
+              5
+            ],
+            "box": [
+              35,
+              36,
+              123,
+              67
+            ],
+            "confidence": 92.0
+          },
+          {
+            "kind": "error_code",
+            "value": "HTTP 502",
+            "source_line": 2,
+            "span": [
+              0,
+              8
+            ],
+            "box": [
+              35,
+              85,
+              182,
+              108
+            ],
+            "confidence": 94.0
+          },
+          {
+            "kind": "symptom",
+            "value": "Connection timed out",
+            "source_line": 3,
+            "span": [
+              0,
+              20
+            ],
+            "box": [
+              34,
+              132,
+              378,
+              156
+            ],
+            "confidence": 95.33
+          }
+        ],
+        "suggested_title": "Nginx / HTTP 502",
+        "suggested_description": "第1行 · software：Nginx\n第2行 · error_code：HTTP 502\n第3行 · symptom：Connection timed out",
+        "analysis_seconds": 0.3738
+      }
+    },
+    {
+      "case": "database",
+      "kind": "log",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "f8ee3c150163432292a3256267324a8f",
+      "lifecycle_passed": true,
+      "seconds": 3.457366492599249,
+      "evidence": {
+        "id": "272eeb18a79847a8a08415757a0f4072",
+        "filename": "database.log",
+        "digest": "dce3b1237b96d2e21692ba7de0d31df76c310f6aef3ec9c7f5bbe4874c24a9b7",
+        "kind": "log",
+        "dimensions": null,
+        "lines": [
+          {
+            "number": 1,
+            "text": "Windows 10",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 2,
+            "text": "MySQL",
+            "confidence": null,
+            "box": null
+          },
+          {
+            "number": 3,
+            "text": "Access denied",
+            "confidence": null,
+            "box": null
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Windows 10",
+            "source_line": 1,
+            "span": [
+              0,
+              10
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "software",
+            "value": "MySQL",
+            "source_line": 2,
+            "span": [
+              0,
+              5
+            ],
+            "box": null,
+            "confidence": null
+          },
+          {
+            "kind": "symptom",
+            "value": "Access denied",
+            "source_line": 3,
+            "span": [
+              0,
+              13
+            ],
+            "box": null,
+            "confidence": null
+          }
+        ],
+        "suggested_title": "MySQL / Access denied",
+        "suggested_description": "第1行 · environment：Windows 10\n第2行 · software：MySQL\n第3行 · symptom：Access denied",
+        "analysis_seconds": 0.001
+      }
+    },
+    {
+      "case": "database",
+      "kind": "screenshot",
+      "expected_fields": 3,
+      "correct_fields": 3,
+      "predicted_fields": 3,
+      "fields_complete": true,
+      "grounded": true,
+      "lookup_status": "answered",
+      "citations": 1,
+      "ticket_id": "8bab81f4d5394413bfb4d4805ef1afed",
+      "lifecycle_passed": true,
+      "seconds": 4.730971161276102,
+      "evidence": {
+        "id": "2a55743698634c0fb7baa218bc132f5b",
+        "filename": "database.png",
+        "digest": "c8c786da737387f159526171579d0b0447cb38087aab55828bbb020679ec24ab",
+        "kind": "screenshot",
+        "dimensions": [
+          1150,
+          360
+        ],
+        "lines": [
+          {
+            "number": 1,
+            "text": "Windows 10",
+            "box": [
+              33,
+              36,
+              235,
+              62
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          },
+          {
+            "number": 2,
+            "text": "MySQL",
+            "box": [
+              35,
+              87,
+              149,
+              119
+            ],
+            "ocr_pass": "primary",
+            "confidence": 95.0
+          },
+          {
+            "number": 3,
+            "text": "Access denied",
+            "box": [
+              32,
+              136,
+              273,
+              162
+            ],
+            "ocr_pass": "primary",
+            "confidence": 96.0
+          }
+        ],
+        "fields": [
+          {
+            "kind": "environment",
+            "value": "Windows 10",
+            "source_line": 1,
+            "span": [
+              0,
+              10
+            ],
+            "box": [
+              33,
+              36,
+              235,
+              62
+            ],
+            "confidence": 96.0
+          },
+          {
+            "kind": "software",
+            "value": "MySQL",
+            "source_line": 2,
+            "span": [
+              0,
+              5
+            ],
+            "box": [
+              35,
+              87,
+              149,
+              119
+            ],
+            "confidence": 95.0
+          },
+          {
+            "kind": "symptom",
+            "value": "Access denied",
+            "source_line": 3,
+            "span": [
+              0,
+              13
+            ],
+            "box": [
+              32,
+              136,
+              273,
+              162
+            ],
+            "confidence": 96.0
+          }
+        ],
+        "suggested_title": "MySQL / Access denied",
+        "suggested_description": "第1行 · environment：Windows 10\n第2行 · software：MySQL\n第3行 · symptom：Access denied",
+        "analysis_seconds": 0.3744
+      }
+    }
+  ]
+}

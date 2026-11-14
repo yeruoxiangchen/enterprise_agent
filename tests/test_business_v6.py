@@ -32,6 +32,17 @@ def knowledge():
         'resolution': 'complete', 'unresolved_question': ''}, 'id': 'knowledge'}])
 
 
+def test_retrieved_experience_does_not_authorize_a_draft(system, monkeypatch):
+    cfg, db, client, model, run_id = configure(system, monkeypatch, [knowledge()],
+        question='我的SSH连接提示Permission denied，应该先检查什么？')
+    cfg.supervisor_strategy = 'experience'
+    Harness(db, cfg).execute(run_id)
+    assert client.get('/api/runs/'+run_id).json()['status'] == 'answered'
+    assert db.one('SELECT count(*) n FROM service_tickets')['n'] == 0
+    events = db.all("SELECT payload FROM events WHERE run_id=? AND kind='business_experience'", (run_id,))
+    assert any('ground-incident-evidence' in row['payload'] for row in events)
+
+
 def test_partial_answer_resume_reuses_knowledge_budget_and_one_assistant_message(system, monkeypatch):
     cfg, db, client, model, run_id = configure(system, monkeypatch, [knowledge()])
     original = v6.draft_ticket

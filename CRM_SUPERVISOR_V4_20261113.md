@@ -1,6 +1,6 @@
 # 多 Agent 主管与专业工具循环 v4
 
-当前修订为`business_v6_external_v4_supervisor_r2_perf1`。保留主管/专业Agent结构，采用异步检查点调度并保留SQLite FULL和关键业务回执；148项联合代码回归通过。四题真实模型验证已完成：多Agent4/4、官方参考2/4，双方未判定及运行异常0，本轮资源已释放。最新性能与恢复依据见[延迟定位与优化](CRM_LATENCY_PERF1_20261114.md)，原执行修复见[执行层修复r2](CRM_EXECUTION_REPAIR_R2_20261113.md)，完整目录与后续待办见[当前状态](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
+最新可选修订为`business_v6_external_v4_supervisor_strategy1_r2`，新增执行进度、描述定位、有限恢复和审核经验，四题开发对照baseline2/4、experience4/4，去重228项当前用例通过。实现及模式见[strategy1](CRM_STRATEGY1_20261114.md)。此前perf1保留主管/专业Agent结构，采用异步检查点调度并保留SQLite FULL和关键业务回执；其148项回归、四题验证与性能证据见[延迟定位与优化](CRM_LATENCY_PERF1_20261114.md)。原执行修复见[执行层修复r2](CRM_EXECUTION_REPAIR_R2_20261113.md)，完整目录与后续待办见[当前状态](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
 
 日期：2026-11-13。适配名 `business_v6_external_v4_supervisor`，CLI选择 `--harness-version v6 --execution-adapter v4`。先完成多Agent的小样本真实模型验收，再决定扩展范围。
 

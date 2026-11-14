@@ -8,13 +8,14 @@ Business guards/receipts are shared with v2; no generated step plan is enforced.
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import re
 from collections import Counter
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import wrap_model_call, wrap_tool_call
-from langchain_core.messages import convert_to_openai_messages
+from langchain_core.messages import HumanMessage, convert_to_openai_messages
 from langchain_core.tools import StructuredTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 from langgraph.checkpoint.sqlite import SqliteSaver
@@ -28,7 +29,7 @@ from .crm_contract import (QUOTED_TEXT, READ_TOOLS, WRITE_TOOLS, explicit_repeat
 from .crm_supervisor_state import (ConversationReads, action_counts, data_version,
     disclosure_request, pending_context, terminal_results, user_identities)
 
-EXECUTION_VERSION = 'business_v6_external_v4_supervisor_r2_perf1'
+EXECUTION_VERSION = 'business_v6_external_v4_supervisor_strategy1_r2'
 CHECKPOINT_DURABILITY = 'async'
 MODEL_CALL_LIMIT = 24
 TOOL_CALL_LIMIT = 30
@@ -61,6 +62,9 @@ class ExternalBusinessQA(GuardedAgent):
 
     def __init__(self, owner, question, history, turn):
         super().__init__(owner, question, history, turn)
+        self.strategy = self.cfg.supervisor_strategy
+        if self.strategy not in {'baseline', 'recovery', 'experience'}:
+            raise ValueError('Unknown supervisor strategy')
         self.memory_path = owner.output / 'supervisor-state.json'
         self.memory = json.loads(self.memory_path.read_text()) if self.memory_path.exists() else {
             'version': EXECUTION_VERSION, 'operation': 0, 'pending': None,
@@ -69,6 +73,9 @@ class ExternalBusinessQA(GuardedAgent):
         }
         if self.memory['version'] != EXECUTION_VERSION:
             raise ValueError('Supervisor checkpoint version changed; use a new run')
+        if self.memory.get('strategy', self.strategy) != self.strategy:
+            raise ValueError('Supervisor strategy changed; use a new run')
+        self.memory['strategy'] = self.strategy
         # Recover audit and counters alongside receipts, including interrupted writes.
         seen = {(c['turn'], c['id']) for c in owner.tool_calls}
         owner.tool_calls.extend(copy.deepcopy(c) for c in self.memory['audit']
@@ -78,7 +85,8 @@ class ExternalBusinessQA(GuardedAgent):
         for key, value in self.memory['usage'].items():
             setattr(owner, key, max(getattr(owner, key), value))
         last_reply = next((m['content'] for m in reversed(self.history) if m['role'] == 'assistant'), '')
-        self.continued_request, corrected = pending_context(self.memory.get('pending'), question, last_reply)
+        self.continued_request, corrected = pending_context(self.memory.get('pending'), question, last_reply,
+                                                          preserve_clarification=self.strategy != 'baseline')
         continuation = self.continued_request is not None and not corrected
         if self.memory.get('turn') == turn:
             if question != self.memory.get('last_question'):
@@ -89,9 +97,14 @@ class ExternalBusinessQA(GuardedAgent):
             if not continuation and not retry:
                 self.memory['operation'] += 1
                 self.memory['intent'] = self.continued_request if corrected else question
+                self.memory.pop('target_description', None)
             self.memory.update(turn=turn, last_question=question, pending=None,
                                continued_request=self.continued_request)
         self.memory.setdefault('intent', question)
+        if self.strategy != 'baseline' and continuation and re.search(
+                r'\b(?:the|that|same)\s+\w+[\w -]{0,25}\s+one\b|(?:那个|刚才的).*(?:故障|工单)',
+                mask_quoted(question), re.I):
+            self.memory['target_description'] = question[:500]
         self.active_task = {'id': f"operation-{self.memory['operation']}", 'domain': 'service',
                             'question': question, 'depends_on': []}
         self.state.update(execution_version=EXECUTION_VERSION,
@@ -101,6 +114,41 @@ class ExternalBusinessQA(GuardedAgent):
         self.progress = ConversationReads(self)
         self.available_tools = set(owner.registry.tool_names)
         self.delegated = []
+        self.experience = None
+        if self.strategy == 'experience':
+            from kb.experience import ExperienceMemory
+            self.experience = ExperienceMemory(self.cfg.experience_path)
+            signature = hashlib.sha256(json.dumps(self.experience.entries, sort_keys=True).encode()).hexdigest()
+            if self.memory.get('experience_version', signature) != signature:
+                raise ValueError('Experience version changed; use a new run')
+            self.memory['experience_version'] = signature
+
+    def strategy_context(self, domain=None):
+        if self.strategy == 'baseline':
+            return {}
+        from .crm_strategy import progress_snapshot
+        snapshot = progress_snapshot(self)
+        self.memory['progress_ledger'] = snapshot
+        context = {'execution_progress': snapshot}
+        if self.strategy == 'experience' and (self.write_actions(self.active_task) or self.continued_request):
+            entries = self.experience.retrieve(self.intent_text() + '\n' + self.run['question'], domain)
+            context['procedural_guidance'] = [{'id': e['id'], 'guidance': e['guidance']} for e in entries]
+            selected = [e['id'] for e in entries]
+            key = f'{self.owner.turn}:{domain or "supervisor"}'
+            if self.memory.setdefault('experience_selections', {}).get(key) != selected:
+                self.memory['experience_selections'][key] = selected
+                self.emit('strategy_experience', {'domain': domain, 'ids': selected,
+                    'characters': sum(len(e['guidance']) for e in entries), 'extra_model_calls': 0})
+        return context
+
+    def strategy_instructions(self):
+        if self.strategy == 'baseline':
+            return ''
+        return ('\nWhen the requested ticket is unclear, ask which ticket the user means; '
+                'accept an issue description as well as a ticket ID. Once the user supplies '
+                'an issue description, use a real ticket listing to identify the matching ticket '
+                'instead of repeatedly demanding its number. Clarify genuinely ambiguous matches; '
+                'never guess an identifier.\n')
 
     def save(self):
         if hasattr(self, 'memory'):
@@ -237,6 +285,18 @@ class ExternalBusinessQA(GuardedAgent):
         return visible
 
     def meter(self, request, handler):
+        if self.strategy != 'baseline':
+            from .crm_strategy import repeated_observation
+            repeated = repeated_observation(self.owner.tool_calls, self.owner.turn)
+            if repeated and self.memory.get('stall_hint_turn') != self.owner.turn:
+                self.memory['stall_hint_turn'] = self.owner.turn
+                hint = {'observed_repetition': repeated, **self.strategy_context(),
+                        'instruction': 'Check progress using actual observations. Continue missing authorized '
+                        'steps, ask for missing input, or explain a factual terminal outcome. Repeating an '
+                        'unchanged failed call is not progress. Explicit user-requested repeated steps '
+                        'still take precedence. These hints grant no additional authorization.'}
+                request = request.override(messages=[*request.messages, HumanMessage(content=json.dumps(hint))])
+                self.emit('strategy_stall_hint', repeated)
         request = request.override(tools=self.visible_tools(request.tools),
                                    model_settings={**request.model_settings, 'parallel_tool_calls': False})
         response = MeteredAgent.meter(self, request, handler)
@@ -287,14 +347,14 @@ class ExternalBusinessQA(GuardedAgent):
         try:
             agent = create_agent(self.model, name=domain,
                 tools=[self.make_tool(d) for d in self.owner.registry.get_definitions() if d.function.name in names],
-                system_prompt=COMMON + '\nProcess only assigned_part; use current_user_request and '
+                system_prompt=COMMON + self.strategy_instructions() + '\nProcess only assigned_part; use current_user_request and '
                     'pending_user_request to resolve original values and references. Return any work '
                     'outside your capability to the supervisor without executing it.\n'
                     + self.owner.policy + '\n' + node['instructions'],
                 middleware=[wrap_model_call(self.meter), self.tool_middleware()])
             output = agent.invoke({'messages': self.history + [{'role': 'user', 'content': json.dumps({
                 'current_user_request': self.run['question'], 'pending_user_request': self.continued_request,
-                'assigned_part': query, **self.verified_context(),
+                'assigned_part': query, **self.verified_context(), **self.strategy_context(domain),
             }, ensure_ascii=False)}]}, config={'recursion_limit': 32, 'max_concurrency': 1})
             answer = output['messages'][-1].content
             if not isinstance(answer, str) or not answer.strip():
@@ -392,6 +452,10 @@ class ExternalBusinessQA(GuardedAgent):
                     *(r['answer'] for r in resolutions.values()),
                     'Deletion cannot proceed without identifying the requester and checking delete permission. Which user ID should I check?'])
                 status, business_status = 'clarify', 'awaiting_input'
+            if (self.strategy != 'baseline' and status == 'clarify' and not unknown
+                    and remaining and not ticket_ids(self.request_text(self.active_task))
+                    and not self.memory.get('target_description')):
+                answer = 'Which ticket do you mean? You can describe the issue or provide its ticket ID.'
         elif resolutions:
             # A correct refusal or an already-satisfied request is a finished
             # interaction. Do not let a model's "not completed" wording reopen it.
@@ -440,6 +504,7 @@ class ExternalBusinessQA(GuardedAgent):
                 'If it asks the user for information, relay that question and wait. Do not ask again after '
                 'the user has supplied that information. Do not invent an answer without a specialist.\n'
                 + self.owner.policy)
+        prompt += self.strategy_instructions()
         with SqliteSaver.from_conn_string(str(self.cfg.root / 'supervisor-checkpoints.sqlite3')) as saver:
             agent = create_agent(self.model, name='single' if self.single else 'supervisor',
                 tools=tools, system_prompt=prompt, checkpointer=saver,
@@ -449,11 +514,39 @@ class ExternalBusinessQA(GuardedAgent):
             saved = agent.get_state(config)
             initial = {'messages': self.history + [{'role': 'user', 'content': json.dumps({
                 'current_user_request': self.run['question'], 'pending_user_request': self.continued_request,
-                **self.verified_context(),
+                **self.verified_context(), **self.strategy_context(),
             }, ensure_ascii=False)}]}
             output = saved.values if saved.values and not saved.next else agent.invoke(
                 None if saved.values else initial, config, durability=CHECKPOINT_DURABILITY)
-        answer = output['messages'][-1].content
-        if not isinstance(answer, str) or not answer.strip():
-            raise ValueError('Supervisor returned an empty answer')
-        return self.finish_answer(answer)
+            answer = output['messages'][-1].content
+            if not isinstance(answer, str) or not answer.strip():
+                raise ValueError('Supervisor returned an empty answer')
+            result = self.finish_answer(answer)
+            if self.strategy != 'baseline':
+                from .crm_strategy import can_recover, progress_snapshot
+                snapshot = progress_snapshot(self)
+                self.memory['progress_ledger'] = snapshot
+                if (can_recover(result, snapshot) and self.memory.get('recovery_turn') != self.owner.turn
+                        and self.state['calls'] <= MODEL_CALL_LIMIT - 4
+                        and self.state['tools'] <= TOOL_CALL_LIMIT - 4):
+                    self.memory['recovery_turn'] = self.owner.turn
+                    self.save()
+                    self.emit('strategy_recovery', snapshot)
+                    feedback = {'execution_progress': snapshot,
+                        'instruction': 'Some requested work remains unexecuted. Continue only the remaining '
+                        'authorized steps using the appropriate specialist. Preserve committed receipts. '
+                        'If a prerequisite is missing, ask one concrete question and stop. '
+                        'Do not repeat completed writes or infer new authorization.'}
+                    output = agent.invoke({'messages': [HumanMessage(content=json.dumps(feedback))]}, config,
+                                          durability=CHECKPOINT_DURABILITY)
+                    answer = output['messages'][-1].content
+                    if not isinstance(answer, str) or not answer.strip():
+                        raise ValueError('Supervisor recovery returned an empty answer')
+                    result = self.finish_answer(answer)
+                    self.memory['progress_ledger'] = progress_snapshot(self)
+                selected = sorted({item for key, ids in self.memory.get('experience_selections', {}).items()
+                                   if key.startswith(f'{self.owner.turn}:') for item in ids})
+                self.emit('strategy_outcome', {'experience_ids': selected, 'status': result['status'],
+                    'progress': self.memory['progress_ledger'], 'model_calls': self.state['calls']})
+                self.save()
+            return result

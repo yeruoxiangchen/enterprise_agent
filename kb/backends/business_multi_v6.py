@@ -47,6 +47,24 @@ class BusinessQA(V5):
             raise ValueError('业务v6版本变化，请创建新请求')
         self.state['v6_version'] = version
         self.state.setdefault('task_failures', {})
+        strategy = self.cfg.supervisor_strategy
+        if self.state.get('context_strategy', strategy) != strategy:
+            raise ValueError('业务上下文策略变化，请创建新请求')
+        self.state['context_strategy'] = strategy
+        if self.cfg.supervisor_strategy == 'experience':
+            from kb.experience import ExperienceMemory
+            memory = ExperienceMemory(self.cfg.experience_path)
+            signature = hashlib.sha256(json.dumps(memory.entries, sort_keys=True).encode()).hexdigest()
+            if self.state.get('experience_version', signature) != signature:
+                raise ValueError('业务经验版本变化，请创建新请求')
+            self.state['experience_version'] = signature
+            for domain in ('technical', 'policy', 'service'):
+                entries = memory.retrieve(self.run['question'], domain)
+                if entries:
+                    self.skills[domain] += '\nProcedural guidance only; original permissions still apply:\n' + '\n'.join(
+                        entry['guidance'] for entry in entries)
+                    self.emit('business_experience', {'domain': domain, 'ids': [e['id'] for e in entries],
+                        'characters': sum(len(e['guidance']) for e in entries), 'extra_model_calls': 0})
 
     def route(self, state):
         result = super().route(state)
