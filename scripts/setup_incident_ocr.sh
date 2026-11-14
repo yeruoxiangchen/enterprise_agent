@@ -2,6 +2,9 @@
 set -euo pipefail
 ROOT=/data/zjr/enterprise_kb_agent
 export TMPDIR="$ROOT/tmp" PIP_CACHE_DIR="$ROOT/cache/pip" PYTHONDONTWRITEBYTECODE=1
+export TORCH_HOME="$ROOT/cache/torch" HF_HOME="$ROOT/cache/huggingface"
+export HF_HUB_CACHE="$ROOT/cache/huggingface/hub" TORCH_EXTENSIONS_DIR="$ROOT/cache/torch_extensions"
+export MPLCONFIGDIR="$ROOT/cache/matplotlib" XDG_CACHE_HOME="$ROOT/cache"
 mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" "$ROOT/tools/tesseract/packages"
 "$ROOT/venv-agentpack/bin/python" -m pip --require-virtualenv install 'Pillow>=10,<13'
 cd "$ROOT/tools/tesseract/packages"

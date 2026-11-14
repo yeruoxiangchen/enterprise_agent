@@ -928,8 +928,8 @@
     },
     {
       "path": "scripts/setup_incident_ocr.sh",
-      "bytes": 864,
-      "sha256": "1badd7e7d37e4695aa057484da44a8fe09434e858abd30f73a6c3a60c943284a"
+      "bytes": 1112,
+      "sha256": "425805506ce3eb49c8c46b900fabade6b839d13b1e2dfe8d348b9bd967abaf3d"
     },
     {
       "path": "scripts/setup_judge_packages.py",
