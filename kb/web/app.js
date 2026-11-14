@@ -1,7 +1,7 @@
 const $ = (q) => document.querySelector(q);
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me, bases = [], conversationId = null, activeRun = null, feedbackRun = null, currentTab = 'chat', toastTimer;
-const statuses = {queued:'等待入库',processing:'正在处理',ready:'已就绪',error:'处理失败',answered:'已完成',insufficient:'资料不足',clarify:'待补充信息',running:'执行中',cancelled:'已停止'};
+const statuses = {queued:'等待入库',processing:'正在处理',ready:'已就绪',error:'处理失败',answered:'已完成',partial_success:'部分完成',insufficient:'资料不足',clarify:'待补充信息',running:'执行中',cancelled:'已停止'};
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.add('hidden'), 4500); }
 async function api(path, options = {}) {
   const headers = {'X-KB-Client':'web', ...(options.headers || {})};
@@ -53,6 +53,7 @@ function fillMessage(block, run) {
   body.classList.toggle('working', ['queued','running'].includes(run.status));
   body.textContent = run.answer || run.error || (run.status === 'cancelled' ? '已停止本次任务。' : '正在检索资料，整理可用证据…');
   actions.innerHTML = `<button data-inspect="${escape(run.id)}">来源与过程 ↗</button>` + (run.answer ? `<button data-feedback="${escape(run.id)}">评价回答</button>` : '');
+  if (run.can_resume) actions.innerHTML += `<button data-resume="${escape(run.id)}">继续未完成步骤</button>`;
 }
 function showEvidence(run) {
   $('#sources').innerHTML = (run.citations || []).map(s => `<button class="source-card" data-document="${escape(s.document_id)}" data-chunk="${s.id}"><strong>[${escape(s.label)}] ${escape(s.filename)}</strong><small>${escape(s.base_name)}${s.page ? ' · 第 '+s.page+' 页' : ''}</small><p>${escape(s.text.slice(0,120))}…</p></button>`).join('') || '<div class="empty-small">尚未引用资料</div>';
@@ -125,6 +126,16 @@ $('#user-form').addEventListener('submit',async e=>{e.preventDefault();try{await
 $('#feedback-form').addEventListener('submit',async e=>{e.preventDefault();const body=Object.fromEntries(new FormData(e.target));body.rating=Number(body.rating);try{await api('/runs/'+feedbackRun+'/feedback',{method:'POST',body});$('#feedback-dialog').close();e.target.reset();toast('已收到反馈，谢谢');}catch(err){toast(err.message);}});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;try{if(b.dataset.tab)await tab(b.dataset.tab);if(b.dataset.close)$('#'+b.dataset.close).close();if(b.dataset.conversation)await openConversation(b.dataset.conversation);if(b.closest('.suggestions')){$('#question').value=b.textContent;$('#question-form').requestSubmit();}if(b.dataset.document)await source(b.dataset.document,b.dataset.chunk);if(b.dataset.inspect){const run=await api('/runs/'+b.dataset.inspect);showEvidence(run);if(matchMedia('(max-width:800px)').matches){$('#source-title').textContent='来源与执行记录';$('#source-download').removeAttribute('href');$('#source-content').innerHTML=$('#sources').innerHTML+$('#trace').innerHTML;$('#source-dialog').showModal();}}if(b.dataset.feedback){feedbackRun=b.dataset.feedback;$('#feedback-dialog').showModal();}if(b.dataset.reindex){await api('/documents/'+b.dataset.reindex+'/reindex',{method:'POST'});await refreshDocuments();}if(b.dataset.delete&&confirm('删除该文档及其索引？历史回答保留，但原文将不可访问。')){await api('/documents/'+b.dataset.delete,{method:'DELETE'});await refreshBases();await refreshDocuments();}}catch(err){toast(err.message);}});
 setInterval(()=>{if(me&&currentTab==='documents')refreshDocuments().catch(()=>{});},2500);
+document.addEventListener('click', async e => {
+  const button = e.target.closest('button[data-resume]');
+  if (!button || activeRun) return;
+  button.disabled = true;
+  try {
+    const result = await api('/runs/'+button.dataset.resume+'/resume', {method:'POST'});
+    setBusy(true);
+    await monitor(result.run_id, result.conversation_id);
+  } catch (error) { button.disabled = false; toast(error.message); }
+});
 enter().catch(()=>showLogin());
 
 const ticketStates={draft:'待确认',submitted:'已提交',processing:'处理中',resolved:'已解决',cancelled:'已取消'};

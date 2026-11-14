@@ -1,0 +1,14 @@
+{
+  "unique_tests_passed": 148,
+  "failures": 0,
+  "supervisor_preserved": true,
+  "checkpoint_durability": "async",
+  "sqlite_synchronous": "FULL (2), tested on the active saver connection",
+  "hard_exit_recovery": "committed and unknown acknowledgement, each with normal and deliberately delayed graph checkpoints",
+  "live_run_tag": "latency_perf1_real4_20261114_r1",
+  "live_result": "complete",
+  "live_candidate_passed": "4/4",
+  "live_reference_passed": "2/4",
+  "live_unknown": 0,
+  "resources_released": true
+}

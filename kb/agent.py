@@ -92,8 +92,15 @@ class Harness:
         self.check_cancel(run["id"])
         if not isinstance(answer, str) or not answer.strip() or len(answer) > 12000:
             raise ValueError("答案为空或过长")
-        if status not in {"answered", "insufficient", "clarify"} or not isinstance(citations, list):
+        allowed_statuses = {"answered", "insufficient", "clarify"}
+        if state.get('policy') == 'business_multi_v6':
+            allowed_statuses.add('partial_success')
+        if status not in allowed_statuses or not isinstance(citations, list):
             raise ValueError("非法完成状态或引用列表")
+        if status == 'partial_success' and not any(
+                item.get('result', {}).get('status') == 'answered'
+                for item in state.get('business', {}).get('completed_tasks', {}).values()):
+            raise ValueError('部分完成必须有实际已完成的子任务')
         if any(not isinstance(c, str) or c not in state["sources"] for c in citations):
             raise ValueError("引用编号不存在，请先读取证据")
         inline = set(re.findall(r"\[(S\d+)\]", answer))
@@ -102,8 +109,8 @@ class Harness:
             raise ValueError("答案中的引用与 citations 必须一致。answer 正文缺少 " +
                              ", ".join("[" + s + "]" for s in missing) +
                              "。请把这些标记写在 answer 的事实后；保留已有证据，不要重复检索。")
-        service_receipts = state.get('business', {}).get('receipts', []) if state.get('policy') in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_single_v2'} else []
-        if status == "answered" and not citations and not service_receipts:
+        service_receipts = state.get('business', {}).get('receipts', []) if state.get('policy') in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2'} else []
+        if status in {"answered", "partial_success"} and not citations and not service_receipts:
             raise ValueError("有结论的回答必须提供已读取的证据")
         sources = []
         for label in dict.fromkeys(citations):
@@ -117,7 +124,10 @@ class Harness:
                 raise Cancelled()
             if row["status"] != "running":
                 return
-            c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), run["conversation_id"], "assistant", answer, run["id"], time.time()))
+            updated = (c.execute("UPDATE messages SET content=? WHERE run_id=? AND role='assistant'",
+                                 (answer, run['id'])).rowcount if state.get('policy') == 'business_multi_v6' else 0)
+            if not updated:
+                c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), run["conversation_id"], "assistant", answer, run["id"], time.time()))
             c.execute("UPDATE runs SET status=?,answer=?,citations=?,state=?,updated_at=? WHERE id=?",
                       (status, answer, encode(sources), encode(state), time.time(), run["id"]))
         self.db.event(run["id"], "finished", {"status": status, "citations": len(sources)})
@@ -153,7 +163,7 @@ class Harness:
         raise ValueError("未知工具")
 
     def execute(self, run_id):
-        if self.settings.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_single_v2'}:
+        if self.settings.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2'}:
             from .business_runtime import execute
             return execute(self, run_id)
         mode = self.db.one("SELECT mode FROM runs WHERE id=?", (run_id,))

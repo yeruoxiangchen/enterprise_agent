@@ -19,6 +19,10 @@ def execute(h, run_id):
             from .backends.business_multi_v3 import BusinessQA
         elif policy == 'business_multi_v4':
             from .backends.business_multi_v4 import BusinessQA
+        elif policy == 'business_multi_v5':
+            from .backends.business_multi_v5 import BusinessQA
+        elif policy == 'business_multi_v6':
+            from .backends.business_multi_v6 import BusinessQA
         elif policy == 'business_single_v2':
             from .backends.business_multi_v2 import SingleBusinessQA as BusinessQA
         else: raise ValueError('未知业务策略')
@@ -32,6 +36,8 @@ def execute(h, run_id):
             checkpoint=lambda s: h.checkpoint(run_id, {'policy':policy, 'business':s}),
             event=lambda k,v: db.event(run_id,k,v), cancelled=lambda: h.check_cancel(run_id))
         result = engine.answer()
+        if result['status'] == 'error':
+            raise RuntimeError('业务步骤执行未完成，已保留执行记录')
         labels = list(dict.fromkeys(re.findall(r'\[(S\d+)\]', result['answer'])))
         state = {'policy':policy, 'business': engine.state, 'sources': engine.state['sources'],
                  'user': user, 'base_ids': engine.allowed}

@@ -1,0 +1,135 @@
+{
+  "expected_trials": 132,
+  "completed_trials": 132,
+  "complete": true,
+  "trials": 1,
+  "arms": {
+    "official_graph": {
+      "expected": 66,
+      "completed": 66,
+      "passed": 48,
+      "scored": 65,
+      "unknown": 1,
+      "official_scored": 64,
+      "official_unknown": 2,
+      "known_harness_failures": 1,
+      "official_success_over_scored": 0.75,
+      "strict_success_lower_bound_over_completed": 0.7272727272727273,
+      "all_trials_success": 48,
+      "all_three_success": null,
+      "reliability_tasks_completed": 66,
+      "reliability_tasks_expected": 66,
+      "all_trials_success_rate": 0.7272727272727273,
+      "prompt_tokens": 2951397,
+      "completion_tokens": 63651,
+      "total_tokens": 3015048,
+      "usage_missing_calls": 0,
+      "tokens_per_task": 45682.545454545456,
+      "tokens_per_success": 62813.5,
+      "model_calls": 1276,
+      "tool_calls": 204,
+      "turn_seconds_p50": 3.067348523065448,
+      "turn_seconds_p95": 7.0352704003453255,
+      "task_active_seconds_p50": 8.503280628472567,
+      "task_active_seconds_p95": 119.68422791687772,
+      "agent_cost_usd": null,
+      "pricing": "self-hosted; no metered monetary charge recorded",
+      "normal_stops": 53,
+      "max_turns_reached": 12,
+      "conversation_stalls": 0,
+      "simulator_failures": 0,
+      "committed_write_calls": 37,
+      "reused_write_attempts": 0,
+      "business_write_rejections": 13,
+      "errors": {
+        "unclassified": 1,
+        "grader_infrastructure": 1
+      }
+    },
+    "multi_v6": {
+      "expected": 66,
+      "completed": 66,
+      "passed": 53,
+      "scored": 66,
+      "unknown": 0,
+      "official_scored": 65,
+      "official_unknown": 1,
+      "known_harness_failures": 1,
+      "official_success_over_scored": 0.8153846153846154,
+      "strict_success_lower_bound_over_completed": 0.803030303030303,
+      "all_trials_success": 53,
+      "all_three_success": null,
+      "reliability_tasks_completed": 66,
+      "reliability_tasks_expected": 66,
+      "all_trials_success_rate": 0.803030303030303,
+      "prompt_tokens": 1843622,
+      "completion_tokens": 53555,
+      "total_tokens": 1897177,
+      "usage_missing_calls": 0,
+      "tokens_per_task": 28745.10606060606,
+      "tokens_per_success": 35795.79245283019,
+      "model_calls": 1287,
+      "tool_calls": 241,
+      "turn_seconds_p50": 4.32319326326251,
+      "turn_seconds_p95": 13.473885360360143,
+      "task_active_seconds_p50": 13.700729986652732,
+      "task_active_seconds_p95": 153.529289775528,
+      "agent_cost_usd": null,
+      "pricing": "self-hosted; no metered monetary charge recorded",
+      "normal_stops": 54,
+      "max_turns_reached": 11,
+      "conversation_stalls": 0,
+      "simulator_failures": 0,
+      "committed_write_calls": 35,
+      "reused_write_attempts": 0,
+      "business_write_rejections": 0,
+      "errors": {
+        "model_call_budget": 1
+      }
+    }
+  },
+  "execution_versions": [
+    "business_v6_external_v4_supervisor_r2",
+    "crm-agent-bench-official-graph-plain-v1"
+  ],
+  "paired": {
+    "official_graph_only": 5,
+    "multi_v6_only": 9,
+    "both_pass": 43,
+    "both_fail": 8,
+    "unknown": 1
+  },
+  "paired_available": true,
+  "paired_openings": {
+    "same": 64,
+    "different": 2,
+    "missing": 0
+  },
+  "pairwise": [
+    {
+      "left": "official_graph",
+      "right": "multi_v6",
+      "completed": 66,
+      "left_only": 5,
+      "right_only": 9,
+      "both_pass": 43,
+      "both_fail": 8,
+      "unknown": 1,
+      "openings": {
+        "same": 64,
+        "different": 2,
+        "missing": 0
+      }
+    }
+  ],
+  "evaluation": {
+    "score_scope": "complete public ITSM 66-task catalogue; shared actor/user/judge weights",
+    "shared_evaluation_model": true,
+    "independent_actor_and_judge_weights": false,
+    "actor": "Qwen3-8B",
+    "user_model": "Qwen3-8B",
+    "judge_model": "Qwen3-8B",
+    "simulator_verifier": null,
+    "user_strategy": "contextual-react"
+  }
+}

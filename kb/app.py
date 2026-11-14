@@ -163,7 +163,7 @@ def create_app(settings=None, start_workers=True):
     @app.get("/api/me")
     def me(user=Depends(current_user)):
         return {**user, "mode": cfg.mode, "retrieval": "hybrid" if cfg.embedding_url else "keyword",
-                "workflow": "business_multi" if cfg.mode=='agent' and cfg.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_single_v2'} else "fixed_rag" if cfg.mode=='agent' and cfg.agent_policy=='fixed_rag_v1' else 'agent' if cfg.mode=='agent' else 'extractive',
+                "workflow": "business_multi" if cfg.mode=='agent' and cfg.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2'} else "fixed_rag" if cfg.mode=='agent' and cfg.agent_policy=='fixed_rag_v1' else 'agent' if cfg.mode=='agent' else 'extractive',
                 "reranking": bool(cfg.reranker_path),
                 "model": cfg.llm_model if cfg.mode == "agent" else None}
 
@@ -282,8 +282,11 @@ def create_app(settings=None, start_workers=True):
         if not row:
             raise HTTPException(404, "会话不存在")
         row["messages"] = db.all("SELECT * FROM messages WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
-        row["runs"] = db.all("SELECT id,status,answer,citations,error,question,created_at FROM runs WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
+        row["runs"] = db.all("SELECT id,status,answer,citations,error,question,created_at,state,cancel_requested FROM runs WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
+        from .business_status import can_resume
         for run in row["runs"]:
+            run['can_resume'] = can_resume(run) and cfg.agent_policy == 'business_multi_v6'
+            run.pop('state')
             run["citations"] = json.loads(run["citations"])
         return row
 
@@ -315,12 +318,33 @@ def create_app(settings=None, start_workers=True):
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str, user=Depends(current_user)):
         run = own_run(user, run_id)
+        from .business_status import can_resume
+        run['can_resume'] = can_resume(run) and cfg.agent_policy == 'business_multi_v6'
         run.pop("state")
         run["citations"] = json.loads(run["citations"])
         run["events"] = db.all("SELECT id,kind,payload,created_at FROM events WHERE run_id=? ORDER BY id", (run_id,))
         for event in run["events"]:
             event["payload"] = json.loads(event["payload"])
         return run
+
+    @app.post('/api/runs/{run_id}/resume')
+    def resume(run_id: str, user=Depends(current_user)):
+        own_run(user, run_id)
+        from .business_status import can_resume
+        with db.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            run = dict(c.execute('SELECT * FROM runs WHERE id=? AND user_id=?', (run_id, user['id'])).fetchone())
+            if cfg.agent_policy != 'business_multi_v6' or not can_resume(run):
+                raise HTTPException(409, '当前请求没有可恢复的步骤，或本次执行预算已用尽')
+            if c.execute("SELECT 1 FROM runs WHERE conversation_id=? AND id<>? AND status IN ('queued','running')",
+                         (run['conversation_id'], run_id)).fetchone():
+                raise HTTPException(409, '此会话已有任务在执行，请等待完成后继续')
+            state = json.loads(run['state'])
+            state['business']['resume_requested'] = True
+            c.execute("UPDATE runs SET status='queued',error=NULL,state=?,updated_at=? WHERE id=?",
+                      (encode(state), time.time(), run_id))
+        db.event(run_id, 'business_resumed', {'reuse_completed_tasks': True})
+        return {'run_id': run_id, 'conversation_id': run['conversation_id'], 'status': 'queued'}
 
     @app.get("/api/runs/{run_id}/events")
     def stream_events(run_id: str, request: Request, after: int = 0, user=Depends(current_user)):
@@ -351,7 +375,7 @@ def create_app(settings=None, start_workers=True):
     @app.post("/api/runs/{run_id}/feedback")
     def feedback(run_id: str, payload: Feedback, user=Depends(current_user)):
         run = own_run(user, run_id)
-        if payload.rating not in {-1, 1} or run["status"] not in {"answered", "insufficient", "clarify"}:
+        if payload.rating not in {-1, 1} or run["status"] not in {"answered", "insufficient", "clarify", "partial_success"}:
             raise HTTPException(400, "请对已完成的回答提交有效评价")
         db.execute("INSERT OR REPLACE INTO feedback VALUES(?,?,?,?,?)", (run_id, user["id"], payload.rating, payload.comment, time.time()))
         return {"ok": True}

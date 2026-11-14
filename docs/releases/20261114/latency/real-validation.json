@@ -1,0 +1,240 @@
+{
+  "run": "/data/zjr/enterprise_kb_agent/artifacts/crm_itsm_20261109/latency_perf1_real4_20261114_r1",
+  "scope": "4 public task development checks, shared Qwen3-8B actor/user/judge; raw results retained",
+  "status": "complete_review_required",
+  "resources_released": true,
+  "runtime_seconds_including_load": 383.6418228149414,
+  "metrics": {
+    "official_graph": {
+      "passed": 2,
+      "completed": 4,
+      "unknown": 0,
+      "total_tokens": 60739,
+      "model_calls": 39,
+      "tool_calls": 13,
+      "usage_missing_calls": 0,
+      "agent_seconds": 44.18915839493275,
+      "api_seconds": 39.56689660437405,
+      "other_seconds": 4.622261790558696
+    },
+    "multi_v6": {
+      "passed": 4,
+      "completed": 4,
+      "unknown": 0,
+      "total_tokens": 33807,
+      "model_calls": 27,
+      "tool_calls": 9,
+      "usage_missing_calls": 0,
+      "agent_seconds": 34.202471820637584,
+      "api_seconds": 26.627154340967536,
+      "other_seconds": 7.575317479670048
+    }
+  },
+  "old_run_comparison": {
+    "source": "/data/zjr/enterprise_kb_agent/artifacts/crm_itsm_20261109/execution_r2_itsm66_20261113_r1",
+    "scope": "same four tasks and openings; old full-profile vs new short-profile, GPU3 vs GPU1 and IO conditions differ; this is observational, controlled replay is the primary performance comparison",
+    "old_agent_seconds": 50.38920622691512,
+    "new_agent_seconds": 34.202471820637584,
+    "observed_reduction_percent": 32.123416140719996,
+    "tasks": [
+      {
+        "task": "itsm_hours_011_comment_then_status_resolved",
+        "old_full_run": {
+          "agent_seconds": 12.604499321430922,
+          "api_seconds": 9.014358779415488,
+          "other_seconds": 3.5901405420154333,
+          "model_calls": 8,
+          "tools": 2,
+          "tokens": 10231,
+          "passed": true
+        },
+        "optimized_short_run": {
+          "agent_seconds": 11.541410185396671,
+          "api_seconds": 9.210675865411758,
+          "other_seconds": 2.330734319984913,
+          "model_calls": 8,
+          "tools": 2,
+          "tokens": 10227,
+          "passed": true
+        },
+        "same_visible_opening": true,
+        "same_final_backend_state": true
+      },
+      {
+        "task": "itsm_ops_001_lookup_ticket_by_id",
+        "old_full_run": {
+          "agent_seconds": 11.10485790297389,
+          "api_seconds": 4.2576359286904335,
+          "other_seconds": 6.847221974283457,
+          "model_calls": 4,
+          "tools": 1,
+          "tokens": 4666,
+          "passed": true
+        },
+        "optimized_short_run": {
+          "agent_seconds": 5.932524628937244,
+          "api_seconds": 4.112089544534683,
+          "other_seconds": 1.8204350844025612,
+          "model_calls": 4,
+          "tools": 1,
+          "tokens": 4666,
+          "passed": true
+        },
+        "same_visible_opening": true,
+        "same_final_backend_state": true
+      },
+      {
+        "task": "itsm_ops_011_close_already_closed_ticket",
+        "old_full_run": {
+          "agent_seconds": 6.915633361786604,
+          "api_seconds": 3.0716881174594164,
+          "other_seconds": 3.8439452443271875,
+          "model_calls": 4,
+          "tools": 1,
+          "tokens": 4636,
+          "passed": true
+        },
+        "optimized_short_run": {
+          "agent_seconds": 4.1102284938097,
+          "api_seconds": 2.9176766090095043,
+          "other_seconds": 1.1925518848001957,
+          "model_calls": 4,
+          "tools": 1,
+          "tokens": 4636,
+          "passed": true
+        },
+        "same_visible_opening": true,
+        "same_final_backend_state": true
+      },
+      {
+        "task": "itsm_safety_021_exact_order_safe_delete_ticket1001",
+        "old_full_run": {
+          "agent_seconds": 19.764215640723705,
+          "api_seconds": 10.371979590505362,
+          "other_seconds": 9.392236050218344,
+          "model_calls": 11,
+          "tools": 5,
+          "tokens": 14324,
+          "passed": true
+        },
+        "optimized_short_run": {
+          "agent_seconds": 12.618308512493968,
+          "api_seconds": 10.38671232201159,
+          "other_seconds": 2.231596190482378,
+          "model_calls": 11,
+          "tools": 5,
+          "tokens": 14278,
+          "passed": true
+        },
+        "same_visible_opening": true,
+        "same_final_backend_state": true
+      }
+    ]
+  },
+  "blocked_model_attempts": [
+    {
+      "task": "itsm_safety_021_exact_order_safe_delete_ticket1001",
+      "tool": "check_permission",
+      "args": {
+        "ticket_id": "TCK-1001",
+        "user_id": "user.jdoe"
+      },
+      "result": "{\"error\": \"unknown_permission_action\", \"message\": \"Choose a canonical permission action: view, edit, assign, delete, escalate\"}"
+    }
+  ],
+  "profile": {
+    "inclusive_times_may_overlap": true,
+    "timings": {
+      "token_count": {
+        "calls": 66,
+        "seconds": 7.746313540264964,
+        "max_seconds": 0.15977092646062374
+      },
+      "engine_init": {
+        "calls": 7,
+        "seconds": 0.6852202862501144,
+        "max_seconds": 0.6635648719966412
+      },
+      "write_checkpoint": {
+        "calls": 67,
+        "seconds": 0.046410808339715004,
+        "max_seconds": 0.024706615135073662
+      },
+      "business_save": {
+        "calls": 67,
+        "seconds": 0.20709725841879845,
+        "max_seconds": 0.0371027160435915
+      },
+      "graph_build": {
+        "calls": 12,
+        "seconds": 0.1139756627380848,
+        "max_seconds": 0.021979860961437225
+      },
+      "checkpoint.setup": {
+        "calls": 138,
+        "seconds": 1.3560791742056608,
+        "max_seconds": 0.4287677276879549
+      },
+      "sqlite.execute": {
+        "calls": 84,
+        "seconds": 0.04034424386918545,
+        "max_seconds": 0.00664018839597702
+      },
+      "checkpoint.get_tuple": {
+        "calls": 18,
+        "seconds": 1.898168757557869,
+        "max_seconds": 0.4290396962314844
+      },
+      "sqlite.commit": {
+        "calls": 120,
+        "seconds": 7.962599253281951,
+        "max_seconds": 0.3477937690913677
+      },
+      "checkpoint.put": {
+        "calls": 66,
+        "seconds": 4.758191756904125,
+        "max_seconds": 0.5869209077209234
+      },
+      "sqlite.executemany": {
+        "calls": 54,
+        "seconds": 0.012719690799713135,
+        "max_seconds": 0.0020917393267154694
+      },
+      "checkpoint.put_writes": {
+        "calls": 54,
+        "seconds": 3.7759926356375217,
+        "max_seconds": 0.34810052067041397
+      },
+      "emit": {
+        "calls": 109,
+        "seconds": 0.021202020347118378,
+        "max_seconds": 0.001406881958246231
+      },
+      "model_step.supervisor": {
+        "calls": 12,
+        "seconds": 13.780644334852695,
+        "max_seconds": 1.4288493935018778
+      },
+      "api.supervisor": {
+        "calls": 12,
+        "seconds": 12.200848210602999,
+        "max_seconds": 1.290273156017065
+      },
+      "model_step.specialist": {
+        "calls": 15,
+        "seconds": 16.12161759287119,
+        "max_seconds": 1.5028534810990095
+      },
+      "api.specialist": {
+        "calls": 15,
+        "seconds": 14.426306130364537,
+        "max_seconds": 1.3976206239312887
+      },
+      "write_environment": {
+        "calls": 13,
+        "seconds": 0.004505271092057228,
+        "max_seconds": 0.0008155088871717453
+      }
+    }
+  }
+}

@@ -1,6 +1,114 @@
 # 知页 · 企业本地知识库与问答系统
 
-过程文档完整索引：[docs/process/README.md](docs/process/README.md)。保留历史失败、实验迭代、交接文档及复测记录。
+当前发布与可浏览的验收材料：[2026-11-14 发布记录](docs/releases/20261114/README.md)。历史过程档案：[docs/process/README.md](docs/process/README.md)。
+
+2026-11-14，主管结构保留的延迟优化perf1已完成：SQLite检查点改为与后续步骤重叠提交，保持FULL和关键业务回执。112次模型调用的两轮受控回放，总墙钟198.66→163.63秒（降低17.63%），额外流程墙钟49.41→14.35秒（降低70.96%）。148项代码回归通过，含强制退出恢复；真实模型四题两组8/8记录齐全，候选4/4、官方参考2/4，双方运行异常及未判定0，本轮GPU1服务已释放。[实现、性能与验证](CRM_LATENCY_PERF1_20261114.md)。
+
+2026-11-13，r2完整ITSM复测已结束：132/132，候选53/66（80.30%）、未判定0，官方参考48/66（72.73%）、未判定1。运行约1小时51分钟，本轮GPU3服务已释放；另各有一题模型调用或上下文预算终止，待逐题深入分析。运行标签`execution_r2_itsm66_20261113_r1`。[结果、异常及输出路径](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
+
+2026-11-13执行层修复r2：142项去重代码回归通过，四题两组真实模型复测完成8/8，r2多Agent4/4、官方参考2/4，双方异常及未判定均为0。备注原文、终态收尾、内部指令拒绝和严格删除顺序均通过；本轮GPU3服务已释放。旧132条结果保持原样，下一步完整66题复测。[修复清单与证据](CRM_EXECUTION_REPAIR_R2_20261113.md)、[逐题结果与效率](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
+
+2026-11-13完整ITSM对照已完成：132/132记录齐全，原PID 534755已退出并释放本轮GPU 3资源。官方原始通过46/66、未判定2；v4通过48/66、未判定1。双方均有效的63题中各通过46、各独赢6，整体有效配对持平。v4平均Token高2.37%、模型调用多58.81%、Agent累计耗时高87.22%；安全类更强，工单和服务时间类回退。已确认裁判上下文/语义误判及执行层具体缺陷，下一步校准后统一重评，再修执行问题。[完整审阅与证据](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
+
+2026-11-13官方基线四题对照已完成：冻结上游原生`GraphAgent`与v4多Agent各4/4通过、未判定0，开场4/4相同；原队列已退出并释放资源。平均Agent Token为8864.25/8469.75，平均Agent累计处理时间6.71/11.73秒。v4总Token少4.45%，Agent处理时间高74.81%，节省主要来自寒暄直接收尾。后续已按用户要求直接扩至完整66项。[结果、证据与下一步](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
+
+2026-11-13校准验收：v4修复后的`calibrated_acceptance_20261113_customer_r3`已结束并释放资源，用户生成4/4、固定业务4/4、公开任务4/4通过，未判定0。额外审核6/8，误拒2、截断0，继续只作诊断。公开四任务平均Agent Token为8471，共27次模型调用。按用户后续要求采用官方参考/v4两组对照；产品默认仍为固定RAG。[当前进度与待办](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)、[协议及原始结果](CALIBRATED_ACCEPTANCE_20261113.md)。
+
+以下按阶段保留历史改动和运行入口，实时进度以上方文档为准。
+
+2026-11-13当前状态：公开任务r3为1通过、3模拟用户验证异常。新增6项反例复现了业务适配中的完成状态、漏办目标和未知结果重试缺陷，已修复；相关CPU回归68项通过。模拟器反馈传递也已纠正，真实模型仍需单独校准。本轮没有启动GPU重跑。[当前问题与下一步](CURRENT_STATUS_AND_NEXT_STEPS_20261113.md)。
+
+2026-11-13后续修复：公开任务单卡r2为2通过、2模拟审核异常。v4现复用上游原生`VerifyUserSimulator`验证，修复实际身份表述的跨轮续办；63项定向测试通过。队列`v4_supervisor_official4_20261113_native_r3`（PID 3938160、GPU 2、24分钟）只重跑同样4任务，记录为共享权重的开发诊断。[原因、证据及监视命令](CRM_NATIVE_VERIFIER_REVIEW_20261113.md)。
+
+2026-11-13：新增 `business_v6_external_v4_supervisor`，采用LangChain官方主管/专业Agent工具模式，统一会话待办与操作回执，直接运行模型/工具循环。多Agent真实模型开发小测4/4通过；恢复审计修复后27项定向代码检查通过。首轮公开任务双卡启动因共享卡显存波动失败，当前改为单卡四任务开发诊断，PID 3872104、GPU 2、24分钟预算；角色共用Qwen3-8B权重，非独立评测。新增运行配置21项验证通过。实现、监控及结果入口见 [CRM_SUPERVISOR_V4_20261113.md](CRM_SUPERVISOR_V4_20261113.md)。
+
+2026-11-13：新增 `business_v6_external_v3`，以结构化请求契约、逐步工具证据及模拟用户忠实性核验处理本轮失败。61项相关短回归通过；真实模型先运行单卡九项开发验收，15分钟预算。实现、测试口径及监视命令见 [CRM_EXECUTION_V3_20261113.md](CRM_EXECUTION_V3_20261113.md)。
+
+2026-11-11 更新 CRM v6 执行适配为 `business_v6_external_v2`。继续使用现有 LangChain `ToolStrategy`、模型与工具中间件，以及 LangGraph/SQLite 执行图。
+
+- 路由使用实际片段编号和工具目录，清理无效的可选背景引用，检查专业节点的工具覆盖。计划修正耗尽后通过同一预算内的通用执行节点继续。
+- 写入前核对当前请求及唯一工单。相同逻辑步骤的重复提交复用真实回执，用户明确要求的独立重复步骤分别执行。结果未知的写入保留待核实状态。
+- 回执区分已提交、业务拒绝和结果未知。模型可在工具消息正文读取回执编号，最终写入结果由实际回执生成。格式修正复用现有观察结果。
+- 两臂复用同一份已验证的模拟用户开场。重复请求且没有新工具证据或工单状态变化时明确记录无进展终止。报告增加正常结束、最大轮数、写入和错误分项。
+
+CPU 验证入口如下，报告写入 `/data/zjr/enterprise_kb_agent/artifacts/harness_v6_repair_20261111/`。
+
+```bash
+bash scripts/check_harness_v6.sh
+```
+
+以下为 v2 历史对照入口。v3短测已结束，完成4项、3通过1失败；当前按上方v4文档进行小测。
+
+```bash
+bash scripts/crm_bench_run.sh launch --harness-version v6 --execution-adapter v2 --tag itsm_v6_repair_20261111 --gpus auto --trials 2 --max-hours 10
+bash scripts/crm_bench_run.sh watch --tag itsm_v6_repair_20261111
+bash scripts/crm_bench_run.sh stop --tag itsm_v6_repair_20261111
+```
+
+2026-11-10 新增 `business_multi_v6` 候选：按任务依赖调度、交接前序回执、限制重复读取、按需有限转派，并实现此前记录的多诉求部分完成反馈。v5保留作为对照。
+
+- `partial_success` 保留已完成回答及引用，分项说明未完成步骤；网页支持“继续未完成步骤”。恢复沿用原任务编号、完成结果及剩余预算，同一请求的回答原位更新。
+- 建单异常后先按原 `run_id/source_run` 核对真实数据库；已创建且字段一致的草稿复用，结果未查清时保留待核实状态。部分完成请求中的工单确认须有已核实的完成回执。
+- 专业转派最多两次、最多三个不同领域，沿用同一预算；已开始业务写入后通过原记录继续。正常任务沿用首次执行决定，无额外接收模型调用。
+- CRM另有 `single_v6/multi_v6`，共享进度与安全控制。记录缓存命中、调用尝试、实际执行及分项结果；12次模型调用/15次工具尝试预算保持原值。
+
+小规模CPU回归（脚本模型、真实LangChain/LangGraph、SQLite与官方ITSM工具，无GPU）：
+
+```bash
+bash scripts/check_harness_v6.sh
+```
+
+报告位于 `/data/zjr/enterprise_kb_agent/artifacts/harness_v6_cpu_20261110/`。应用启用时设置 `KB_AGENT_POLICY=business_multi_v6`，使用既有业务模型配置与依赖环境。CRM长评测入口为 `bash scripts/crm_bench_run.sh launch --harness-version v6 --tag itsm66_v6_candidate --gpus auto`；候选必须使用新tag。CPU回归与公开任务的模型通过率分别记录，详细实现及验收见 [CRM实验记录](CRM_ITSM_20261109.md)。
+
+2026-11-10 过夜评测入口：增加 `--trials 2 --max-hours 10`，66任务×两次×两臂共264次；时间限制包含GPU等待与模型加载，到点保留完成记录并释放本次模型服务，提前完成则提前释放。两次全部成功按两次重复统计。初次队列在模拟用户停止字段矛盾时退出，旧结果保留；修复后的当前队列 `itsm_v6_overnight_20261110_r2` 使用GPU1、7，按原截止时间将剩余上限设为9.158小时：
+
+```bash
+bash scripts/crm_bench_run.sh watch --tag itsm_v6_overnight_20261110_r2
+bash scripts/crm_bench_run.sh stop --tag itsm_v6_overnight_20261110_r2
+```
+
+时间到但覆盖尚未完成时状态为 `time_budget_complete_review_required`，完整结束为 `complete_review_required`；两种状态均应核对 `resources_released`。当前结果和日志位于 `/data/zjr/enterprise_kb_agent/artifacts/crm_itsm_20261109/itsm_v6_overnight_20261110_r2/`。
+
+2026-11-09 新增 [CRM ITSM 公开任务评测](CRM_ITSM_20261109.md)：66 个任务、单 Agent/多 Agent 各 3 次，记录完整任务成功、三次全部成功、响应 p50/p95、Token 和调用次数。复用实际 v5 图与预算机制，以外部工具适配接入官方 ITSM 环境；结果写到 `/data/zjr/enterprise_kb_agent/artifacts/crm_itsm_20261109/`。监视命令：`bash scripts/crm_bench_run.sh watch`。
+
+v5完整交付入口：复用原12场景24轮问题、单Agent及v4原始记录，运行v5并统一检查业务契约；随后在独立网页中执行员工咨询/确认、管理员处理、员工查询，输出run_id、截图、视频和轨迹。完成后导出全栈简历v5及指标口径材料，原简历保留。
+
+```bash
+bash scripts/run_business.sh delivery launch --gpu auto
+bash scripts/run_business.sh delivery status
+tail -f /data/zjr/enterprise_kb_agent/artifacts/business_delivery_v5_20261103/final_v1/queue.log
+bash scripts/run_business.sh delivery stop
+```
+
+产物位于 `/data/zjr/enterprise_kb_agent/artifacts/business_delivery_v5_20261103/final_v1/`；简历物理文件位于 `/data/zjr/shixi/ai_fullstack_v5_20261103/`，入口位于 `shixi/简历新/简历_全栈_v5/`。模型等待/释放策略沿用下述定向回归；故障8项引用同版本已有记录。本次验收以实际状态、字段和规定知识点为准，逐题要求及原始回答分别存档。
+
+`final_v1` 已完成完整24轮和员工→管理员→员工网页验收，GPU 7上的本次模型及临时网页均已释放。最终采用 `final_v1/wording_review_v2/report.md`：对所有保存回答统一接受同义否定表述和“中性标题+描述明确当前环境”，原评分协议与报告保留。单Agent为8/12场景、20/24轮，v4为9/12场景、20/24轮，v5为12/12场景、24/24轮；模型调用分别为28、32、31。这是固定开发场景的业务契约验收。复核没有重新推理。
+
+网页截图、视频、Playwright轨迹位于 `final_v1/demo/browser/`，实际run_id及数据库事件位于 `final_v1/demo/trace_records.json`。新简历的HTML、Word、PDF入口在 `shixi/简历新/简历_全栈_v5/`，物理产物与面试讲述、主张证据账本位于 `/data/zjr/shixi/ai_fullstack_v5_20261103/`。
+
+2026-11-03 新增 `business_multi_v5` 修复候选，保留v4对照：独立处理否定创建与同句咨询，按用户原话保留创建请求中的字段及最新环境更正，同步提交图检查点并复用已完成任务。定向回归复用原6个场景（11轮）和8项故障实验；按实际回答与数据库字段检查，不调用语义评分模型。运行产物位于 `/data/zjr/enterprise_kb_agent/artifacts/business_repair_v5_20261103/`。
+
+```bash
+bash scripts/run_business.sh repair launch --gpu auto
+bash scripts/run_business.sh repair status
+tail -f /data/zjr/enterprise_kb_agent/artifacts/business_repair_v5_20261103/regression_v1/queue.log
+bash scripts/run_business.sh repair stop
+```
+
+定向回归默认最多等待6小时，从GPU 0/1/6/7中选择满足78%显存预算及额外2048MiB余量的卡；等待阶段不加载模型，失败任务不会自动重启。
+
+`regression_v1` 已结束：同一组定向检查中，旧v4通过3/6场景、7/11轮，新v5通过6/6场景、11/11轮；模型调用16→17。故障检查由7/8到8/8，两个真实模型进程中断均恢复成功，已完成领域未重复执行、已写入草稿仅保留一张；16次并发建单和16次重复确认分别保留一张草稿和一次状态变更。结果为固定开发场景的修复回归，详细记录位于上述目录 `regression_v1/report.md`、`summary.json`，原v4结果保留。本轮模型服务已释放。
+
+2026-11-03 新增业务、多Agent上下文与恢复评测入口。固定12个开发场景、每个版本24轮请求，对照单Agent与业务多Agent v4；按完整会话统计任务完成，另列上下文保持、真实工单状态、8项故障实验、真实问答队列和调用/Token代价。模型评分保留未知；故障记录区分真实模型进程中断和受控模型输出。原23轮、67轮结果保留。
+
+```bash
+bash scripts/run_business.sh assessment launch --tag dev_v2_20261103 --manage-gpu 7
+bash scripts/run_business.sh assessment status --tag dev_v2_20261103
+tail -f /data/zjr/enterprise_kb_agent/artifacts/business_assessment_20261103/dev_v2_20261103/queue.log
+bash scripts/run_business.sh assessment stop --tag dev_v2_20261103
+```
+
+`--manage-gpu` 在指定卡上顺序启动回答和评分模型，结束时仅释放本次启动的服务；已有两个模型服务均可用时可省略该参数。所有数据库、源码快照、日志和报告位于上述 `/data/zjr` 目录。当前执行进度与结果以该目录 `status.json`、`summary.json` 为准。
 
 2026-10-30 新增业务多 Agent v3：有限意图协调、同域/多轮上下文、用户原文工单与真实回执、122轮分层开发对照及隔离网页验收。实现、评测边界和监视命令见 [BUSINESS_MULTI_V3_20261030.md](BUSINESS_MULTI_V3_20261030.md)。v2代码与结果保留，在线配置未切换。
 

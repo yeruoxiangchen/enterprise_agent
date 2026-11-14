@@ -41,8 +41,12 @@ def transition(db, user, ticket_id, action, version, note=''):
         if row['status'] != before or row['version'] != version:
             raise ValueError('工单已更新，请刷新后操作')
         if action == 'submit':
-            run = c.execute('SELECT status,cancel_requested FROM runs WHERE id=?', (row['source_run'],)).fetchone()
-            if not run or run['cancel_requested'] or run['status'] not in ('answered', 'clarify', 'insufficient'):
+            run = c.execute('SELECT status,cancel_requested,state FROM runs WHERE id=?', (row['source_run'],)).fetchone()
+            partial_verified = False
+            if run and run['status'] == 'partial_success':
+                from .business_status import verified_partial_draft
+                partial_verified = verified_partial_draft(run, row)
+            if not run or run['cancel_requested'] or (run['status'] not in ('answered', 'clarify', 'insufficient') and not partial_verified):
                 raise ValueError('原问答尚未正常完成，不能提交该草稿')
         c.execute('UPDATE service_tickets SET status=?,note=?,version=version+1,updated_at=? WHERE id=?',
                   (after, note[:2000], time.time(), ticket_id))

@@ -7,6 +7,9 @@ export TMPDIR="$RUNTIME/tmp" TORCH_HOME="$RUNTIME/cache/torch"
 export HF_HOME="$RUNTIME/cache/huggingface" HF_HUB_CACHE="$RUNTIME/cache/huggingface/hub"
 export TORCH_EXTENSIONS_DIR="$RUNTIME/cache/torch_extensions" MPLCONFIGDIR="$RUNTIME/cache/matplotlib"
 export PIP_CACHE_DIR="$RUNTIME/cache/pip" XDG_CACHE_HOME="$RUNTIME/cache"
+export CUDA_CACHE_PATH="$RUNTIME/cache/cuda" TRITON_CACHE_DIR="$RUNTIME/cache/triton"
+export TORCHINDUCTOR_CACHE_DIR="$RUNTIME/cache/torchinductor"
+mkdir -p "$CUDA_CACHE_PATH" "$TRITON_CACHE_DIR" "$TORCHINDUCTOR_CACHE_DIR"
 export HAYSTACK_TELEMETRY_ENABLED=false OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false
 export LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false
 umask 077
@@ -41,6 +44,20 @@ case "$ACTION" in
     export KB_RERANKER_START_TIMEOUT=600
     if [[ -f "$RUNTIME/judge.env" ]]; then set -a; source "$RUNTIME/judge.env"; set +a; fi
     exec "$PYTHON" -B scripts/business_v4_supplement.py "$@" ;;
+  assessment)
+    export KB_RERANKER_START_TIMEOUT=600
+    if [[ -f "$RUNTIME/judge.env" ]]; then set -a; source "$RUNTIME/judge.env"; set +a; fi
+    exec "$PYTHON" -B scripts/business_assessment.py "$@" ;;
+  repair)
+    export KB_RERANKER_START_TIMEOUT=600
+    if [[ -f "$RUNTIME/judge.env" ]]; then set -a; source "$RUNTIME/judge.env"; set +a; fi
+    exec "$PYTHON" -B scripts/business_repair_v5.py "$@" ;;
+  delivery)
+    export KB_RERANKER_START_TIMEOUT=600
+    if [[ -f "$RUNTIME/judge.env" ]]; then set -a; source "$RUNTIME/judge.env"; set +a; fi
+    exec "$PYTHON" -B scripts/business_delivery_v5.py "$@" ;;
+  delivery-review)
+    exec "$PYTHON" -B scripts/business_delivery_review.py "$@" ;;
   stop) exec "$PYTHON" -B scripts/business_control.py ;;
   *) exec "$PYTHON" -B scripts/business_ops.py "$ACTION" "$@" ;;
 esac

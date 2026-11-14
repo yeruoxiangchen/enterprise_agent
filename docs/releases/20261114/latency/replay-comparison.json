@@ -1,0 +1,47 @@
+{
+  "scope": "3 recorded task dialogues, 112 model calls per pass, two ABBA repetitions; original response/API waits replayed; not new inference accuracy",
+  "runs": {
+    "baseline": [
+      {
+        "repeat": 1,
+        "agent_seconds": 205.12510863132775,
+        "model_seconds": 149.24216406419873,
+        "other_seconds": 55.882944567129016,
+        "calls": 112,
+        "checkpoint_commits": 514
+      },
+      {
+        "repeat": 2,
+        "agent_seconds": 192.1896904092282,
+        "model_seconds": 149.24333383888006,
+        "other_seconds": 42.946356570348144,
+        "calls": 112,
+        "checkpoint_commits": 514
+      }
+    ],
+    "optimized": [
+      {
+        "repeat": 1,
+        "agent_seconds": 163.79023229703307,
+        "model_seconds": 149.2688828650862,
+        "other_seconds": 14.521349431946874,
+        "calls": 112,
+        "checkpoint_commits": 514
+      },
+      {
+        "repeat": 2,
+        "agent_seconds": 163.46932234987617,
+        "model_seconds": 149.29537727311254,
+        "other_seconds": 14.17394507676363,
+        "calls": 112,
+        "checkpoint_commits": 514
+      }
+    ]
+  },
+  "mean_agent_seconds_before": 198.65739952027798,
+  "mean_agent_seconds_after": 163.62977732345462,
+  "agent_reduction_percent": 17.632175937774676,
+  "mean_other_seconds_before": 49.41465056873858,
+  "mean_other_seconds_after": 14.347647254355252,
+  "other_reduction_percent": 70.96479062541005
+}
