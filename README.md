@@ -1,5 +1,7 @@
 # 知页 · 企业本地知识库与问答系统
 
+2026-11-16，主管选择性RL训练入口已接入：复用Agent Lightning/veRL GRPO，在实际DeepAgents业务图中训练主管LoRA、冻结专业Agent。任务、奖励、独立环境及短训进度见 [Agent RL接入记录](AGENT_RL_IMPLEMENTATION_20261116.md)。
+
 [简历固定版本](https://github.com/yeruoxiangchen/enterprise_agent/tree/resume-20261116) · [最新代码](https://github.com/yeruoxiangchen/enterprise_agent/tree/main) · [版本与评测记录](docs/versions.md) · [操作演示](docs/demos/README.md)
 
 2026-11-16，工单当前状态视图已接入原生网页执行核心：历史回执保持原样，进度查询按账号权限读取最新状态、版本与备注，并核对生成期间的版本变化。最终定向检查17/17，真实模型三个请求的业务链路通过；应用已重载。实现、首次复测问题及最终结果见[状态新鲜度修复](STATE_FRESHNESS_REPAIR_20261116.md)，小型验证摘要见[本次发布记录](docs/releases/20261116_fresh_state/README.md)。

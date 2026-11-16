@@ -11,6 +11,7 @@ class Settings:
     llm_model: str = field(default_factory=lambda: os.getenv("KB_LLM_MODEL", ""))
     llm_key: str = field(default_factory=lambda: os.getenv("KB_LLM_API_KEY", ""))
     tokenize_url: str = field(default_factory=lambda: os.getenv("KB_TOKENIZE_URL", ""))
+    tokenize_model: str = field(default_factory=lambda: os.getenv("KB_TOKENIZE_MODEL", ""))
     tokenize_key: str | None = field(default_factory=lambda: os.getenv("KB_TOKENIZE_API_KEY"))
     context_tokens: int = field(default_factory=lambda: int(os.getenv("KB_CONTEXT_TOKENS", "8192")))
     output_tokens: int = field(default_factory=lambda: int(os.getenv("KB_OUTPUT_TOKENS", "1400")))

@@ -20,7 +20,8 @@ class ContextBudget:
             headers = {"Authorization": "Bearer " + key} if key else {}
             try:
                 with httpx.Client(timeout=cfg.timeout, trust_env=False) as client:
-                    r = client.post(cfg.tokenize_url, headers=headers, json={"model": cfg.llm_model,
+                    r = client.post(cfg.tokenize_url, headers=headers, json={
+                        "model": getattr(cfg,'tokenize_model','') or cfg.llm_model,
                         "messages": messages, "tools": tools,
                         "chat_template_kwargs": {"enable_thinking": cfg.enable_thinking}})
                     r.raise_for_status()
