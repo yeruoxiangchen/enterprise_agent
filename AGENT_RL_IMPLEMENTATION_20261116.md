@@ -17,6 +17,8 @@ veRL 0.6 的HTTP采样前端通过本轮私有Ray进程内的服务扩展注册�
 
 另外适配vLLM 0.11新增的executor `non_block`参数：保留veRL原有ZMQ执行与结果，异步接口返回已完成Future。对应上游已记录的[接口兼容问题](https://github.com/verl-project/verl/issues/4308)，本轮保持同步执行，不宣称异步吞吐优化。
 
+在进入原生训练器前，删除该批次所有样本共同的、attention mask为0的左侧prompt padding。全部真实token、position id、response及奖励保留，上限仍为8K；避免把两三千token的主管调用强行补到8K进行全序列计算。小型Qwen3上已核对响应logits和反向梯度一致。r11已完成8/8有效业务轨迹，但在未去除这些padding的反向传播中OOM，参数更新为0；新轮次独立记录。
+
 ## 当前训练对象与任务
 
 主管使用 rank16/alpha32 的 all-linear LoRA，专家使用另一模型端点和冻结底座，temperature=0。只有主管请求进入训练代理，工具结果和专家输出作为观测。共享的调用预算、鉴权、业务回执、fork上下文及确认机制继续由实际运行链管理。
@@ -64,10 +66,7 @@ bash scripts/agent_rl.sh stop --tag supervisor_grpo_short_NEW
 
 - 原有执行链兼容检查：32项通过。
 - 前序应用、角色路由与业务奖励检查：36项通过。
-- 当前角色路由、奖励与采样配置检查：28项通过；另增2项，验证策略预算失败计0、程序异常终止训练。检查使用真实工具、真实DeepAgents图，覆盖跨角色共享预算、环境隔离及oracle不进入模型输入。
-- 计数端点配置检查：5项通过，覆盖独立模型名、鉴权凭据及原配置回退。新增`KB_TOKENIZE_MODEL`可将计数服务的别名与生成服务分开。
-- vLLM实际Executor接口检查：2项通过，同步和Future返回均保留原执行结果；在隔离训练环境运行，不分配GPU。
-- 数据传输检查：2项通过，直接使用上游LoadedDataset和collate覆盖全部8类任务，核对完整任务、实际环境快照及载荷完整性。
+- 最新应用/角色/奖励/计数配置检查36项、vLLM接口2项、真实上游数据传输2项、Qwen3 padding概率及梯度等价1项，去重共41项通过。新增`KB_TOKENIZE_MODEL`可将计数服务的别名与生成服务分开。
 - 真实上游HTTP代理检查通过：合法鉴权、未鉴权拒绝、原始prompt/response token恢复、Store轨迹归属及归档。报告：`outputs/proxy-wire-final/result.json`。该检查使用受控HTTP后端。
 - GPU短闭环正在联调，最终状态、采样数量和参数更新情况以对应输出目录为准；本记录不预填模型收益。
 

@@ -21,6 +21,12 @@ class StrictBusinessDaemon(AgentModeDaemon):
             raise RuntimeError(f'Business rollout {rollout.rollout_id} has no verified reward; stop the update')
         return super()._fillna_reward(rollout)
 
+    def get_train_data_batch(self,*args,**kwargs):
+        from .padding import trim_shared_prompt_padding
+        data,metrics=super().get_train_data_batch(*args,**kwargs)
+        metrics['training/common_prompt_padding_removed']=trim_shared_prompt_padding(data)
+        return data,metrics
+
 
 class BusinessTrainer(AgentLightningTrainer):
     def init_workers(self):

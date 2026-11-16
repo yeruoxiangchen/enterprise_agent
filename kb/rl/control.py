@@ -73,8 +73,9 @@ def run_job(args):
             lock=(DATA_ROOT/f'gpu-{gpu}.lock').open('w')
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
             leases.append(lock)
-            if snapshot[gpu]['free_mib']<22000:
-                raise RuntimeError(f'GPU {gpu} needs 22000MiB free; available {snapshot[gpu]["free_mib"]}')
+            required=23500 if gpu==devices[0] else 22000
+            if snapshot[gpu]['free_mib']<required:
+                raise RuntimeError(f'GPU {gpu} needs {required}MiB free; available {snapshot[gpu]["free_mib"]}')
         save(stage='start_frozen_specialist',gpu_snapshot=snapshot)
         services.start('actor',devices[1],memory_fraction=.78,max_model_len=8192)
         async def ready():
@@ -162,7 +163,7 @@ def run_job(args):
                 with (folder/'trace-export.log').open('a')as stream:
                     exported=subprocess.run([str(DATA_ROOT/'envs/runner/bin/python'),'-B',
                         '-m','kb.rl.audit_store','--store',status['store_url'],'--output',str(folder)],
-                        cwd=SOURCE,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=25)
+                        cwd=SOURCE,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=120)
                 save(trace_export_exit=exported.returncode)
             except (OSError,subprocess.TimeoutExpired)as exc:
                 save(trace_export_error=str(exc))
