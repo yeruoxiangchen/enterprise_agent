@@ -77,6 +77,24 @@ bash scripts/agent_rl.sh stop --tag supervisor_grpo_short_NEW
 - 应用/角色/奖励/计数配置原36项通过；选择性角色验证现扩展为主管和专家两种实际图路由，共增加1项。加上vLLM接口2项、真实上游数据传输2项、Qwen3 padding概率及梯度等价1项，去重共42项通过。新增`KB_TOKENIZE_MODEL`可将计数服务的别名与生成服务分开。
 - 真实上游HTTP代理检查通过：合法鉴权、未鉴权拒绝、原始prompt/response token恢复、Store轨迹归属及归档。报告：`outputs/proxy-wire-final/result.json`。该检查使用受控HTTP后端。
 - 新增角色回调、零策略动作的真实图路径、奖励恢复/轨迹丢失拒绝及上游GRPO/REINFORCE++数值对照检查通过；原始报告为`role-outcomes.xml`和`adapter-and-estimator.xml`。前者24项中含原有16项奖励重验，后者3项。
-- GPU短闭环正在联调，最终状态、采样数量和参数更新情况以对应输出目录为准；本记录不预填模型收益。
+- 最终代码侧检查：运行链、角色、奖励、计数及无动作处理43项，上游适配器/优势数值对照3项，数据传输2项，vLLM接口2项，Qwen3 padding梯度等价1项，共51项通过。
+
+## 已审阅的双卡短训
+
+运行：`outputs/specialists_rpp_short_20261116_r1/`，训练源码与Git提交`0f3ab13`一致。GPU5训练/采样业务专家共享LoRA，GPU6运行固定主管；总耗时22.81分钟，退出后两卡均释放。
+
+|检查|结果|
+|---|---|
+|训练迭代/更新RPC|2/2|
+|优势信号|正492 token、负398 token|
+|首轮梯度范数|0.2493、0.3283、0.4242|
+|LoRA B权重|252个张量，22,413,312个非零元素；L2=0.0103078|
+|更新后采样|策略版本0、1、2均记录；两个更新后适配器ID均被实际选用|
+|调用/token/奖励核对|20/20一致；其中5条无专家调用的轨迹保留真实得分|
+|执行异常|0|
+|训练业务结果|12/16|
+|开发业务结果|2/4；未训练基线同为2/4|
+
+这轮已验证有效梯度、权重变化、更新后采样、检查点、开发评估与资源释放的完整闭环。4题开发检查没有出现收益，后续应固定预算开展更长训练与基线对照。完整结构化结果在`review.json`，原始奖励、轨迹与权重核对分别在`rollouts/`、`traces/`和`adapter-weight-review.json`。所有产物物理位置均在`/data/zjr/enterprise_kb_agent/rl/`。
 
 联调发现并修正的接入问题：Ray socket路径长度、跨Ray传递已启动代理的不可序列化资源、训练注意力后端和BF16配置、上游HFModelConfig要求LoRA目标为字符串、单卡FSDP1的显存驻留、代理鉴权及遥测版本差异、veRL HTTP前端的动态LoRA选择。各轮失败日志保留在 `outputs/supervisor_grpo_short_20261116_r*/`。
