@@ -96,12 +96,22 @@ class Journal:
             emit('operation_reconciled', {'evidence_id':ident,'status':result.status,'value':result.value})
             return {'evidence_id':ident,'status':result.status,'value':result.value}
 
-    def snapshot(self,request_id=None,*,request_ids=None):
+    def snapshot(self,request_id=None,*,request_ids=None,current_version=None):
         records = self.records()
         scope=request_ids if request_ids is not None else {request_id}if request_id is not None else None
         if scope is not None:
             records=[r for r in records if r['request_id']in scope or r['status']=='unknown']
+        observations=[]
+        for r in records[-8:]:
+            observation={'evidence_id':r['id'],'tool':r['name'],
+                         'status':r['status'],'value':r['result']}
+            if current_version is not None:
+                # The receipt proves what this tool returned at execution time;
+                # it never changes into a claim about the entity's current state.
+                observation.update(evidence_kind='historical_tool_receipt',recorded_at=r['created'],
+                    observed_state_version=r['version'],
+                    state_changed_since_observation=str(r['version'])!=str(current_version))
+            observations.append(observation)
         return {'committed': [r['id'] for r in records if r['status'] == 'committed'],
                 'uncertain': [r['id'] for r in records if r['status'] == 'unknown'],
-                'recent_observations': [{'evidence_id':r['id'],'tool':r['name'],
-                    'status':r['status'],'value':r['result']} for r in records[-8:]]}
+                'recent_observations': observations}

@@ -1,0 +1,7 @@
+{
+  "kb/harness/journal.py": "4843758e4c08646685eaf810e3f98c025b8255664a36806c59a931b2b879f854",
+  "kb/harness/ports.py": "80a699a89ddab4c717ce598288883d42b33ba0458adbb3a1da72e523a31543d2",
+  "kb/harness/native.py": "3716e191cdc491475c763c2ce0c39889f74284640fd01667ace5bac4e7ce04d5",
+  "kb/harness/native_application.py": "01fa4934aa33c0d07438efe3b4750596865a258be7c2212b13084e38b5d57658",
+  "tests/test_ticket_state_freshness.py": "b7a4a950cb2ad83e56fc3bd3ebcf05a306aae0fd3c7b322716721929c0d63418"
+}

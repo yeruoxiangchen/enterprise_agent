@@ -4,6 +4,7 @@
 | --- | --- |
 | [`resume-20261116`](https://github.com/yeruoxiangchen/enterprise_agent/tree/resume-20261116) | 2026-11-16 冻结的简历项目源码快照 |
 | [`main`](https://github.com/yeruoxiangchen/enterprise_agent/tree/main) | 最新源码，后续更新继续进入此分支 |
+| [当前状态修复](releases/20261116_fresh_state/README.md) | 最新网页工单状态修复与功能验收 |
 | [本次发布记录](releases/20261116/README.md) | 源码清单、评测对应关系和发布检查 |
 | [操作演示](demos/README.md) | 实际网页操作及结果 |
 

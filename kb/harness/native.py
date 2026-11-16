@@ -248,6 +248,23 @@ class NativeHarness:
             'proposed_description': args.get('description'), 'bound_description': description})
         return {**call, 'args': {**args, 'description': description}}
 
+    def _business_snapshot(self):
+        enrich=getattr(self.port,'progress_snapshot',None)
+        if enrich is None:
+            return self.journal.snapshot()
+        snapshot=enrich(self.journal.snapshot(current_version=self.port.version()))
+        if not snapshot['current_ticket_states'] and not snapshot['unavailable_ticket_ids']:
+            # Keep ordinary knowledge/incident conversations on their existing
+            # context contract when no related ticket state is available.
+            return self.journal.snapshot()
+        self.emit('current_business_state_observed',{
+            'source':snapshot['current_state_source'],
+            'observed_at':snapshot['current_state_observed_at'],
+            'tickets':[{'id':row['id'],'status':row['status'],'version':row['version']}
+                       for row in snapshot['current_ticket_states']],
+            'unavailable_ticket_ids':snapshot['unavailable_ticket_ids']})
+        return snapshot
+
     def _middleware(self):
         @wrap_model_call
         def native_context(request, handler):
@@ -263,7 +280,7 @@ class NativeHarness:
                 request = request.override(tools=tools)
             if self.shared_context:
                 context = {'quoted_customer_messages': request.state.get('quoted_customer_messages', []),
-                           'actual_business_receipts': self.journal.snapshot()}
+                           'actual_business_receipts': self._business_snapshot()}
                 if hasattr(self.port, 'input_context'):
                     context['authenticated_application_context'] = self.port.input_context()
                 content = request.system_message.content if request.system_message else ''
@@ -420,7 +437,7 @@ class NativeHarness:
         @tool
         def inspect_progress() -> dict:
             """Read the actual business receipts and uncertain operations."""
-            return self.journal.snapshot()
+            return self._business_snapshot()
 
         @tool
         def reconcile_operation(operation_id: str) -> dict:

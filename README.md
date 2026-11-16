@@ -2,6 +2,8 @@
 
 [简历固定版本](https://github.com/yeruoxiangchen/enterprise_agent/tree/resume-20261116) · [最新代码](https://github.com/yeruoxiangchen/enterprise_agent/tree/main) · [版本与评测记录](docs/versions.md) · [操作演示](docs/demos/README.md)
 
+2026-11-16，工单当前状态视图已接入原生网页执行核心：历史回执保持原样，进度查询按账号权限读取最新状态、版本与备注，并核对生成期间的版本变化。最终定向检查17/17，真实模型三个请求的业务链路通过；应用已重载。实现、首次复测问题及最终结果见[状态新鲜度修复](STATE_FRESHNESS_REPAIR_20261116.md)，小型验证摘要见[本次发布记录](docs/releases/20261116_fresh_state/README.md)。
+
 2026-11-16，在线 `business_native_v1` 已接入 Go 模型网关，继续使用现有 Qwen3-8B。
 真实 HTTP 验证完成带引用检索、专业 Agent 创建草稿、成员确认、管理员处理及同会话状态查询；
 应用记录、网关请求和账户扣额三者核对一致，临时占用为零。

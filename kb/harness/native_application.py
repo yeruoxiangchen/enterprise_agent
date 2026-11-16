@@ -61,8 +61,9 @@ def execute(h, run_id):
         citations = list(dict.fromkeys(re.findall(r'\[(S\d+)\]', answer)))
         current = [r for r in records if r['request_id'] == run_id]
         unresolved = [r for r in records if r['status'] == 'unknown']
-        completed = any(r['status'] in ('observed', 'committed') for r in current)
-        status = ('partial_success' if completed else 'insufficient') if unresolved else 'answered' if citations or current else 'clarify'
+        completed = (any(r['status'] in ('observed', 'committed') for r in current)
+                     or bool(port.current_ticket_states or port.current_unavailable_ticket_ids))
+        status = ('partial_success' if completed else 'insufficient') if unresolved else 'answered' if citations or current or completed else 'clarify'
         state['business']['resumable'] = False
         h.finish(run, state, answer, citations, status)
     except BaseException as exc:
@@ -88,6 +89,17 @@ def _state(h, run, user, port, engine, previous, started):
     records = engine.journal.records()
     current = [r for r in records if r['request_id'] == run['id']]
     receipts = list(port.receipts)
+    observed_tasks={}
+    if port.current_ticket_states or port.current_unavailable_ticket_ids:
+        # This is an actual read-only application DB observation, not a tool
+        # call invented for the transcript. Keep its provenance in the finish
+        # contract even when the model answers directly from supplied context.
+        observation_id='current-state-'+run['id']
+        receipts.append({'action':'current_ticket_state','task_id':observation_id,
+            'source':'authenticated_ticket_database','observed_at':port.current_state_observed_at,
+            'tickets':port.current_ticket_states,'unavailable_ticket_ids':port.current_unavailable_ticket_ids,
+            'verified':True})
+        observed_tasks[observation_id]={'kind':'database_observation','result':{'status':'answered'}}
     # The persisted journal survives a worker/process restart; in-memory port
     # receipts alone cannot establish that a draft has already been created.
     for effect in current:
@@ -110,12 +122,14 @@ def _state(h, run, user, port, engine, previous, started):
             'calls': engine.turn_calls, 'tools': engine.turn_tools,
             'max_calls': engine.max_calls, 'max_tools': engine.max_tools,
             'receipts': receipts, 'resumable': False,
-            'deferred_user_actions': [f"在服务工单页面确认提交工单 {r['result']['id']}。" for r in current
-                if r['name'] == 'prepare_ticket_draft' and r['status'] == 'committed'
-                and r['result'].get('status') == 'draft'],
+            'current_ticket_states':port.current_ticket_states,
+            'unavailable_ticket_ids':port.current_unavailable_ticket_ids,
+            'current_state_observed_at':port.current_state_observed_at,
+            'deferred_user_actions': [f"在服务工单页面确认提交工单 {item['ticket_id']}。"
+                                     for item in port.user_handoffs(current)],
             'remaining_work': [r['id'] for r in records if r['status'] == 'unknown'],
-            'completed_tasks': {r['id']: {'result': {'status': 'answered'}} for r in current
-                if r['status'] in ('observed', 'committed')},
+            'completed_tasks': {**{r['id']: {'result': {'status': 'answered'}} for r in current
+                if r['status'] in ('observed', 'committed')},**observed_tasks},
             'usage': {'prompt_tokens': usage.get('prompt_tokens', 0)+engine.prompt_tokens,
                 'completion_tokens': usage.get('completion_tokens', 0)+engine.completion_tokens,
                 'missing_usage_calls': missing_usage, 'usage_complete': missing_usage == 0,

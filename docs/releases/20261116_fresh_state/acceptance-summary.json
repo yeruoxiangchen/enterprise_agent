@@ -1,0 +1,49 @@
+{
+  "checked_at": "2026-11-16T12:51:56.955745+00:00",
+  "scope": "Application state-freshness engineering repair; authored functional acceptance with live Qwen3-8B, not a model benchmark",
+  "broad_compatibility_round": {
+    "tests": 52,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "final_application_round": {
+    "tests": 17,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "new_freshness_cases": 8,
+  "live_model": {
+    "status": "complete_review_required",
+    "source_label": "fresh-state-repair-20261116",
+    "scope": "three real-model application requests; real auth/FTS/DB/tools; no embedding endpoint",
+    "checks": {
+      "grounded_answer": {
+        "answered": true,
+        "cited": true,
+        "no_unrequested_draft": true
+      },
+      "draft": {
+        "answered": true,
+        "one_draft": true,
+        "waits_for_user": true
+      },
+      "status": {
+        "answered": true,
+        "actual_resolved_state": true,
+        "resolved_answer": true
+      }
+    },
+    "passed": true,
+    "sdk_matches_provider": true
+  },
+  "initial_live_attempt": {
+    "status_query_passed": true,
+    "retrieval_passed": false,
+    "failure": "Model supplied a knowledge-base ID to read_incident; original failure retained."
+  },
+  "application_reloaded": true,
+  "resources_released": true,
+  "remaining_model_review": "The final reply reports resolved/version4 and the correct admin note, but retains a generic Web UI confirmation/submission closing sentence; this is a model wording issue, not a pending structured submission."
+}

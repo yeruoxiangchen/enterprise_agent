@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import copy
+import time
 
 from .contracts import TaskResult, ToolOutcome, ToolSpec
 from .journal import canonical
@@ -224,6 +225,9 @@ class ApplicationPort:
         self.base_ids=db.check_bases(user,base_ids)
         self.retriever=Retriever(db,settings)
         self.sources={};self.receipts=[];self.journal=None;self.observed_incidents={}
+        self.current_ticket_states=[];self.current_unavailable_ticket_ids=[]
+        self.current_state_observed_at=None
+        self._ticket_observation_versions={}
         self.attachments=db.all('SELECT incident_id,digest FROM run_incidents WHERE run_id=?',(run_id,))
 
     def input_context(self):
@@ -245,8 +249,67 @@ class ApplicationPort:
     def bind_journal(self,journal):
         self.journal=journal
 
+    def progress_snapshot(self,snapshot):
+        """Read an authorized current view; leave durable effect history intact."""
+        run=self.db.one('SELECT conversation_id FROM runs WHERE id=? AND user_id=?',
+                        (self.run_id,self.user['id']))
+        if not run:
+            raise PermissionError('Request does not belong to the authenticated user')
+        known={}
+        for record in reversed(self.journal.records() if self.journal else []):
+            if record['status'] not in ('observed','committed') or not isinstance(record['result'],dict):
+                continue
+            value=record['result']
+            if record['name'] in ('prepare_ticket_draft','get_my_ticket') and value.get('id'):
+                known.setdefault(value['id'],None)
+            elif record['name']=='list_my_tickets':
+                for ticket in value.get('tickets',[]):
+                    if ticket.get('id'):known.setdefault(ticket['id'],None)
+        references=list(known)[:64]
+        fields='id,title,status,version,note,updated_at'
+        rows=self.db.all(f'SELECT {fields} FROM service_tickets WHERE user_id=? AND source_run IN '
+            '(SELECT id FROM runs WHERE conversation_id=? AND user_id=?) '
+            'ORDER BY updated_at DESC,id LIMIT 9',
+            (self.user['id'],run['conversation_id'],self.user['id']))
+        referenced=[]
+        if references:
+            placeholders=','.join('?' for _ in references)
+            referenced=self.db.all(f'SELECT {fields} FROM service_tickets WHERE user_id=? '
+                f'AND id IN ({placeholders})',(self.user['id'],*references))
+        available={row['id']:row for row in [*rows,*referenced]}
+        # Prefer entities most recently discussed; bound the injected context.
+        rank={ident:i for i,ident in enumerate(references)}
+        ordered=sorted(available.values(),key=lambda row:(rank.get(row['id'],64),-row['updated_at'],row['id']))
+        observed_at=time.time()
+        current=[{**row,'note':row['note'][:512],'note_truncated':len(row['note'])>512}
+                 for row in ordered[:8]]
+        unavailable=[ident for ident in references if ident not in available]
+        self.current_ticket_states=current
+        self.current_unavailable_ticket_ids=unavailable
+        self.current_state_observed_at=observed_at
+        self._ticket_observation_versions={row['id']:row['version'] for row in current}
+        self._ticket_observation_versions.update({ident:None for ident in unavailable})
+        return {**snapshot,'current_state_source':'authenticated_ticket_database',
+                'current_state_observed_at':observed_at,'current_ticket_states':current,
+                'unavailable_ticket_ids':unavailable,
+                'current_tickets_truncated':len(ordered)>8 or len(known)>64,
+                'receipt_semantics':'recent_observations are historical tool results; current_ticket_states is the latest authorized database view. Query get_my_ticket for omitted or truncated details.'}
+
+    def _state_freshness_errors(self):
+        observed=self._ticket_observation_versions
+        if not observed:return []
+        placeholders=','.join('?' for _ in observed)
+        rows=self.db.all('SELECT id,version FROM service_tickets WHERE user_id=? '
+            f'AND id IN ({placeholders})',(self.user['id'],*observed))
+        current={row['id']:row['version'] for row in rows}
+        changed=[ident for ident,version in observed.items() if current.get(ident)!=version]
+        return [{'code':'ticket_state_changed_during_generation','ticket_ids':changed,
+                 'instruction':'The ticket state changed after the supplied observation. Use the refreshed current state or query get_my_ticket before answering. Preserve previous committed operations.'}] if changed else []
+
     def validate_completion(self,answer,records):
         """Validate a typed Web request contract against actual tool receipts."""
+        freshness=self._state_freshness_errors()
+        if freshness:return freshness
         state=json.loads(self.db.one('SELECT state FROM runs WHERE id=?',(self.run_id,))['state'])
         required=state.get('input_contract',{}).get('knowledge_grounded',False)
         read_ids={r['result'].get('id')for r in records if r['request_id']==self.run_id and
@@ -266,9 +329,15 @@ class ApplicationPort:
         return [{'code':'unknown_source_label','labels':sorted(unknown)}]if unknown else[]
 
     def user_handoffs(self,records):
-        return [{'action':'confirm_submission','channel':'service_ticket_ui','evidence_id':r['id'],
-                 'ticket_id':r['result']['id']}for r in records if r['name']=='prepare_ticket_draft'
-                and r['status']=='committed'and r['result'].get('status')=='draft']
+        handoffs=[]
+        for r in records:
+            if r['name']!='prepare_ticket_draft' or r['status']!='committed':continue
+            ticket=self.db.one('SELECT id,status FROM service_tickets WHERE id=? AND user_id=?',
+                               (r['result'].get('id'),self.user['id']))
+            if ticket and ticket['status']=='draft':
+                handoffs.append({'action':'confirm_submission','channel':'service_ticket_ui',
+                                 'evidence_id':r['id'],'ticket_id':ticket['id']})
+        return handoffs
 
     def draft_payload(self,arguments):
         from kb import incidents
