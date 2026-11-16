@@ -423,7 +423,7 @@ class NativeHarness:
     def _model_for_role(self, role):
         """Select an explicit specialist endpoint without changing graph semantics.
 
-        ``*`` is the frozen-specialist default during selective RL. Omitted
+        ``*`` selects the default specialist endpoint for selective RL. Omitted
         overrides preserve the existing shared-model execution path.
         """
         return self.role_models.get(role, self.role_models.get('*', self.model))

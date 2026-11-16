@@ -123,7 +123,8 @@ def test_rollout_requires_updated_adapter_and_rejects_ambiguous_versions():
         select_policy_adapter({73,74},2)
 
 
-def test_native_episode_uses_real_tools_and_keeps_oracle_out_of_model(tmp_path,monkeypatch):
+@pytest.mark.parametrize('train_role',['supervisor','specialists'])
+def test_native_episode_uses_real_tools_and_keeps_oracle_out_of_model(tmp_path,monkeypatch,train_role):
     import asyncio
     from kb.rl.runtime import run_episode
     from kb.context import ContextBudget
@@ -135,13 +136,21 @@ def test_native_episode_uses_real_tools_and_keeps_oracle_out_of_model(tmp_path,m
     expert=ScriptModel(replies=[call('get_ticket',{'ticket_id':sample['target_ticket']},'get'),
                               answer('The requested ticket is open.')])
     monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
+    resources=[]
     def models(**kwargs):
-        return supervisor if kwargs['metadata']['rl_role']=='supervisor' else expert
+        resources.append((kwargs['metadata']['rl_role'],kwargs['base_url']))
+        return supervisor if kwargs['metadata']['rl_role'] in ('supervisor','frozen_supervisor') else expert
     result=asyncio.run(run_episode(sample,{'url':'http://train.local/v1','model':'policy'},
-        {'url':'http://frozen.local/v1','model':'base'},tmp_path/'episode',model_factory=models))
+        {'url':'http://frozen.local/v1','model':'base'},tmp_path/'episode',model_factory=models,
+        train_role=train_role))
     assert result['reward']==1,result
     assert len(supervisor.seen)==len(expert.seen)==2
     assert result['model_calls']==4
+    assert result['supervisor']['trainable']==(train_role=='supervisor')
+    assert result['specialist']['trainable']==(train_role=='specialists')
+    assert resources==([('supervisor','http://train.local/v1'),('frozen_specialist','http://frozen.local/v1')]
+        if train_role=='supervisor' else
+        [('frozen_supervisor','http://frozen.local/v1'),('specialist_policy','http://train.local/v1')])
     inputs=str(supervisor.seen)+str(expert.seen)
     assert 'fixture_sha256'not in inputs and 'reward_contract'not in inputs
     assert 'expected_actions'not in inputs and 'expected_state'not in inputs

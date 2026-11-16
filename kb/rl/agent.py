@@ -1,4 +1,4 @@
-"""Agent Lightning runner; only supervisor calls go through the training proxy."""
+"""Route the selected agent role through the upstream training proxy."""
 from __future__ import annotations
 
 import os
@@ -20,6 +20,7 @@ class BusinessAgent(agl.LitAgent[dict]):
             {'url':os.environ['KB_RL_SPECIALIST_URL'],
              'model':os.environ['KB_RL_SPECIALIST_MODEL']},folder,
             temperature=temperature,
+            train_role=os.environ.get('KB_RL_TRAIN_ROLE','supervisor'),
             context_tokens=int(os.environ.get('KB_RL_CONTEXT','8192')),
             output_tokens=int(os.environ.get('KB_RL_OUTPUT_TOKENS','512')))
         # The upstream runner records this scalar as a reward span. It never

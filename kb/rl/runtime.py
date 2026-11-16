@@ -20,7 +20,7 @@ def write_json(path, value):
 
 async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7,
                       context_tokens=8192, output_tokens=512, max_calls=24,
-                      timeout_seconds=180, model_factory=None):
+                      timeout_seconds=180, model_factory=None,train_role='supervisor'):
     from langchain_openai import ChatOpenAI
     from harness.tools.environment import create_environment
     import harness.tools.domains  # noqa: F401
@@ -33,7 +33,7 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
         raise ValueError('Keep RL episodes on project data storage')
     folder.mkdir(parents=True, exist_ok=False)
     if supervisor['url'] == specialist['url'] and supervisor['model'] == specialist['model']:
-        raise ValueError('Selective training needs distinct supervisor and frozen-specialist resources')
+        raise ValueError('Selective training needs distinct policy and frozen-model resources')
     factory = model_factory or ChatOpenAI
 
     def model(resource, role, sampling_temperature):
@@ -43,19 +43,27 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
             metadata={'rl_role': role, 'rl_task_id': sample['id']},
             extra_body={'chat_template_kwargs': {'enable_thinking': False}})
 
-    root_model = model(supervisor, 'supervisor', temperature)
-    frozen_model = model(specialist, 'frozen_specialist', 0)
+    if train_role not in ('supervisor','specialists'):
+        raise ValueError('Unknown trainable agent role')
+    root_trainable=train_role=='supervisor'
+    root_resource=supervisor if root_trainable else specialist
+    child_resource=specialist if root_trainable else supervisor
+    root_model=model(root_resource,'supervisor' if root_trainable else 'frozen_supervisor',
+                     temperature if root_trainable else 0)
+    child_model=model(child_resource,'frozen_specialist' if root_trainable else 'specialist_policy',
+                      0 if root_trainable else temperature)
     cfg = Settings(root=folder, mode='agent', llm_url=supervisor['url'],
         llm_model=supervisor['model'], llm_key='local',
         tokenize_url=specialist['url'].removesuffix('/v1')+'/tokenize',
         tokenize_model=specialist['model'],tokenize_key='',
+        enable_thinking=False,
         context_tokens=context_tokens, output_tokens=output_tokens, timeout=60,
         harness_model_calls=max_calls, harness_tool_calls=32)
     environment = environment_for(sample)
     adapter = NativeCRMAdapter(environment, cfg,
         yaml.safe_load((BENCH_ROOT/'src/agents/itsm.yaml').read_text()),
         (BENCH_ROOT/'src/tasks/policies/itsm_policy.md').read_text(), folder,
-        model=root_model, role_models={'*': frozen_model}, fork_subagents=True,
+        model=root_model, role_models={'*': child_model}, fork_subagents=True,
         operation_permissions=True, prepare_operations=True,
         specialist_owned_checks=True, require_dependency_confirmation=True,
         bind_user_request=True)
@@ -95,8 +103,11 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
             usage_missing_calls=adapter.usage_missing_calls,
             environment=environment.get_state(), audit=adapter.tool_calls,
             effects=adapter.engine.journal.records(),
-            supervisor={'model':supervisor['model'],'temperature':temperature},
-            specialist={'model':specialist['model'],'temperature':0,'trainable':False})
+            train_role=train_role,
+            supervisor={'model':root_resource['model'],'temperature':temperature if root_trainable else 0,
+                        'trainable':root_trainable},
+            specialist={'model':child_resource['model'],'temperature':0 if root_trainable else temperature,
+                        'trainable':not root_trainable})
         write_json(folder/'result.json', result)
         await adapter.aclose()
     return result

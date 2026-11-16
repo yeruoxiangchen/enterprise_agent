@@ -5,6 +5,7 @@ import argparse
 import asyncio
 from collections import defaultdict
 import json
+import os
 from pathlib import Path
 
 from .runtime import write_json
@@ -40,7 +41,7 @@ async def _export(store,output):
                      'token_ids_complete':bool(triplets) and all(
                          t.prompt.get('token_ids') and t.response.get('token_ids') for t in triplets)})
     mixed=sum(len(set(v for v in values if v is not None))>1 for values in groups.values())
-    summary={'rollouts':len(rows),'training_proxy_roles':['supervisor'],
+    summary={'rollouts':len(rows),'training_proxy_roles':[os.environ.get('KB_RL_TRAIN_ROLE','supervisor')],
              'groups':len(groups),'groups_with_mixed_outcomes':mixed,'rows':rows,
              'scope':'training plumbing and executable outcome feedback; final-answer semantic accuracy not scored'}
     write_json(output/'trajectory-summary.json',summary)

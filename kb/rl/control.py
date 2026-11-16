@@ -41,6 +41,7 @@ def run_job(args):
     status={'pid':os.getpid(),'start_ticks':identity(os.getpid()),'status':'running',
             'stage':'prepare','started_at':time.time(),'gpus':args.gpus.split(','),
             'max_minutes':args.max_minutes,'steps':args.steps,'resources_released':False}
+    status['train_role']=args.train_role
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -99,6 +100,7 @@ def run_job(args):
         ray_dir=short_root/'r'/hashlib.sha256(args.tag.encode()).hexdigest()[:6]
         ray_dir.mkdir(parents=True,exist_ok=True)
         env.update(KB_RL_RUN_DIR=str(folder),KB_RL_SPECIALIST_URL=expert['url']+'/v1',
+                   KB_RL_TRAIN_ROLE=args.train_role,
                    KB_RL_SPECIALIST_MODEL=expert['model'],AGL_MANAGED_STORE='0',
                    AGENTOPS_API_KEY='',RAY_TMPDIR=str(ray_dir),WANDB_MODE='offline',
                    PYTHONUNBUFFERED='1')
@@ -135,7 +137,8 @@ def run_job(args):
         start('runner',[runner_python,*common,'--role','runner'],runner_env)
         trainer_env={**env,'CUDA_VISIBLE_DEVICES':devices[0]}
         algorithm=start('trainer',[trainer_python,*common,'--role','algorithm'],trainer_env)
-        save(stage='training',roles={'supervisor':devices[0],'frozen_specialist':devices[1]})
+        save(stage='training',roles={'trainable_policy':devices[0],'frozen_model':devices[1],
+                                    'train_role':args.train_role})
         first_episode_deadline=min(deadline,time.monotonic()+720)
         while algorithm.poll()is None:
             if time.monotonic()>deadline:raise TimeoutError('RL job time budget reached; progress retained')
@@ -186,6 +189,7 @@ def main():
     parser.add_argument('command',choices=('prepare','launch','_run','status','watch','stop'))
     parser.add_argument('--tag',default='supervisor_grpo_short_20261116')
     parser.add_argument('--gpus',default='5,6')
+    parser.add_argument('--train-role',choices=('supervisor','specialists'),default='supervisor')
     parser.add_argument('--steps',type=int,default=2)
     parser.add_argument('--batch-size',type=int,default=2)
     parser.add_argument('--group-size',type=int,default=4)
@@ -223,7 +227,8 @@ def main():
             path=folder/'status.json'
             state=json.loads(path.read_text())if path.exists()else{'status':'starting'}
             print(json.dumps(state,ensure_ascii=False,indent=2),flush=True)
-            if args.command=='status'or state.get('status')in ('failed','stopped','complete_review_required'):break
+            if args.command=='status' or (state.get('status') in
+                ('failed','stopped','complete_review_required') and state.get('resources_released')):break
             time.sleep(5)
     else:
         info=json.loads((folder/'launcher.json').read_text())

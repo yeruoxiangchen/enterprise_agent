@@ -1,6 +1,6 @@
 # 企业业务 Agent RL 接入记录 · 2026-11-16
 
-基线为已发布的 `adcbd65802abc17f3d082bad061e988a1aed5cb7`。本轮将主管的策略模型接入真实 DeepAgents 运行链，专家使用独立、固定的 Qwen3-8B 服务；当前网页服务沿用原有模型配置。
+基线为已发布的 `adcbd65802abc17f3d082bad061e988a1aed5cb7`。选择性训练接入真实DeepAgents运行链，可选择主管或专业Agent作为策略模型，其他角色直连固定的Qwen3-8B服务。当前网页服务沿用原有模型配置。
 
 ## 方法与实现来源
 
@@ -21,7 +21,9 @@ veRL 0.6 的HTTP采样前端通过本轮私有Ray进程内的服务扩展注册�
 
 ## 当前训练对象与任务
 
-主管使用 rank16/alpha32 的 all-linear LoRA，专家使用另一模型端点和冻结底座，temperature=0。只有主管请求进入训练代理，工具结果和专家输出作为观测。共享的调用预算、鉴权、业务回执、fork上下文及确认机制继续由实际运行链管理。
+训练策略使用rank16/alpha32的all-linear LoRA，采样temperature=0.7；固定角色使用另一模型端点和冻结底座，temperature=0。只有选定角色的请求进入训练代理。共享的调用预算、鉴权、业务回执、fork上下文及确认机制继续由实际运行链管理。
+
+`--train-role supervisor`训练主管、冻结专业Agent；`--train-role specialists`冻结主管，训练专业Agent共享的LoRA。r12主管试验中，首两组各4次全成功，后两组各4次全失败，组内优势和梯度均为0。失败轨迹显示固定专家在未分配工单上尝试转派、在依赖未解除时尝试删除。因此下一轮选择训练专业Agent，数据与可执行评分保持v2原样，以检查是否获得实际策略梯度。
 
 首批任务使用公开 crm-agent-bench 的真实 ITSM 工具和原生判分函数，另行生成业务实例。它们属于自建训练/开发环境，并非公开 ITSM66 成绩。
 
@@ -52,7 +54,7 @@ bash scripts/agent_rl.sh prepare
 
 # 短闭环：一张卡训练/采样，一张卡运行冻结专家
 bash scripts/agent_rl.sh launch --tag supervisor_grpo_short_NEW \
-  --gpus 5,6 --steps 2 --batch-size 2 --group-size 4 \
+  --gpus 5,6 --train-role specialists --steps 2 --batch-size 2 --group-size 4 \
   --val-limit 4 --max-minutes 90
 bash scripts/agent_rl.sh watch --tag supervisor_grpo_short_NEW
 bash scripts/agent_rl.sh stop --tag supervisor_grpo_short_NEW
@@ -66,7 +68,7 @@ bash scripts/agent_rl.sh stop --tag supervisor_grpo_short_NEW
 
 - 原有执行链兼容检查：32项通过。
 - 前序应用、角色路由与业务奖励检查：36项通过。
-- 最新应用/角色/奖励/计数配置检查36项、vLLM接口2项、真实上游数据传输2项、Qwen3 padding概率及梯度等价1项，去重共41项通过。新增`KB_TOKENIZE_MODEL`可将计数服务的别名与生成服务分开。
+- 应用/角色/奖励/计数配置原36项通过；选择性角色验证现扩展为主管和专家两种实际图路由，共增加1项。加上vLLM接口2项、真实上游数据传输2项、Qwen3 padding概率及梯度等价1项，去重共42项通过。新增`KB_TOKENIZE_MODEL`可将计数服务的别名与生成服务分开。
 - 真实上游HTTP代理检查通过：合法鉴权、未鉴权拒绝、原始prompt/response token恢复、Store轨迹归属及归档。报告：`outputs/proxy-wire-final/result.json`。该检查使用受控HTTP后端。
 - GPU短闭环正在联调，最终状态、采样数量和参数更新情况以对应输出目录为准；本记录不预填模型收益。
 
