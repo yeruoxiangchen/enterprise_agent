@@ -42,6 +42,7 @@ def run_job(args):
             'stage':'prepare','started_at':time.time(),'gpus':args.gpus.split(','),
             'max_minutes':args.max_minutes,'steps':args.steps,'resources_released':False}
     status['train_role']=args.train_role
+    status['adv_estimator']=args.adv_estimator
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -133,6 +134,7 @@ def run_job(args):
                 '--dataset',str(DATA_ROOT/'datasets'/DATASET_NAME),'--store',store_url,
                 '--steps',str(args.steps),'--batch-size',str(args.batch_size),
                 '--group-size',str(args.group_size),'--val-limit',str(args.val_limit)]
+        common+=['--adv-estimator',args.adv_estimator]
         runner_env={**env,'CUDA_VISIBLE_DEVICES':''}
         start('runner',[runner_python,*common,'--role','runner'],runner_env)
         trainer_env={**env,'CUDA_VISIBLE_DEVICES':devices[0]}
@@ -190,6 +192,7 @@ def main():
     parser.add_argument('--tag',default='supervisor_grpo_short_20261116')
     parser.add_argument('--gpus',default='5,6')
     parser.add_argument('--train-role',choices=('supervisor','specialists'),default='supervisor')
+    parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--steps',type=int,default=2)
     parser.add_argument('--batch-size',type=int,default=2)
     parser.add_argument('--group-size',type=int,default=4)

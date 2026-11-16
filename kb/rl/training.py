@@ -1,4 +1,4 @@
-"""Pinned upstream GRPO configuration and separate CPU-runner/GPU-trainer roles."""
+"""Upstream critic-free RL and separate CPU-runner/GPU-trainer roles."""
 from __future__ import annotations
 
 import argparse
@@ -11,14 +11,16 @@ from .tasks import DATA_ROOT, pack_task
 AGL_COMMIT = '6db3c73dc0af2e50fe80e56873a57c1703f1b2a7'
 
 
-def training_config(run_dir, model_path, *, steps=20, batch_size=4, group_size=4):
+def training_config(run_dir, model_path, *, steps=20, batch_size=4, group_size=4,adv_estimator='grpo'):
     """Adapt the upstream Calc-X LoRA recipe; no custom policy-gradient loss."""
     run_dir = Path(run_dir).resolve()
     if not run_dir.is_relative_to(DATA_ROOT):
         raise ValueError('RL outputs belong on the project data volume')
+    if adv_estimator not in ('grpo','reinforce_plus_plus'):
+        raise ValueError('Use a supported upstream advantage estimator')
     return {
         'ray_kwargs': {'ray_init':{'num_cpus':8}},
-        'algorithm': {'adv_estimator':'grpo','use_kl_in_reward':False},
+        'algorithm': {'adv_estimator':adv_estimator,'gamma':1.0,'use_kl_in_reward':False},
         'data': {'train_batch_size':batch_size,'max_prompt_length':8192,
                  'max_response_length':512,'filter_overlong_prompts':False},
         'actor_rollout_ref': {
@@ -67,6 +69,7 @@ def main():
     parser.add_argument('--steps',type=int,default=20)
     parser.add_argument('--batch-size',type=int,default=4)
     parser.add_argument('--group-size',type=int,default=4)
+    parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--val-limit',type=int,default=0)
     args=parser.parse_args()
     os.environ['AGL_MANAGED_STORE']='0'
@@ -74,7 +77,8 @@ def main():
     import agentlightning as agl
     from .agent import BusinessAgent
     config=training_config(args.run_dir,args.model,steps=args.steps,
-                           batch_size=args.batch_size,group_size=args.group_size)
+                           batch_size=args.batch_size,group_size=args.group_size,
+                           adv_estimator=args.adv_estimator)
     if args.role=='algorithm':
         from .verl_contract import StrictBusinessDaemon,BusinessTrainer
         algorithm=agl.VERL(config,daemon_cls=StrictBusinessDaemon,trainer_cls=BusinessTrainer)

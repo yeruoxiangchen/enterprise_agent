@@ -35,13 +35,19 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
     if supervisor['url'] == specialist['url'] and supervisor['model'] == specialist['model']:
         raise ValueError('Selective training needs distinct policy and frozen-model resources')
     factory = model_factory or ChatOpenAI
+    from threading import Lock
+    from .role_usage import RoleUsage
+    role_counts={}
+    role_lock=Lock()
 
     def model(resource, role, sampling_temperature):
-        return factory(model=resource['model'], base_url=resource['url'],
+        candidate=factory(model=resource['model'], base_url=resource['url'],
             api_key=resource.get('key') or 'local', temperature=sampling_temperature,
             max_tokens=output_tokens, timeout=60, max_retries=0,
             metadata={'rl_role': role, 'rl_task_id': sample['id']},
             extra_body={'chat_template_kwargs': {'enable_thinking': False}})
+        return candidate.model_copy(update={'callbacks':[
+            *(candidate.callbacks or []),RoleUsage(role,role_counts,role_lock)]})
 
     if train_role not in ('supervisor','specialists'):
         raise ValueError('Unknown trainable agent role')
@@ -98,6 +104,9 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
     finally:
         result = score_task(sample, adapter, error=error)
         result.update(task_id=sample['id'], family=sample['family'], split=sample['split'],
+            role_model_calls=role_counts,
+            policy_model_calls_completed=role_counts[
+                'supervisor' if root_trainable else 'specialist_policy']['completed'],
             seconds=time.monotonic()-started, turns=turns,
             model_calls=adapter.model_calls, tokens=adapter.prompt_tokens+adapter.completion_tokens,
             usage_missing_calls=adapter.usage_missing_calls,

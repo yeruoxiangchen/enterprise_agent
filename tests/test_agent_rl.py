@@ -146,6 +146,7 @@ def test_native_episode_uses_real_tools_and_keeps_oracle_out_of_model(tmp_path,m
     assert result['reward']==1,result
     assert len(supervisor.seen)==len(expert.seen)==2
     assert result['model_calls']==4
+    assert result['policy_model_calls_completed']==2
     assert result['supervisor']['trainable']==(train_role=='supervisor')
     assert result['specialist']['trainable']==(train_role=='specialists')
     assert resources==([('supervisor','http://train.local/v1'),('frozen_specialist','http://frozen.local/v1')]
@@ -154,6 +155,27 @@ def test_native_episode_uses_real_tools_and_keeps_oracle_out_of_model(tmp_path,m
     inputs=str(supervisor.seen)+str(expert.seen)
     assert 'fixture_sha256'not in inputs and 'reward_contract'not in inputs
     assert 'expected_actions'not in inputs and 'expected_state'not in inputs
+
+
+def test_frozen_supervisor_may_finish_lookup_without_a_trainable_call(tmp_path,monkeypatch):
+    import asyncio
+    from kb.rl.runtime import run_episode
+    from kb.context import ContextBudget
+    from test_deep_harness import ScriptModel,call
+    from test_native_harness import answer
+    sample=make_task('train',0)
+    root=ScriptModel(replies=[call('get_ticket',{'ticket_id':sample['target_ticket']},'read'),
+                              answer('The ticket is open.')])
+    child=ScriptModel(replies=[])
+    monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
+    def models(**kwargs):
+        return root if kwargs['metadata']['rl_role']=='frozen_supervisor' else child
+    result=asyncio.run(run_episode(sample,{'url':'http://policy.local/v1','model':'policy'},
+        {'url':'http://fixed.local/v1','model':'base'},tmp_path/'episode',
+        model_factory=models,train_role='specialists'))
+    assert result['reward']==1 and result['model_calls']==2
+    assert result['policy_model_calls_completed']==0
+    assert result['role_model_calls']['frozen_supervisor']['completed']==2
 
 
 @pytest.mark.parametrize('budget_failure',[False,True])

@@ -6,7 +6,8 @@
 
 - **AgentFlow**：[论文](https://arxiv.org/abs/2510.05592)、[官方实现](https://github.com/lupantech/AgentFlow)。借鉴其在完整系统运行过程中选择性训练 Planner 的组织方式；本项目继续使用自己的 DeepAgents 业务图。
 - **Agent Lightning 0.3.1**：固定官方兼容分支提交 [`6db3c73`](https://github.com/microsoft/agent-lightning/tree/6db3c73dc0af2e50fe80e56873a57c1703f1b2a7)。直接复用 LitAgent、Trainer、OtelTracer、LLMProxy、LlmProxyTraceToTriplet、VERL 和逐调用训练接口。
-- **veRL 0.6.0**：直接使用官方 GRPO、LoRA/FSDP2、参考策略和 vLLM 权重同步。奖励为整个任务的可执行结果，沿用 Agent Lightning 的相同结果分配。当前采用官方逐调用训练路径，不将此实现称为 AgentFlow 的完整复现或 Agent Lightning 1.0。
+- **veRL 0.6.0**：直接使用官方GRPO/REINFORCE++、LoRA/FSDP2、参考策略和vLLM权重同步。奖励为整个任务的可执行结果，沿用Agent Lightning的相同结果分配。当前采用官方逐调用训练路径，不将此实现称为AgentFlow的完整复现或Agent Lightning 1.0。
+- **REINFORCE++**：[论文](https://arxiv.org/abs/2501.03262)、[veRL实现](https://verl.readthedocs.io/en/v0.5.x/_modules/verl/trainer/ppo/core_algos.html)。本轮使用`reinforce_plus_plus`，在整个有效动作批次上归一化优势；保留`grpo`配置作对照，不修改上游策略梯度损失。
 - 本项目新增：角色模型路由、业务采样适配、参数化任务、业务判分、缺失奖励终止、独立环境与进程管理。没有新增自定义策略梯度算法。
 
 固定旧版兼容组合是因为已有 GPU 环境为 Python 3.11、Torch 2.8、vLLM 0.11；DeepAgents 运行环境为 Python 3.12。训练器和执行器通过官方 Store/Proxy 跨进程连接，分别安装在 `/data` 的独立叠加环境，共享依赖目录只读使用。
@@ -24,6 +25,10 @@ veRL 0.6 的HTTP采样前端通过本轮私有Ray进程内的服务扩展注册�
 训练策略使用rank16/alpha32的all-linear LoRA，采样temperature=0.7；固定角色使用另一模型端点和冻结底座，temperature=0。只有选定角色的请求进入训练代理。共享的调用预算、鉴权、业务回执、fork上下文及确认机制继续由实际运行链管理。
 
 `--train-role supervisor`训练主管、冻结专业Agent；`--train-role specialists`冻结主管，训练专业Agent共享的LoRA。r12主管试验中，首两组各4次全成功，后两组各4次全失败，组内优势和梯度均为0。失败轨迹显示固定专家在未分配工单上尝试转派、在依赖未解除时尝试删除。因此下一轮选择训练专业Agent，数据与可执行评分保持v2原样，以检查是否获得实际策略梯度。
+
+专家GRPO r1的首批仍然是同题全对/全错，优势和梯度均为0；下一批在主管直接处理查询、取消时遇到零策略调用，旧代理把有效任务奖励误报为缺失。该轮失败记录保留。现在由实际LangChain回调记录各角色已完成调用数；零策略调用时同时核对上游reward span、任务身份、当前attempt和本地业务结果，保留得分并跳过其梯度。已完成策略调用缺少token轨迹仍然终止。整批没有可训练动作时记录跳过，不生成伪样本。
+
+数据与二值业务奖励保持不变。当前试验选择REINFORCE++利用批次中成功/失败的差异；每次更新记录正/负优势token数、梯度及历史，最后核对LoRA B权重。主管GRPO r12的252个LoRA B张量已核对为全零，未将该轮的训练完成计为学习收益。
 
 首批任务使用公开 crm-agent-bench 的真实 ITSM 工具和原生判分函数，另行生成业务实例。它们属于自建训练/开发环境，并非公开 ITSM66 成绩。
 
@@ -54,7 +59,8 @@ bash scripts/agent_rl.sh prepare
 
 # 短闭环：一张卡训练/采样，一张卡运行冻结专家
 bash scripts/agent_rl.sh launch --tag supervisor_grpo_short_NEW \
-  --gpus 5,6 --train-role specialists --steps 2 --batch-size 2 --group-size 4 \
+  --gpus 5,6 --train-role specialists --adv-estimator reinforce_plus_plus \
+  --steps 2 --batch-size 4 --group-size 2 \
   --val-limit 4 --max-minutes 90
 bash scripts/agent_rl.sh watch --tag supervisor_grpo_short_NEW
 bash scripts/agent_rl.sh stop --tag supervisor_grpo_short_NEW
@@ -70,6 +76,7 @@ bash scripts/agent_rl.sh stop --tag supervisor_grpo_short_NEW
 - 前序应用、角色路由与业务奖励检查：36项通过。
 - 应用/角色/奖励/计数配置原36项通过；选择性角色验证现扩展为主管和专家两种实际图路由，共增加1项。加上vLLM接口2项、真实上游数据传输2项、Qwen3 padding概率及梯度等价1项，去重共42项通过。新增`KB_TOKENIZE_MODEL`可将计数服务的别名与生成服务分开。
 - 真实上游HTTP代理检查通过：合法鉴权、未鉴权拒绝、原始prompt/response token恢复、Store轨迹归属及归档。报告：`outputs/proxy-wire-final/result.json`。该检查使用受控HTTP后端。
+- 新增角色回调、零策略动作的真实图路径、奖励恢复/轨迹丢失拒绝及上游GRPO/REINFORCE++数值对照检查通过；原始报告为`role-outcomes.xml`和`adapter-and-estimator.xml`。前者24项中含原有16项奖励重验，后者3项。
 - GPU短闭环正在联调，最终状态、采样数量和参数更新情况以对应输出目录为准；本记录不预填模型收益。
 
 联调发现并修正的接入问题：Ray socket路径长度、跨Ray传递已启动代理的不可序列化资源、训练注意力后端和BF16配置、上游HFModelConfig要求LoRA目标为字符串、单卡FSDP1的显存驻留、代理鉴权及遥测版本差异、veRL HTTP前端的动态LoRA选择。各轮失败日志保留在 `outputs/supervisor_grpo_short_20261116_r*/`。

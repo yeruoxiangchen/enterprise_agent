@@ -32,14 +32,16 @@ async def _export(store,output):
                 'spans':[s.model_dump(mode='json')for s in spans],
                 'triplets':[t.model_dump(mode='json')for t in triplets]}
         write_json(output/'traces'/f'{rollout.rollout_id}.json',record)
-        rewards=[t.reward for t in triplets if t.reward is not None]
-        reward=rewards[-1]if rewards else None
-        group=rollout.input.get('id','unknown')
+        from .outcome import reward_from_spans
+        reward=reward_from_spans(spans)
+        task_id=rollout.input.get('id','unknown')
+        group=(rollout.metadata or {}).get('data_id') or rollout.input.get('data_id') or rollout.rollout_id
         groups[group].append(reward)
-        rows.append({'rollout_id':rollout.rollout_id,'task_id':group,'status':rollout.status,
+        rows.append({'rollout_id':rollout.rollout_id,'task_id':task_id,'sampling_group_id':group,
+                     'mode':rollout.mode,'status':rollout.status,
                      'triplets':len(triplets),'reward':reward,
-                     'token_ids_complete':bool(triplets) and all(
-                         t.prompt.get('token_ids') and t.response.get('token_ids') for t in triplets)})
+                     'token_ids_complete':all(t.prompt.get('token_ids') and t.response.get('token_ids')
+                         for t in triplets) if triplets else None})
     mixed=sum(len(set(v for v in values if v is not None))>1 for values in groups.values())
     summary={'rollouts':len(rows),'training_proxy_roles':[os.environ.get('KB_RL_TRAIN_ROLE','supervisor')],
              'groups':len(groups),'groups_with_mixed_outcomes':mixed,'rows':rows,
