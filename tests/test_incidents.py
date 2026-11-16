@@ -70,10 +70,13 @@ def test_log_instructions_are_data_and_never_create_tickets(system):
 
 
 @pytest.mark.parametrize('dark,environment', [(False, 'Ubuntu 24.04'), (True, 'Linux')])
-def test_real_cpu_ocr_returns_grounded_fields(system, dark, environment):
+@pytest.mark.parametrize('backend', ['rapidocr', 'tesseract'])
+def test_real_cpu_ocr_returns_grounded_fields(system, dark, environment, backend):
     from PIL import Image, ImageDraw, ImageFont
     cfg = system[0]
-    if not Path(cfg.incident_ocr_bin).exists(): pytest.skip('CPU OCR component not installed')
+    cfg.incident_ocr_backend = backend
+    if backend == 'tesseract' and not Path(cfg.incident_ocr_bin).exists(): pytest.skip('CPU OCR component not installed')
+    if backend == 'rapidocr' and not (Path(cfg.incident_ocr_packages)/'READY.json').exists(): pytest.skip('Region OCR component not installed')
     image = Image.new('RGB', (1100, 260), '#20252b' if dark else 'white'); draw = ImageDraw.Draw(image)
     font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 36)
     draw.multiline_text((30, 30), environment+'\nSSH connection failed\nPermission denied', fill='white' if dark else 'black', font=font, spacing=18)

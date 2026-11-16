@@ -99,6 +99,10 @@ class Database:
             CREATE TABLE IF NOT EXISTS incident_evidence(
               id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
               payload TEXT NOT NULL, run_id TEXT REFERENCES runs(id), created_at REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS run_incidents(
+              run_id TEXT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+              incident_id TEXT NOT NULL REFERENCES incident_evidence(id),
+              digest TEXT NOT NULL, PRIMARY KEY(run_id,incident_id));
             CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
             CREATE INDEX IF NOT EXISTS idx_events_run ON events(run_id,id);
             CREATE INDEX IF NOT EXISTS idx_runs_pending ON runs(status,created_at);

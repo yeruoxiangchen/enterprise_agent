@@ -29,6 +29,9 @@ class ConversationReads(ReadProgress):
         record = super().get(task_id, name, arguments, version)
         if not record:
             return None
+        if (name in getattr(self.engine, 'fresh_read_names', set())
+                and record.get('source_turn') != self.engine.owner.turn):
+            return None
         value = payload(record['result'])
         if not isinstance(value, dict) or value.get('error'):
             return None
@@ -47,7 +50,7 @@ class ConversationReads(ReadProgress):
         super().put(task_id, name, arguments, version, result)
         self.state['read_observations'][self.key(task_id, name, arguments, version)].update(
             task_id=task_id, name=name, arguments=copy.deepcopy(arguments), version=version,
-            source_call_id=self.engine.current_call_id)
+            source_call_id=self.engine.current_call_id, source_turn=self.engine.owner.turn)
 
     def observations(self):
         task_id = self.engine.active_task['id']
@@ -59,7 +62,8 @@ class ConversationReads(ReadProgress):
             current = self.get(task_id, record['name'], record['arguments'], version)
             if current:
                 result.append({'name': record['name'], 'arguments': record['arguments'],
-                               'result': record['result'], 'id': record.get('source_call_id'), 'ok': True})
+                               'result': record['result'], 'id': record.get('source_call_id'),
+                               'turn': record.get('source_turn'), 'ok': True})
         return result
 
 
@@ -142,6 +146,13 @@ def terminal_results(engine, targets):
         if value.get('found') is False:
             resolved[(name,ticket)] = {'status': 'refused', 'answer': f'Ticket {ticket} was not found. No change was made.'}
         elif name == 'close_ticket' and value.get('status') == 'Closed':
+            resolved[(name,ticket)] = {'status': 'already_satisfied', 'answer': f'Ticket {ticket} is already Closed. No additional closure was performed.'}
+        elif name == 'close_ticket' and any(
+                call.get('turn') == engine.owner.turn and call['name'] == name
+                and call['arguments'].get('ticket_id') == ticket and call.get('backend_executed')
+                and isinstance(result := payload(call.get('result')), dict)
+                and result.get('status_code') == 409 and 'already Closed' in str(result.get('error', ''))
+                for call in engine.owner.tool_calls):
             resolved[(name,ticket)] = {'status': 'already_satisfied', 'answer': f'Ticket {ticket} is already Closed. No additional closure was performed.'}
         elif name == 'reassign_ticket' and value.get('ticket_id') == ticket and not value.get('assigned_to'):
             resolved[(name,ticket)] = {'status': 'refused', 'answer': f'Ticket {ticket} is currently unassigned, so it cannot be reassigned. No reassignment was made.'}

@@ -8,14 +8,23 @@ def can_resume(run):
         return False
     state = json.loads(run['state'])
     business = state.get('business', {})
+    if state.get('policy') in {'business_deep_v1','business_native_v1'}:
+        return (business.get('resumable')is True and bool(business.get('workspace'))
+                and business.get('calls',0)<business.get('max_calls',30)
+                and business.get('tools',0)<business.get('max_tools',36))
     return (state.get('policy') == 'business_multi_v6' and bool(business.get('plan'))
             and bool(business.get('task_failures')) and business.get('calls', 0) < 12
             and business.get('tools', 0) < 15)
 
 
+def can_resume_for(run, policy):
+    """A new application runtime must not load a different runtime's checkpoint."""
+    return json.loads(run['state']).get('policy') == policy and can_resume(run)
+
+
 def verified_partial_draft(run, ticket):
     state = json.loads(run['state'])
-    if state.get('policy') != 'business_multi_v6':
+    if state.get('policy') not in {'business_multi_v6','business_deep_v1','business_native_v1'}:
         return False
     business = state.get('business', {})
     for receipt in business.get('receipts', []):

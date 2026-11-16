@@ -51,6 +51,8 @@ class Question(BaseModel):
     question: str = Field(min_length=1, max_length=3000)
     conversation_id: str | None = None
     base_ids: list[str] = Field(default_factory=list, max_length=50)
+    incident_ids: list[str] = Field(default_factory=list,max_length=8)
+    knowledge_grounded: bool = False
 
 
 class Feedback(BaseModel):
@@ -170,7 +172,8 @@ def create_app(settings=None, start_workers=True):
     @app.get("/api/me")
     def me(user=Depends(current_user)):
         return {**user, "mode": cfg.mode, "retrieval": "hybrid" if cfg.embedding_url else "keyword",
-                "workflow": "business_multi" if cfg.mode=='agent' and cfg.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2'} else "fixed_rag" if cfg.mode=='agent' and cfg.agent_policy=='fixed_rag_v1' else 'agent' if cfg.mode=='agent' else 'extractive',
+                "workflow": "business_multi" if cfg.mode=='agent' and cfg.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2','business_deep_v1','business_native_v1'} else "fixed_rag" if cfg.mode=='agent' and cfg.agent_policy=='fixed_rag_v1' else 'agent' if cfg.mode=='agent' else 'extractive',
+                "agent_policy": cfg.agent_policy,
                 "reranking": bool(cfg.reranker_path),
                 "model": cfg.llm_model if cfg.mode == "agent" else None}
 
@@ -331,9 +334,9 @@ def create_app(settings=None, start_workers=True):
             raise HTTPException(404, "会话不存在")
         row["messages"] = db.all("SELECT * FROM messages WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
         row["runs"] = db.all("SELECT id,status,answer,citations,error,question,created_at,state,cancel_requested FROM runs WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
-        from .business_status import can_resume
+        from .business_status import can_resume_for
         for run in row["runs"]:
-            run['can_resume'] = can_resume(run) and cfg.agent_policy == 'business_multi_v6'
+            run['can_resume'] = can_resume_for(run, cfg.agent_policy)
             run.pop('state')
             run["citations"] = json.loads(run["citations"])
         return row
@@ -343,6 +346,11 @@ def create_app(settings=None, start_workers=True):
         if not payload.question.strip():
             raise HTTPException(400, "问题不能为空")
         ids = base_access(user, payload.base_ids)
+        from .incidents import owned
+        try:
+            incidents=[json.loads(owned(db,user,ident)['payload'])for ident in dict.fromkeys(payload.incident_ids)]
+        except LookupError:
+            raise HTTPException(404,'故障材料不存在或不属于当前用户')from None
         if not ids:
             raise HTTPException(400, "请先创建可访问的知识库并上传文档")
         conversation_id = payload.conversation_id or uid()
@@ -357,8 +365,11 @@ def create_app(settings=None, start_workers=True):
                 if not payload.conversation_id:
                     c.execute("INSERT INTO conversations VALUES(?,?,?,?)", (conversation_id, user["id"], payload.question[:45], now))
                 c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), conversation_id, "user", payload.question, run_id, now))
-                c.execute("INSERT INTO runs(id,conversation_id,user_id,question,base_ids,mode,status,created_at,updated_at) VALUES(?,?,?,?,?,?,'queued',?,?)",
-                          (run_id, conversation_id, user["id"], payload.question, encode(ids), cfg.mode, now, now))
+                initial_state={'input_contract':{'knowledge_grounded':payload.knowledge_grounded}} if cfg.agent_policy=='business_native_v1' else {}
+                c.execute("INSERT INTO runs(id,conversation_id,user_id,question,base_ids,mode,status,state,created_at,updated_at) VALUES(?,?,?,?,?,?,'queued',?,?,?)",
+                          (run_id, conversation_id, user["id"], payload.question, encode(ids), cfg.mode, encode(initial_state), now, now))
+                c.executemany('INSERT INTO run_incidents VALUES(?,?,?)',
+                    [(run_id,item['id'],item['digest'])for item in incidents])
         except sqlite3.IntegrityError:
             raise HTTPException(409, "会话状态冲突，请刷新后重试") from None
         return {"run_id": run_id, "conversation_id": conversation_id}
@@ -366,8 +377,9 @@ def create_app(settings=None, start_workers=True):
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str, user=Depends(current_user)):
         run = own_run(user, run_id)
-        from .business_status import can_resume
-        run['can_resume'] = can_resume(run) and cfg.agent_policy == 'business_multi_v6'
+        from .business_status import can_resume_for
+        run['can_resume'] = can_resume_for(run, cfg.agent_policy)
+        run['incident_inputs']=db.all('SELECT incident_id,digest FROM run_incidents WHERE run_id=?',(run_id,))
         run.pop("state")
         run["citations"] = json.loads(run["citations"])
         run["events"] = db.all("SELECT id,kind,payload,created_at FROM events WHERE run_id=? ORDER BY id", (run_id,))
@@ -378,11 +390,11 @@ def create_app(settings=None, start_workers=True):
     @app.post('/api/runs/{run_id}/resume')
     def resume(run_id: str, user=Depends(current_user)):
         own_run(user, run_id)
-        from .business_status import can_resume
+        from .business_status import can_resume_for
         with db.connect() as c:
             c.execute('BEGIN IMMEDIATE')
             run = dict(c.execute('SELECT * FROM runs WHERE id=? AND user_id=?', (run_id, user['id'])).fetchone())
-            if cfg.agent_policy != 'business_multi_v6' or not can_resume(run):
+            if not can_resume_for(run, cfg.agent_policy):
                 raise HTTPException(409, '当前请求没有可恢复的步骤，或本次执行预算已用尽')
             if c.execute("SELECT 1 FROM runs WHERE conversation_id=? AND id<>? AND status IN ('queued','running')",
                          (run['conversation_id'], run_id)).fetchone():

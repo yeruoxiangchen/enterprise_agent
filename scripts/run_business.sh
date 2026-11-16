@@ -29,7 +29,7 @@ case "$ACTION" in
     "$PYTHON" -m pip install --target "$RUNTIME/business-packages-v2" -r requirements.business.lock
     "$PYTHON" -m pip list --path "$RUNTIME/business-packages-v2" --format=freeze > "$RUNTIME/business-requirements.lock"
     ;;
-  test) exec "$PYTHON" -m pytest -p no:cacheprovider --basetemp "$RUNTIME/tmp/business-tests" "$@" ;;
+  test) exec "$PYTHON" -m pytest -p no:cacheprovider --basetemp "$RUNTIME/tmp/business-tests-$$" "$@" ;;
   browser) exec env -u PYTHONPATH "$RUNTIME/venv/bin/python" -B scripts/business_browser.py ;;
   v2) exec "$PYTHON" -B scripts/business_v2_ops.py "$@" ;;
   v3)

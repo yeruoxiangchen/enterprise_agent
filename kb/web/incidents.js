@@ -46,6 +46,7 @@ document.querySelector('#incident-question').addEventListener('click', () => {
   const details = incidentEvidence.fields.map(field => field.value).join('；');
   if (!details) { toast('未找到明确字段，请在提问框补充故障现象'); return; }
   document.querySelector('#question').value = '请根据知识库帮助我排查以下故障：' + details;
+  pendingIncidentIds = [incidentEvidence.id];
   document.querySelector('#incident-dialog').close();
   tab('chat'); document.querySelector('#question').focus();
 });

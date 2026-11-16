@@ -30,6 +30,18 @@ def test_changing_an_approved_entry_requires_review_again():
     assert merge_deltas(SEED, [changed])[0]['status'] == 'candidate'
 
 
+def test_expanding_phase_scope_requires_review_again():
+    changed = copy.deepcopy(SEED[0]); changed['phases'] = ['clarify', 'recover', 'execute']
+    assert merge_deltas(SEED, [changed])[0]['status'] == 'candidate'
+
+
+def test_legacy_approved_memory_without_phase_metadata_remains_usable(tmp_path):
+    entry = dict(id='legacy-guide', domains=['service'], triggers='legacy-specific-guidance',
+                 guidance='Read the observed result before replying.', status='approved')
+    path = tmp_path/'legacy.json'; path.write_text(json.dumps({'version': 1, 'entries': [entry]}))
+    assert ExperienceMemory(path).retrieve('legacy-specific-guidance', 'service', phase='read')[0]['id'] == entry['id']
+
+
 @pytest.mark.parametrize('previous_status', ['candidate', 'retired'])
 def test_repeating_same_delta_cannot_bypass_explicit_review(previous_status):
     old = {**SEED[0], 'status': previous_status}

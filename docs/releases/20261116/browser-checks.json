@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "screenshot_retrieval_without_unrequested_write": true,
+    "followup_preserves_attachment_and_creates_one_draft": true,
+    "explicit_ui_confirmation": true,
+    "duplicate_confirmation_idempotent": true,
+    "cross_account_ticket_isolation": true,
+    "admin_accept_and_resolve": true,
+    "member_queries_actual_resolved_status": true,
+    "user_cancels_draft_without_submission": true,
+    "no_browser_javascript_errors": true
+  },
+  "errors": []
+}

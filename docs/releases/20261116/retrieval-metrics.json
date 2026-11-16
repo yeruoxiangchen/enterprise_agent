@@ -1,0 +1,128 @@
+{
+  "source_report": "git_support_v1/bm25_dev_v2/report.json",
+  "complete": true,
+  "records": 100,
+  "metrics": {
+    "all_evidence_at_1": {
+      "mean": 0.40476190476190477,
+      "ci95_family_bootstrap": [
+        0.2619047619047619,
+        0.5833333333333334
+      ],
+      "families": 21
+    },
+    "all_evidence_at_10": {
+      "mean": 0.9047619047619048,
+      "ci95_family_bootstrap": [
+        0.8333333333333334,
+        0.9761904761904762
+      ],
+      "families": 21
+    },
+    "all_evidence_at_3": {
+      "mean": 0.7023809523809523,
+      "ci95_family_bootstrap": [
+        0.5476190476190477,
+        0.8333333333333334
+      ],
+      "families": 21
+    },
+    "all_evidence_at_5": {
+      "mean": 0.7976190476190477,
+      "ci95_family_bootstrap": [
+        0.6785714285714286,
+        0.9047619047619048
+      ],
+      "families": 21
+    },
+    "any_evidence_at_1": {
+      "mean": 0.4642857142857143,
+      "ci95_family_bootstrap": [
+        0.3333333333333333,
+        0.6190476190476191
+      ],
+      "families": 21
+    },
+    "any_evidence_at_10": {
+      "mean": 0.9404761904761905,
+      "ci95_family_bootstrap": [
+        0.8809523809523809,
+        0.9880952380952381
+      ],
+      "families": 21
+    },
+    "any_evidence_at_3": {
+      "mean": 0.7619047619047619,
+      "ci95_family_bootstrap": [
+        0.6309523809523809,
+        0.8809523809523809
+      ],
+      "families": 21
+    },
+    "any_evidence_at_5": {
+      "mean": 0.8690476190476191,
+      "ci95_family_bootstrap": [
+        0.7619047619047619,
+        0.9523809523809523
+      ],
+      "families": 21
+    },
+    "evidence_ndcg_at_10_diagnostic": {
+      "mean": 0.6990862989316945,
+      "ci95_family_bootstrap": [
+        0.6061753969997683,
+        0.7913151863117144
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_1": {
+      "mean": 0.43452380952380953,
+      "ci95_family_bootstrap": [
+        0.2976190476190476,
+        0.6071428571428571
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.9226190476190477,
+      "ci95_family_bootstrap": [
+        0.8630952380952381,
+        0.9761904761904762
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_3": {
+      "mean": 0.7321428571428571,
+      "ci95_family_bootstrap": [
+        0.5952380952380952,
+        0.8511904761904762
+      ],
+      "families": 21
+    },
+    "evidence_recall_at_5": {
+      "mean": 0.8333333333333334,
+      "ci95_family_bootstrap": [
+        0.7321428571428571,
+        0.9226190476190477
+      ],
+      "families": 21
+    },
+    "mrr_at_10": {
+      "mean": 0.6306831065759637,
+      "ci95_family_bootstrap": [
+        0.5228741496598639,
+        0.7427721088435374
+      ],
+      "families": 21
+    },
+    "returned": {
+      "mean": 9.69,
+      "ci95_family_bootstrap": [
+        9.31,
+        9.96
+      ],
+      "families": 25
+    }
+  },
+  "scope": "Pro Git development questions; evidence retrieval metrics apply to the evidence-labelled subset"
+}

@@ -1,0 +1,20 @@
+{
+  "time": 1794753670.029157,
+  "files": {
+    "kb/harness/native.py": "5bdcdd62bb258fc115c6e6954301cc570e915fc339954398821ae3c30ae2f555",
+    "kb/harness/native_application.py": "037a01017995c18a18e7a07ab3851a7fdd2734c0a8cd46ee92997497f2a30a2a",
+    "kb/harness/ports.py": "3a5f8899ddf07f1376a7f948a5f1ec68ed4541839408c3ab6305af783cf4a287",
+    "kb/agent.py": "c7d05e8e477e38d084af697f9487d25e10569e9e42a2f778593d522c2da8aa6e",
+    "kb/app.py": "0035df5a96f30a0eb9fe9cec9c30decca08d5c0ee87af92b6c043fe22020b9ee",
+    "kb/business_status.py": "1153d245f89ec98f96b6ce75a7636fd9095b9f9fc900aa0368497fc4aa035e29",
+    "kb/web/app.js": "769631f9698f75ed87876b47b917ebce29851f0c479d3adfaa80f90480d76cf6",
+    "scripts/model_service.py": "9e708fad8cad1e1b63169407b35c74fb5448df3cf2ffddd7879bdfc38eedba85",
+    "scripts/harness.sh": "90e14038d47c754f387dd983aa80ca7671a13e8dd2ad0fa5673216b418687a30",
+    "scripts/native_application_acceptance.py": "459f9174ea207d19d5a5e603dd68627c2ff00772613c39c8f3812449e492cb92",
+    "scripts/native_application_browser.py": "b1fd0460ab6cb1e51fd120c49fbf034295a1db5a57adaf96b3887ca5b0399b45",
+    "tests/test_native_application.py": "ba5d401ce63a5621a193984749ef142f71132fd75b9d24394ac01d4d014ef82c",
+    "scripts/native_application_deployed_check.py": "805959aef0252594a605c915fbff05d7510d6abb8ec0f570dd150168ff60a4c7",
+    "scripts/harness_app_check.py": "3a6ba29f78aca88eba7d816d8ef7dd52326f5d9013701f91a63a460928aab927",
+    "scripts/run_business.sh": "33210a9628f39d965c467751c5425793b089da0a728efce655bd1a2407e5a625"
+  }
+}

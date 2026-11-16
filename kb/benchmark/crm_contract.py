@@ -49,7 +49,9 @@ _SUBJECT_STOPWORDS = set(('the and for from with this that ticket tickets issue 
 _STEP_BOUNDARY = re.compile(
     r'(?=\b(?:then|after that)\b)|[,;\n]+\s*(?=\b(?:first|second|then|after that)\b)'
     r'|(?<!\bfirst)(?<!\bsecond)(?<!\bthen)(?<!\bafter that)[,;\n]+\s*(?=\b(?:add|append|close|delete|remove|assign|reassign|escalate|update|set|check|tell|leave|keep)\b)'
-    r'|\band\s+(?=\b(?:add|append|close|delete|remove|assign|reassign|escalate|update|set|check|tell|leave|keep|do not|don\'t)\b)'
+    r'|\band\s+(?=\b(?:add|append|close|delete|remove|assign|reassign|escalate|update|set|check|confirm|verify|look|show|tell|leave|keep|do not|don\'t)\b)'
+    r'|[\n]+|[.!?]\s+(?=(?:please\s+)?(?:confirm|verify|check|look|show)\b)'
+    r'|[,;]\s*(?=(?:please\s+)?(?:confirm|verify|look|show)\b)'
     r'|(?=\b(?:but|while|without|except|leaving)\b)'
     r'|(?=\bwith\s+(?:(?:an?|open)\s+)*dependenc)', re.I)
 QUOTED_TEXT = re.compile(
@@ -67,7 +69,7 @@ def split_explicit_steps(text):
     edges = [0, *(m.start() for m in _STEP_BOUNDARY.finditer(masked)), len(text)]
     result = []
     for start, end in zip(edges, edges[1:]):
-        while start < end and (text[start].isspace() or text[start] in ',;'):
+        while start < end and (text[start].isspace() or text[start] in ',;.!?'):
             start += 1
         while end > start and (text[end-1].isspace() or text[end-1] in ',;'):
             end -= 1
@@ -159,7 +161,10 @@ def tool_hints(text):
     if hints.intersection({'close_ticket', 'delete_ticket'}) or re.search(r'\bcheck\b[^.?!;]{0,60}\bdependencies\b', clean, re.I):
         hints.add('check_dependencies')
     if not hints.intersection(WRITE_TOOLS) and ticket_ids(text) and re.search(
-            r'\b(?:status|priority|details|look up|lookup|assigned|assignee|subject)\b|查询', clean, re.I):
+            r'\b(?:status|priority|details|look up|lookup|assigned|assignee|owner|ownership|subject|confirm|verify)\b|查询|负责人|复查', clean, re.I):
+        hints.add('get_ticket')
+    if hints.intersection(WRITE_TOOLS) and re.search(
+            r'\b(?:confirm|verify|look\s+(?:it\s+)?up|lookup|read\s*back|check\s+(?:the\s+)?(?:new|updated|current))\b|复查|核实', clean, re.I):
         hints.add('get_ticket')
     if re.search(r'\blook\b[^.?!;]{0,35}\bback up\b|\bconfirm who\b|重新查询', clean, re.I):
         hints.add('get_ticket')
@@ -168,8 +173,8 @@ def tool_hints(text):
 
 def is_service_request(text):
     return bool(tool_hints(text) or re.search(
-        r'\b(?:ticket|tickets|ITSM|service desk|support|status|priority|assignee|dependency|dependencies|permission)\b'
-        r'|工单|服务台|依赖|权限', text, re.I))
+        r'\b(?:ticket|tickets|ITSM|service desk|support|status|priority|assignee|owner|ownership|dependency|dependencies|permission|permitted|authorized)\b'
+        r'|工单|服务台|依赖|权限|负责人', text, re.I))
 
 
 def is_continuation(text):
@@ -202,6 +207,13 @@ def selected_ticket(text, records):
 
 def canonical_call(name, arguments, actions):
     arguments = dict(arguments)
+    if name in {'assign_ticket', 'reassign_ticket'}:
+        aliases = ('new_owner', 'new_assignee', 'assigned_to', 'to_user')
+        supplied = {arguments[key] for key in aliases if isinstance(arguments.get(key), str)}
+        if len(supplied) == 1 and ('assignee' not in arguments or arguments['assignee'] in supplied):
+            arguments.setdefault('assignee', next(iter(supplied)))
+            for key in aliases:
+                arguments.pop(key, None)
     ticket = arguments.get('ticket_id')
     if isinstance(ticket, str) and TICKET_ID.fullmatch(ticket):
         arguments['ticket_id'] = ticket.upper()
@@ -307,5 +319,7 @@ def read_fact(record):
             return f'Ticket {value["ticket_id"]} was not found.'
         fields = [f'{key.replace("_", " ")} {value[key]}' for key in ('subject', 'status', 'priority', 'assigned_to')
                   if key in value and value[key]]
+        if 'assigned_to' in value and not value['assigned_to']:
+            fields.append('currently unassigned (no current owner)')
         return f'Ticket {value["ticket_id"]}: '+', '.join(fields)+'.' if fields else None
     return None

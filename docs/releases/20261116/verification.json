@@ -1,0 +1,24 @@
+{
+  "checked_at": "2026-11-16T08:19:44.007968+00:00",
+  "scope": "publication verification of current source; targeted application tests use controlled model responses and real library/business adapters, without GPU inference",
+  "unit_checks": {
+    "tests": 24,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "test_files": [
+    "tests/test_native_application.py",
+    "tests/test_native_forked.py",
+    "tests/test_tokenizer_auth.py"
+  ],
+  "static_checks": {
+    "python_files_parsed": 238,
+    "shell_files_checked": 15,
+    "syntax_errors": [],
+    "secret_pattern_findings": []
+  },
+  "git_diff_check": "passed",
+  "historical_business_model_acceptance": "See linked frozen reports; not rerun during source publication",
+  "test_environment_note": "CRM unit adapters require the existing pinned crm-agent-bench/src on PYTHONPATH, matching scripts/harness.sh."
+}

@@ -13,7 +13,11 @@ class ContextBudget:
             return self.counter(messages, tools), "test_counter"
         cfg = self.settings
         if cfg.tokenize_url:
-            headers = {"Authorization": "Bearer " + cfg.llm_key} if cfg.llm_key else {}
+            # A generation gateway and the tokenizer can use different credentials.
+            # None retains the existing shared-key behavior; an explicit empty key
+            # supports a local tokenizer that does not require authentication.
+            key = cfg.llm_key if cfg.tokenize_key is None else cfg.tokenize_key
+            headers = {"Authorization": "Bearer " + key} if key else {}
             try:
                 with httpx.Client(timeout=cfg.timeout, trust_env=False) as client:
                     r = client.post(cfg.tokenize_url, headers=headers, json={"model": cfg.llm_model,

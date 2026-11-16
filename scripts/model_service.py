@@ -1,4 +1,4 @@
-"""Own a single-GPU vLLM service without modifying shared environments or jobs."""
+"""Own a bounded local vLLM service without modifying shared environments or jobs."""
 import argparse
 import json
 import os
@@ -19,6 +19,8 @@ def main():
     p.add_argument("action", choices=["start", "status", "stop"])
     p.add_argument("--role", choices=["answer", "judge"], default="answer")
     p.add_argument("--gpu", default="1", choices=["0", "1", "6", "7"])
+    p.add_argument('--gpus',help='One or two distinct physical GPUs, comma separated; overrides --gpu')
+    p.add_argument('--context-tokens',type=int,help='Explicit service context limit, at most 16384')
     p.add_argument("--port", type=int)
     p.add_argument("--memory-fraction", type=float, default=.78)
     p.add_argument("--model")
@@ -27,7 +29,7 @@ def main():
     args.port = args.port or (18769 if args.role == "judge" else 18768)
     args.model = args.model or ("/data/zjr/models/Qwen3-VL-8B-Instruct" if args.role == "judge" else "/data/zjr/deepsearch_rl/models/Qwen3-8B")
     alias = "kb-judge-qwen3-vl-8b" if args.role == "judge" else "kb-qwen3-8b"
-    context = 12288 if args.role == "judge" else 8192
+    context = (12288 if args.role == "judge" else 8192) if args.context_tokens is None else args.context_tokens
     root = Settings().root
     state_path = root / ("judge_service.json" if args.role == "judge" else "model_service.json")
     state = json.loads(state_path.read_text()) if state_path.exists() else {}
@@ -51,6 +53,13 @@ def main():
         return
     if alive:
         raise SystemExit("Project model service already running; use status")
+    group=(args.gpus or args.gpu).split(',')
+    if len(group)not in(1,2)or len(set(group))!=len(group)or any(g not in map(str,range(8))for g in group):
+        raise SystemExit('Use one or two distinct physical GPUs from 0 to 7')
+    if args.role=='judge'and len(group)!=1:
+        raise SystemExit('The judge launch profile uses one GPU')
+    if not 0<context<=16384:
+        raise SystemExit('Context must be between 1 and 16384 tokens')
     if args.role == "judge":
         answer = json.loads((root / "model_service.json").read_text())
         answer_path = Path(answer["model_physical_path"])
@@ -59,11 +68,12 @@ def main():
             raise SystemExit("Judge must have different weights, not only a different alias")
     if not .5 <= args.memory_fraction <= .8:
         raise SystemExit("Shared-GPU memory fraction must be between .5 and .8")
-    stats = subprocess.check_output(["nvidia-smi", "-i", args.gpu, "--query-gpu=memory.total,memory.free", "--format=csv,noheader,nounits"], text=True)
-    total, free = map(int, stats.strip().split(","))
-    if free < total * args.memory_fraction + 2048:
-        raise SystemExit(f"GPU {args.gpu} free {free} MiB below budget plus 2048 MiB headroom; not started")
-    env = dict(os.environ, CUDA_VISIBLE_DEVICES=args.gpu, OMP_NUM_THREADS="2", OPENBLAS_NUM_THREADS="1",
+    for gpu in group:
+        stats = subprocess.check_output(["nvidia-smi", "-i", gpu, "--query-gpu=memory.total,memory.free", "--format=csv,noheader,nounits"], text=True)
+        total, free = map(int, stats.strip().split(","))
+        if free < total * args.memory_fraction + 2048:
+            raise SystemExit(f"GPU {gpu} free {free} MiB below budget plus 2048 MiB headroom; not started")
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES=','.join(group), OMP_NUM_THREADS="2", OPENBLAS_NUM_THREADS="1",
                MKL_NUM_THREADS="1", VLLM_USAGE_STATS="0", DO_NOT_TRACK="1", HF_HUB_OFFLINE="1",
                TRANSFORMERS_OFFLINE="1", TOKENIZERS_PARALLELISM="false",
                VLLM_CACHE_ROOT=str(root / "cache/vllm"), TRITON_CACHE_DIR=str(root / "cache/triton"),
@@ -71,9 +81,12 @@ def main():
     command = [args.python, "-B", "-u", "-m", "vllm.entrypoints.openai.api_server", "--model", args.model,
                "--served-model-name", alias, "--host", "127.0.0.1", "--port", str(args.port),
                "--dtype", "bfloat16", "--gpu-memory-utilization", str(args.memory_fraction),
-               "--max-model-len", str(context), "--max-num-seqs", "1", "--max-num-batched-tokens", "2048",
+               "--max-model-len", str(context), "--max-num-seqs", "1", "--max-num-batched-tokens", "512",
+               "--safetensors-load-strategy", "eager",
                "--enforce-eager", "--enable-auto-tool-choice", "--tool-call-parser", "hermes",
                "--disable-log-requests"]
+    if len(group)>1:
+        command+=['--tensor-parallel-size',str(len(group)),'--disable-custom-all-reduce']
     if args.role == "judge":
         overlay = root / "judge_packages"
         if not (overlay / "receipt.json").exists():
@@ -83,7 +96,8 @@ def main():
     log_path = root / ("logs/judge.log" if args.role == "judge" else "logs/model.log")
     with log_path.open("a") as log:
         child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env=env, start_new_session=True)
-    state = {"pid": child.pid, "start_ticks": process_identity(child.pid), "gpu": args.gpu,
+    state = {"pid": child.pid, "start_ticks": process_identity(child.pid), "gpu": ','.join(group),
+             "physical_gpus":group,"tensor_parallel_size":len(group),
              "url": f"http://127.0.0.1:{args.port}", "model": alias, "dtype": "bfloat16", "role": args.role,
              "model_physical_path": str(Path(args.model).resolve()), "environment": args.python,
              "gpu_memory_fraction": args.memory_fraction, "context": context, "concurrency": 1,

@@ -70,6 +70,26 @@ def constrained_response_format(response_format):
     return result
 
 
+def evidence_first_grading_format(response_format):
+    """Preserve the native verdict schema while emitting reasons before votes."""
+    if (not response_format or response_format.get('type')!='json_schema'
+            or response_format.get('json_schema',{}).get('name')!='semantic_communication_grade'):
+        return response_format
+    result=copy.deepcopy(response_format)
+    def reorder(node):
+        if isinstance(node,dict):
+            fields=node.get('properties',{})
+            if set(fields)=={'criterion_id','met','evidence','explanation'}:
+                order=['criterion_id','explanation','evidence','met']
+                node['properties']={key:fields[key]for key in order}
+                node['required']=[key for key in order if key in node.get('required',[])]
+            for value in node.values():reorder(value)
+        elif isinstance(node,list):
+            for value in node:reorder(value)
+    reorder(result['json_schema']['schema'])
+    return result
+
+
 def normalize_usage(raw):
     """Translate the provider's nested usage into the benchmark's integer map."""
     if not isinstance(raw, dict):
@@ -116,16 +136,23 @@ class ModelServices:
     def save(self):
         write(self.output/'services.json', self.owned)
 
-    def start(self, role, gpu, *, max_model_len=None, memory_fraction=GPU_MEMORY_FRACTION):
+    def start(self, role, gpu, *, max_model_len=None, memory_fraction=GPU_MEMORY_FRACTION,
+              tensor_parallel_size=1):
         default_context = 16384 if role == 'actor' else 12288
         context = default_context if max_model_len is None else max_model_len
         if type(context) is not int or not 0 < context <= default_context:
             raise ValueError(f'Invalid {role} context length: {context}')
         if not .5 <= memory_fraction <= .8:
             raise ValueError('Service memory fraction must be between .5 and .8')
-        snapshot = gpu_snapshot()[gpu]
-        if not gpu_has_room(snapshot, memory_fraction):
-            raise RuntimeError(f'GPU {gpu} has insufficient headroom before {role} startup: {snapshot}')
+        group = gpu.split(',')
+        if (tensor_parallel_size not in (1,2) or len(group)!=tensor_parallel_size
+                or len(set(group))!=len(group)):
+            raise ValueError('Use one distinct physical GPU per tensor-parallel rank (1 or 2)')
+        snapshots = gpu_snapshot()
+        for index in group:
+            if index not in snapshots or not gpu_has_room(snapshots[index], memory_fraction):
+                raise RuntimeError(f'GPU {index} has insufficient headroom before {role} startup: {snapshots.get(index)}')
+        snapshot = snapshots[gpu] if tensor_parallel_size==1 else {index:snapshots[index]for index in group}
         model = RUNTIME/'models/Qwen3-8B' if role == 'actor' else Path('/data/zjr/models/Qwen3-VL-8B-Instruct')
         if not (model/'config.json').is_file():
             raise FileNotFoundError(model)
@@ -141,6 +168,8 @@ class ModelServices:
                    '--max-model-len', str(context), '--max-num-seqs', '1',
                    '--max-num-batched-tokens', str(PREFILL_TOKENS), '--enforce-eager', '--disable-log-requests']
         env = dict(os.environ, CUDA_VISIBLE_DEVICES=gpu)
+        if tensor_parallel_size>1:
+            command += ['--tensor-parallel-size',str(tensor_parallel_size),'--disable-custom-all-reduce']
         env.pop('PYTHONPATH', None)
         if role == 'actor':
             command += ['--enable-auto-tool-choice', '--tool-call-parser', 'hermes']
@@ -158,6 +187,7 @@ class ModelServices:
                  'model': alias, 'model_path': str(model.resolve()), 'command': command,
                  'url': f'http://127.0.0.1:{port}', 'memory_fraction': memory_fraction,
                  'max_model_len': context,
+                 'tensor_parallel_size':tensor_parallel_size,'physical_gpus':group,
                  'snapshot_before_start': snapshot, 'headroom_mib': GPU_HEADROOM_MIB,
                  'log': str(log_path), 'started_at': time.time(), 'released': False}
         self.owned[role] = lease
@@ -205,10 +235,12 @@ class ModelServices:
 
 class LocalEvalClient(LLMClient):
     """Small tracked bridge for the official simulator and semantic grader."""
-    def __init__(self, url, model, output, seed, timeout=90, *, require_complete=False, context_tokens=None):
+    def __init__(self, url, model, output, seed, timeout=90, *, require_complete=False, context_tokens=None,
+                 reason_first_grading=False):
         self.url, self.model, self.output, self.seed = url, model, Path(output), seed
         self.require_complete = require_complete
         self.context_tokens = context_tokens
+        self.reason_first_grading=reason_first_grading
         self.client = httpx.AsyncClient(timeout=timeout, trust_env=False)
         self.usage = {'num_calls': 0, 'prompt_tokens': 0, 'completion_tokens': 0,
                       'total_tokens': 0, 'failed_calls': 0}
@@ -222,6 +254,8 @@ class LocalEvalClient(LLMClient):
                    'chat_template_kwargs': {'enable_thinking': False}}
         if response_format:
             response_format = constrained_response_format(response_format)
+            if self.reason_first_grading:
+                response_format=evidence_first_grading_format(response_format)
             payload['response_format'] = response_format
             if response_format.get('type') == 'json_schema':
                 # vLLM constrains decoding but does not insert the schema into
@@ -234,6 +268,10 @@ class LocalEvalClient(LLMClient):
                     'each criterion explanation when present. The output must match this JSON Schema:\n'
                     + json.dumps(schema, separators=(',', ':')))
                 if response_format['json_schema'].get('name') == 'semantic_communication_grade':
+                    if self.reason_first_grading:
+                        instruction += ('\nFor each criterion, first explain whether every required part is satisfied, '
+                            'then cite exact evidence, then output met consistent with that explanation. '
+                            'Use the schema field order: criterion_id, explanation, evidence, met.')
                     instruction += (
                         '\nEVIDENCE FIELD FORMAT: When contradiction_found is false, '
                         'contradiction_evidence MUST be the empty string "". Never put '

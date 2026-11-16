@@ -1,6 +1,7 @@
 const $ = (q) => document.querySelector(q);
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me, bases = [], conversationId = null, activeRun = null, feedbackRun = null, currentTab = 'chat', toastTimer;
+let pendingIncidentIds = [];
 const statuses = {queued:'等待入库',processing:'正在处理',ready:'已就绪',error:'处理失败',answered:'已完成',partial_success:'部分完成',insufficient:'资料不足',clarify:'待补充信息',running:'执行中',cancelled:'已停止'};
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.add('hidden'), 4500); }
 async function api(path, options = {}) {
@@ -40,7 +41,7 @@ async function tab(name) {
   if (name === 'tickets') await refreshTickets();
 }
 const welcomeMarkup = $('#chat-messages').innerHTML;
-function newChat() { conversationId = null; activeRun = null; $('#chat-messages').innerHTML = welcomeMarkup; setBusy(false); showEvidence({citations:[], events:[]}); tab('chat').catch(e=>toast(e.message)); $('#question').focus(); }
+function newChat() { conversationId = null; activeRun = null; pendingIncidentIds = []; $('#chat-messages').innerHTML = welcomeMarkup; setBusy(false); showEvidence({citations:[], events:[]}); tab('chat').catch(e=>toast(e.message)); $('#question').focus(); }
 function setBusy(value) { $('#send').disabled = value; $('#cancel-run').classList.toggle('hidden', !value); }
 function message(question, run) {
   const block = document.createElement('div'); block.dataset.runBlock = run.id;
@@ -58,7 +59,8 @@ function fillMessage(block, run) {
 function showEvidence(run) {
   $('#sources').innerHTML = (run.citations || []).map(s => `<button class="source-card" data-document="${escape(s.document_id)}" data-chunk="${s.id}"><strong>[${escape(s.label)}] ${escape(s.filename)}</strong><small>${escape(s.base_name)}${s.page ? ' · 第 '+s.page+' 页' : ''}</small><p>${escape(s.text.slice(0,120))}…</p></button>`).join('') || '<div class="empty-small">尚未引用资料</div>';
   const names = {search:'检索资料',read_chunk:'读取原文',list_documents:'查看文档',finish:'提交答案'};
-  $('#trace').innerHTML = (run.events || []).map(e => {
+  const internalEvents = new Set(['business_context','model_request','model_response','native_graph_returned']);
+  $('#trace').innerHTML = (run.events || []).filter(e => !internalEvents.has(e.kind)).map(e => {
     let title = e.kind, detail = '';
     const domains = {technical:'技术支持',policy:'制度流程',service:'服务办理'};
     if (e.kind === 'business_route') { title='业务分工'; detail=e.payload.tasks.map(t=>domains[t.domain]+'：'+t.question).join('；') || e.payload.clarification; }
@@ -72,6 +74,12 @@ function showEvidence(run) {
     if (e.kind === 'started') { title = e.payload.resumed ? '恢复任务' : '开始任务'; detail = e.payload.mode === 'agent' ? '模型问答' : '原文检索'; }
     if (e.kind === 'tool') { title = names[e.payload.name] || e.payload.name; const r = e.payload.result; detail = r.error || (r.results ? `找到 ${r.results.length} 条候选片段` : r.filename || '已完成'); if (r.warnings?.length) detail += '；' + r.warnings.join('；'); }
     if (e.kind === 'model') { title = '模型处理'; detail = `第 ${e.payload.turn} 轮`; }
+    if (e.kind === 'native_application_started') { title = '开始处理'; detail = '知识查询与工单办理'; }
+    if (e.kind === 'delegation_bound') { title = '专业任务分工'; detail = ({evidence:'资料核验',service:'服务办理'})[e.payload.subagent_type] || '专业处理'; }
+    if (e.kind === 'tool_effect') { title = ({search_documents:'检索资料',read_incident:'读取故障材料',prepare_ticket_draft:'生成工单草稿',list_my_tickets:'查询我的工单',get_my_ticket:'读取工单进度'})[e.payload.name] || '业务操作'; detail = ({observed:'已取得结果',committed:'已保存',refused:'操作未执行',unknown:'等待核对'})[e.payload.status] || ''; }
+    if (e.kind === 'native_application_error') { title = '处理暂未完成'; detail = '请查看任务状态，符合恢复条件时可继续办理'; }
+    if (e.kind === 'application_contract_retry') { title = '补全资料核验'; detail = '正在补齐本次请求需要的依据'; }
+    if (e.kind === 'effect_reused') { title = '沿用已完成的操作'; detail = '保留已有回执，避免重复办理'; }
     if (e.kind === 'finished') { title = '完成'; detail = `引用 ${e.payload.citations} 条来源`; }
     if (e.kind === 'error') { title = '执行失败'; detail = e.payload.message; }
     if (e.kind === 'cancelled') title = '任务停止';
@@ -112,9 +120,9 @@ async function source(id, chunk) {
 }
 async function refreshFeedback() { const rows = await api('/feedback'); $('#feedback-list').innerHTML = rows.map(f => `<article class="feedback-card"><small>${escape(f.username)} · ${date(f.created_at)} · ${f.rating === 1 ? '有帮助' : '需要改进'}</small><h3>${escape(f.question)}</h3><pre>${escape(f.answer)}</pre><p>${escape(f.comment || '未填写补充说明')}</p></article>`).join('') || '<p class="muted">还没有用户反馈。</p>'; }
 $('#login-form').addEventListener('submit',async e=>{e.preventDefault(); const button=e.target.querySelector('button');button.disabled=true; $('#login-error').textContent=''; try{await api('/login',{method:'POST',body:Object.fromEntries(new FormData(e.target))});e.target.reset();await enter();}catch(err){$('#login-error').textContent=err.message;}finally{button.disabled=false;}});
-$('#logout').addEventListener('click',async()=>{try{await api('/logout',{method:'POST'});activeRun=null;showLogin();}catch(e){toast(e.message);}});
+$('#logout').addEventListener('click',async()=>{try{await api('/logout',{method:'POST'});activeRun=null;pendingIncidentIds=[];showLogin();}catch(e){toast(e.message);}});
 $('#new-chat').addEventListener('click',newChat);
-$('#question-form').addEventListener('submit',async e=>{e.preventDefault(); const question=$('#question').value.trim();if(!question||activeRun)return;setBusy(true);try{const result=await api('/chat',{method:'POST',body:{question,conversation_id:conversationId,base_ids:$('#chat-base').value?[$('#chat-base').value]:[]}});conversationId=result.conversation_id;$('#welcome')?.remove();message(question,{id:result.run_id,status:'queued'});$('#question').value='';$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;await refreshHistory();monitor(result.run_id,conversationId);}catch(err){setBusy(false);toast(err.message);}});
+$('#question-form').addEventListener('submit',async e=>{e.preventDefault(); const question=$('#question').value.trim();if(!question||activeRun)return;setBusy(true);try{const result=await api('/chat',{method:'POST',body:{question,conversation_id:conversationId,base_ids:$('#chat-base').value?[$('#chat-base').value]:[],incident_ids:pendingIncidentIds,knowledge_grounded:pendingIncidentIds.length>0}});pendingIncidentIds=[];conversationId=result.conversation_id;$('#welcome')?.remove();message(question,{id:result.run_id,status:'queued'});$('#question').value='';$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;await refreshHistory();monitor(result.run_id,conversationId);}catch(err){setBusy(false);toast(err.message);}});
 $('#question').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#question-form').requestSubmit();}});
 $('#cancel-run').addEventListener('click',async()=>{if(activeRun){try{await api('/runs/'+activeRun+'/cancel',{method:'POST'});toast('已请求停止，正在结束当前步骤');}catch(e){toast(e.message);}}});
 $('#document-base').addEventListener('change',()=>refreshDocuments().catch(e=>toast(e.message)));

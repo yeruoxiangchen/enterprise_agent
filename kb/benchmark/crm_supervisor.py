@@ -12,6 +12,7 @@ import hashlib
 import json
 import re
 from collections import Counter
+from jsonschema import Draft202012Validator
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import wrap_model_call, wrap_tool_call
@@ -25,11 +26,11 @@ from .crm_adapter_v6 import ExternalBusinessQA as GuardedAgent
 from .crm_contract import (QUOTED_TEXT, READ_TOOLS, WRITE_TOOLS, explicit_repeat,
                            is_service_request, mask_quoted, payload, read_fact, receipt_answer,
                            requested_write_targets, requested_writes, ticket_ids, tool_hints,
-                           write_allowance)
+                           selected_ticket, write_allowance)
 from .crm_supervisor_state import (ConversationReads, action_counts, data_version,
     disclosure_request, pending_context, terminal_results, user_identities)
 
-EXECUTION_VERSION = 'business_v6_external_v4_supervisor_strategy1_r2'
+EXECUTION_VERSION = 'business_v6_external_v4_supervisor_experience_v2_readcontract1'
 CHECKPOINT_DURABILITY = 'async'
 MODEL_CALL_LIMIT = 24
 TOOL_CALL_LIMIT = 30
@@ -114,6 +115,9 @@ class ExternalBusinessQA(GuardedAgent):
         self.progress = ConversationReads(self)
         self.available_tools = set(owner.registry.tool_names)
         self.delegated = []
+        self.fresh_read_names = (tool_hints(question) & READ_TOOLS) if self.strategy != 'baseline' else set()
+        self.argument_schemas = {d.function.name: {**copy.deepcopy(d.function.parameters),
+            'additionalProperties': False} for d in owner.registry.get_definitions()}
         self.experience = None
         if self.strategy == 'experience':
             from kb.experience import ExperienceMemory
@@ -130,25 +134,49 @@ class ExternalBusinessQA(GuardedAgent):
         snapshot = progress_snapshot(self)
         self.memory['progress_ledger'] = snapshot
         context = {'execution_progress': snapshot}
-        if self.strategy == 'experience' and (self.write_actions(self.active_task) or self.continued_request):
-            entries = self.experience.retrieve(self.intent_text() + '\n' + self.run['question'], domain)
+        if snapshot['unknown_write_result']:
+            phase = 'reconcile'
+        elif snapshot['terminal_decisions'] and not snapshot['remaining_actions']:
+            phase = 'terminal'
+        elif snapshot['remaining_reads'] and not snapshot['remaining_actions']:
+            phase = 'verify' if snapshot['committed_receipt_ids'] else 'read'
+        elif snapshot['remaining_actions'] and (not ticket_ids(self.request_text(self.active_task))
+                or ('delete_ticket' in snapshot['remaining_actions'] and not user_identities(
+                    self.request_text(self.active_task), self.owner.environment.get_state().get('session', {})))):
+            phase = 'clarify'
+        else:
+            phase = 'recover' if self.memory.get('recovery_turn') == self.owner.turn else 'execute'
+        context['execution_phase'] = phase
+        if self.strategy == 'experience':
+            entries = self.experience.retrieve(self.intent_text() + '\n' + self.run['question'], domain, phase=phase)
             context['procedural_guidance'] = [{'id': e['id'], 'guidance': e['guidance']} for e in entries]
             selected = [e['id'] for e in entries]
             key = f'{self.owner.turn}:{domain or "supervisor"}'
             if self.memory.setdefault('experience_selections', {}).get(key) != selected:
                 self.memory['experience_selections'][key] = selected
                 self.emit('strategy_experience', {'domain': domain, 'ids': selected,
+                    'phase': phase,
                     'characters': sum(len(e['guidance']) for e in entries), 'extra_model_calls': 0})
         return context
 
     def strategy_instructions(self):
         if self.strategy == 'baseline':
             return ''
-        return ('\nWhen the requested ticket is unclear, ask which ticket the user means; '
+        hints = tool_hints(self.request_text(self.active_task))
+        target_guidance = ('When the requested ticket is unclear, ask which ticket the user means; '
                 'accept an issue description as well as a ticket ID. Once the user supplies '
                 'an issue description, use a real ticket listing to identify the matching ticket '
                 'instead of repeatedly demanding its number. Clarify genuinely ambiguous matches; '
-                'never guess an identifier.\n')
+                'never guess an identifier. ') if hints.intersection(WRITE_TOOLS | {'get_ticket'}) else ''
+        permission_guidance = ('An account-level permission lookup needs user_id and action; ticket_id is '
+                'optional unless the user specifies a ticket. Do not demand a ticket number for an '
+                'account-level question. ') if 'check_permission' in hints and not hints.intersection(WRITE_TOOLS) else ''
+        return ('\n' + target_guidance + permission_guidance +
+                'An explicit lookup or confirmation needs a current tool read, '
+                'including readback after a change. A receipt does not replace that requested lookup. '
+                'Before closing or reassigning, look up the ticket; an already-closed ticket needs no new close. '
+                'Use the canonical tool parameter names. Correct a malformed tool call using the user values '
+                'already supplied; ask the user only for information that is actually missing.\n')
 
     def save(self):
         if hasattr(self, 'memory'):
@@ -193,6 +221,17 @@ class ExternalBusinessQA(GuardedAgent):
         # second identical mutation. Newly requested work starts a new operation.
         return self.memory['intent']
 
+    def write_targets(self, task, text):
+        targets = requested_write_targets(text)
+        if self.continued_request and text == self.request_text(task) and not requested_writes(task['question']):
+            supplied = ticket_ids(task['question'])
+            resolved = next(iter(supplied)) if len(supplied) == 1 else selected_ticket(text, self.latest_ticket_list())
+            if resolved:
+                for action in requested_writes(self.continued_request):
+                    if not any(name == action for name, _ in targets):
+                        targets.add((action, resolved))
+        return targets
+
     def write_limit(self, name, arguments, task):
         return write_allowance(name, arguments, self.intent_text())
 
@@ -219,6 +258,17 @@ class ExternalBusinessQA(GuardedAgent):
                 'committed_receipts': self.operation_receipts()}
 
     def guard_arguments(self, name, arguments):
+        if self.strategy != 'baseline':
+            if name == 'check_permission' and not arguments.get('user_id') and not user_identities(
+                    self.request_text(self.active_task), self.owner.environment.get_state().get('session', {})):
+                return {'error': 'identity_required', 'message': 'Ask for the requester identity before checking permission.'}
+            errors = list(Draft202012Validator(self.argument_schemas[name]).iter_errors(arguments))
+            if errors:
+                return {'error': 'invalid_tool_arguments',
+                    'message': 'Correct the tool call, using the supplied user values. Required fields: '
+                        + ', '.join(self.argument_schemas[name].get('required', [])) + '. Allowed fields: '
+                        + ', '.join(self.argument_schemas[name].get('properties', {})),
+                    'validation_errors': [error.message[:250] for error in errors[:3]]}
         blocked = super().guard_arguments(name, arguments)
         if blocked:
             return blocked
@@ -257,6 +307,27 @@ class ExternalBusinessQA(GuardedAgent):
                 return {'error': 'ticket_identity_required', 'message': 'Ask which ticket to look up, or identify it from an actual listing. Never invent a ticket ID.'}
         return None
 
+    def make_tool(self, definition):
+        tool = super().make_tool(definition)
+        if self.strategy == 'baseline' or definition.function.name != 'check_permission':
+            return tool
+        execute = tool.func
+        def grounded_permission(**arguments):
+            from .crm_strategy import permission_action
+            arguments = dict(arguments)
+            text = self.request_text(self.active_task)
+            identities = user_identities(text, {}) or user_identities(
+                text, self.owner.environment.get_state().get('session', {}))
+            if 'user_id' not in arguments and len(identities) == 1:
+                arguments['user_id'] = next(iter(identities))
+            if 'action' not in arguments and (action := permission_action(text)):
+                arguments['action'] = action
+            if 'ticket_id' not in arguments and 'delete_ticket' in self.write_actions(self.active_task) and len(ticket_ids(text)) == 1:
+                arguments['ticket_id'] = next(iter(ticket_ids(text)))
+            return execute(**arguments)
+        tool.func = grounded_permission
+        return tool
+
     def visible_tools(self, tools):
         """Expose mutation tools only when their currently observed inputs exist."""
         observations = self.progress.observations()
@@ -275,6 +346,8 @@ class ExternalBusinessQA(GuardedAgent):
                 continue
             if name == 'close_ticket' and tickets and all(t.get('status') == 'Closed' or t.get('found') is False for t in tickets.values()):
                 continue
+            if self.strategy != 'baseline' and name == 'close_ticket' and not tickets:
+                continue
             if name == 'check_permission' and not identities:
                 continue
             if name == 'delete_ticket' and not any(
@@ -283,6 +356,36 @@ class ExternalBusinessQA(GuardedAgent):
                 continue
             visible.append(tool)
         return visible
+
+    def require_read_before_answer(self, request):
+        """Bind a fully specified explicit lookup through native tool choice."""
+        if self.strategy == 'baseline':
+            return request
+        from .crm_strategy import progress_snapshot
+        progress = progress_snapshot(self)
+        if (progress['unknown_write_result'] or progress['remaining_actions']
+                or progress['remaining_targets']):
+            return request
+        offered = {tool.name for tool in request.tools}
+        for check in progress['remaining_reads']:
+            name, arguments = check['name'], check['arguments']
+            if (not Draft202012Validator(self.argument_schemas[name]).is_valid(arguments)
+                    or self.guard_arguments(name, arguments)):
+                continue
+            selected = name if name in offered else next((delegation for delegation, domain in DELEGATIONS.items()
+                if delegation in offered and name in {
+                    tool['name'] for tool in self.owner.config['nodes'][CAPABILITIES[domain]]['tools']}), None)
+            if selected is None:
+                continue
+            self.emit('strategy_required_read', {'tool': selected, 'requested_read': check})
+            return request.override(
+                tool_choice={'type': 'function', 'function': {'name': selected}},
+                messages=[*request.messages, HumanMessage(content=json.dumps({
+                    'required_user_lookup': check,
+                    'instruction': 'Perform this explicitly requested read before answering. Delegate it '
+                        'if you are the supervisor. Use the supplied arguments and the actual observation; '
+                        'do not repeat a completed mutation or substitute a write receipt for a lookup.'}))])
+        return request
 
     def meter(self, request, handler):
         if self.strategy != 'baseline':
@@ -299,6 +402,7 @@ class ExternalBusinessQA(GuardedAgent):
                 self.emit('strategy_stall_hint', repeated)
         request = request.override(tools=self.visible_tools(request.tools),
                                    model_settings={**request.model_settings, 'parallel_tool_calls': False})
+        request = self.require_read_before_answer(request)
         response = MeteredAgent.meter(self, request, handler)
         # Delegations are orchestration, not canonical backend actions. They remain
         # in full model events and separate delegation events, including failures.
@@ -400,18 +504,21 @@ class ExternalBusinessQA(GuardedAgent):
         completed_targets = {(r['name'], r['arguments']['ticket_id']) for r in receipts}
         # The original goal may have lacked a ticket ID. A later answer supplies
         # that target without authorizing an additional occurrence of the action.
-        requested_targets = requested_write_targets(self.request_text(self.active_task))
+        requested_targets = self.write_targets(self.active_task, self.request_text(self.active_task))
         resolutions = terminal_results(self, requested_targets - completed_targets)
         for name, _ in resolutions:
             completed_counts[name] += 1
         required_counts = action_counts(self.intent_text(), self.write_actions(self.active_task))
         remaining = {name for name, count in required_counts.items() if completed_counts[name] < count}
         missing_targets = requested_targets - completed_targets - resolutions.keys()
-        pending = bool(unknown or remaining or missing_targets)
+        from .crm_strategy import remaining_reads, requested_reads
+        read_checks = remaining_reads(self, receipts) if self.strategy != 'baseline' else []
+        pending = bool(unknown or remaining or missing_targets or read_checks)
         self.memory['pending'] = self.request_text(self.active_task) if pending else None
         self.owner.pending_itsm_request = self.memory['pending']
         self.state['completion'] = {'confirmed_receipt_ids': [r['id'] for r in receipts],
             'remaining_actions': sorted(remaining), 'missing_targets': sorted(missing_targets),
+            'remaining_reads': read_checks,
             'unknown_write_result': unknown, 'terminal_decisions': [
                 {'name': name, 'ticket_id': ticket, **resolution}
                 for (name, ticket), resolution in sorted(resolutions.items())]}
@@ -445,7 +552,8 @@ class ExternalBusinessQA(GuardedAgent):
                 answer = '\n'.join(dict.fromkeys([
                     *(receipt_answer(r, calls) for r in receipts), *facts, *reasons,
                     *(r['answer'] for r in resolutions.values()),
-                    'The remaining requested changes have not been completed.']))
+                    ('The remaining requested changes have not been completed.' if remaining or missing_targets
+                     else 'The requested lookup or verification has not been completed.')]))
             if (not unknown and 'delete_ticket' in remaining and requested_targets
                     and not user_identities(self.request_text(self.active_task), self.owner.environment.get_state().get('session', {}))):
                 answer = '\n'.join([*(receipt_answer(r, calls) for r in receipts),
@@ -461,6 +569,13 @@ class ExternalBusinessQA(GuardedAgent):
             # interaction. Do not let a model's "not completed" wording reopen it.
             answer = '\n'.join([*(receipt_answer(r, self.owner.tool_calls) for r in receipts),
                                 *(r['answer'] for r in resolutions.values())])
+        elif self.strategy != 'baseline' and requested_reads(self):
+            required_names = {check['name'] for check in requested_reads(self)}
+            facts = [fact for observation in self.progress.observations()
+                     if observation['name'] in required_names and (fact := read_fact(observation))]
+            if facts:
+                answer = '\n'.join(dict.fromkeys([
+                    *(receipt_answer(r, self.owner.tool_calls) for r in receipts), *facts]))
         if disclosure_request(self.run['question']):
             # Mixed prompt-disclosure requests may contain legitimate business
             # work. Render that evidence rather than forwarding leaked policies.
@@ -478,6 +593,13 @@ class ExternalBusinessQA(GuardedAgent):
         return {'answer': answer, 'status': status}
 
     def answer(self):
+        if self.strategy != 'baseline' and re.match(
+                r"\s*(?:please\s+)?(?:cancel\b|never\s*mind\b|forget it\b|don't do it\b|取消|不用了)",
+                mask_quoted(self.run['question']), re.I) and not requested_writes(self.run['question']):
+            self.memory['pending'] = None
+            self.owner.pending_itsm_request = None
+            self.save()
+            return {'answer': 'Okay, the pending request has been cancelled.', 'status': 'answered'}
         if closing_acknowledgement(self.run['question']):
             self.memory['pending'] = None
             self.owner.pending_itsm_request = None

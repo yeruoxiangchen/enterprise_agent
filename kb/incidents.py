@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -49,7 +50,7 @@ def grounded_fields(lines):
     return fields[:80]
 
 
-def image_lines(path, cfg):
+def _tesseract_lines(path, cfg):
     binary = Path(cfg.incident_ocr_bin)
     if not binary.is_file():
         raise ValueError('截图文字识别尚未配置，请先上传文字日志')
@@ -92,6 +93,45 @@ def image_lines(path, cfg):
     return lines
 
 
+def image_lines(path, cfg):
+    """Prefer detected text regions; retain the installed legacy fallback."""
+    backend=cfg.incident_ocr_backend
+    if backend not in {'auto','rapidocr','tesseract'}:
+        raise ValueError('未知的截图识别后端')
+    packages=Path(cfg.incident_ocr_packages)
+    installed=(packages/'READY.json').is_file()
+    if backend=='rapidocr' and not installed:
+        raise ValueError('截图文字识别组件尚未安装，请运行setup_rapidocr.sh')
+    if backend=='rapidocr' or (backend=='auto' and installed):
+        env={**os.environ,'CUDA_VISIBLE_DEVICES':'','PYTHONDONTWRITEBYTECODE':'1',
+             'OMP_NUM_THREADS':'2','OPENBLAS_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}
+        try:
+            process=subprocess.run([sys.executable,'-B',str(Path(__file__).with_name('incident_ocr_worker.py')),
+                '--image',str(path),'--packages',str(packages)],capture_output=True,text=True,timeout=20,env=env)
+        except subprocess.TimeoutExpired:
+            raise ValueError('截图识别超时，请裁剪到主要报错区域后重试')from None
+        if process.returncode:
+            raise ValueError('截图识别失败，请检查CPU OCR组件或上传文字日志')
+        try:
+            lines=json.loads(process.stdout)
+        except json.JSONDecodeError:
+            raise ValueError('截图识别结果无效，请检查CPU OCR组件')from None
+        if not lines:
+            raise ValueError('未识别到清晰文字，请裁剪报错区域或上传日志')
+        for line in lines:
+            line['text']=redact(line['text'])
+        return lines
+    from PIL import Image,ImageOps,ImageStat
+    with Image.open(path)as image:
+        raster=ImageOps.grayscale(image)
+        if ImageStat.Stat(raster).mean[0]<127:
+            raster=ImageOps.invert(raster)
+        raster=ImageOps.autocontrast(raster)
+        with tempfile.TemporaryDirectory(dir=cfg.root/'tmp',prefix='legacy-ocr-')as temporary:
+            legacy=Path(temporary)/'ocr.png';raster.save(legacy,dpi=(150,150))
+            return _tesseract_lines(legacy,cfg)
+
+
 def analyze(db, cfg, user, filename, data):
     filename = Path(filename.replace('\\', '/')).name[:120]
     suffix = Path(filename).suffix.lower()
@@ -106,7 +146,7 @@ def analyze(db, cfg, user, filename, data):
     dimensions = None
     if suffix in IMAGE_TYPES:
         try:
-            from PIL import Image, ImageOps, ImageStat, UnidentifiedImageError
+            from PIL import Image, UnidentifiedImageError
             with Image.open(io.BytesIO(data)) as image:
                 if image.format not in {'PNG', 'JPEG', 'WEBP'}:
                     raise ValueError('图片内容需为PNG、JPEG或WebP')
@@ -117,13 +157,9 @@ def analyze(db, cfg, user, filename, data):
                 dimensions = [image.width, image.height]
                 with tempfile.TemporaryDirectory(dir=cfg.root/'tmp', prefix='incident-') as temporary:
                     normalized = Path(temporary)/'image.png'; image.save(normalized)
-                    # Keep the original screenshot; normalize only the OCR raster.
-                    raster = ImageOps.grayscale(image)
-                    if ImageStat.Stat(raster).mean[0] < 127:
-                        raster = ImageOps.invert(raster)
-                    raster = ImageOps.autocontrast(raster)
-                    ocr_input = Path(temporary)/'ocr.png'; raster.save(ocr_input, dpi=(150, 150))
-                    lines = image_lines(ocr_input, cfg)
+                    # The region detector sees the source colors and original
+                    # line positions; the legacy backend handles its own raster.
+                    lines = image_lines(normalized, cfg)
                     saved.write_bytes(normalized.read_bytes())
         except ImportError:
             raise ValueError('截图处理组件尚未安装，请先上传文字日志') from None

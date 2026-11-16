@@ -24,6 +24,10 @@ if [[ "${1:-status}" == incident-acceptance ]]; then
   shift
   exec "$CRM_DATA_ROOT/venv-agentpack/bin/python" -B -u "$PROJECT_DIR/scripts/incident_acceptance.py" "$@"
 fi
+if [[ "${1:-status}" == public-screenshot ]]; then
+  shift
+  exec "$CRM_DATA_ROOT/venv-agentpack/bin/python" -B -u "$PROJECT_DIR/scripts/public_screenshot_check.py" "$@"
+fi
 if [[ "${1:-status}" == acceptance ]]; then
   shift
   if [[ "${1:-status}" == watch ]]; then

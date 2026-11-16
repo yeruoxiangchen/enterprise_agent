@@ -23,10 +23,3 @@ datasets/
 checkpoints/
 *.sqlite3
 *.sqlite3-*
-
-# Runtime secrets; allow explicitly curated process documentation.
-*.env
-*.pem
-*.key
-!docs/process/
-!docs/process/**

@@ -58,7 +58,7 @@ class OfficialGraphAdapter(LLMClient):
     """The official GraphAgent, using the shared model and task budgets."""
 
     def __init__(self, *, environment, settings, config, policy, seed, output,
-                 model_call_limit=24, tool_call_limit=30):
+                 model_call_limit=24, tool_call_limit=30,tool_budget_scope='all_model_tools'):
         from crm_bench_services import LocalEvalClient
         self.environment, self.settings, self.seed = environment, settings, seed
         self.output = Path(output)
@@ -69,6 +69,9 @@ class OfficialGraphAdapter(LLMClient):
         self.model_calls = self.prompt_tokens = self.completion_tokens = self.usage_missing_calls = 0
         self.llm_seconds = 0.0
         self.call_limit, self.tool_limit = model_call_limit, tool_call_limit
+        if tool_budget_scope not in ('all_model_tools','canonical_business_attempts'):
+            raise ValueError('Unknown reference tool-budget scope')
+        self.tool_budget_scope=tool_budget_scope
         self.turn_calls = self.turn_tool_attempts = 0
         self.budget = ContextBudget(settings)
         self.http = LocalEvalClient(settings.llm_url.removesuffix('/v1'), settings.llm_model,
@@ -118,7 +121,8 @@ class OfficialGraphAdapter(LLMClient):
             self.llm_seconds = self.http.seconds
         routing = bool(tools) and all(t.function.name in self.route_names for t in tools)
         calls = response.tool_calls or []
-        self.turn_tool_attempts += len(calls)
+        self.turn_tool_attempts += (len(calls)if self.tool_budget_scope=='all_model_tools'else
+            sum(call.name in self.registry.tool_names for call in calls))
         if routing:
             self.emit('reference_route', {'choices': [c.model_dump() for c in calls], 'content': response.content})
         else:

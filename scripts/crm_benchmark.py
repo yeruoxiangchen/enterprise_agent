@@ -51,7 +51,8 @@ def source_fingerprints():
                                                 'crm_bench_control.py', 'crm_bench_run.sh', 'crm_bench_resume.py',
                                                 'crm_acceptance.py', 'crm_small_check.py',
                                                 'crm_latency_probe.py', 'crm_latency_profile.py',
-                                                'experience_memory.py', 'incident_acceptance.py', 'setup_incident_ocr.sh')]
+                                                'experience_memory.py', 'incident_acceptance.py', 'public_screenshot_check.py',
+                                                'setup_incident_ocr.sh')]
     files += [p for p in (UPSTREAM/'src/harness').rglob('*.py')]
     files += [UPSTREAM/p for p in ('src/tasks/itsm.yaml', 'src/agents/itsm.yaml',
                                  'src/tasks/policies/itsm_policy.md', 'benchmark/benchmark.yaml',

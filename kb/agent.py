@@ -93,7 +93,7 @@ class Harness:
         if not isinstance(answer, str) or not answer.strip() or len(answer) > 12000:
             raise ValueError("答案为空或过长")
         allowed_statuses = {"answered", "insufficient", "clarify"}
-        if state.get('policy') == 'business_multi_v6':
+        if state.get('policy') in {'business_multi_v6','business_deep_v1','business_native_v1'}:
             allowed_statuses.add('partial_success')
         if status not in allowed_statuses or not isinstance(citations, list):
             raise ValueError("非法完成状态或引用列表")
@@ -109,7 +109,7 @@ class Harness:
             raise ValueError("答案中的引用与 citations 必须一致。answer 正文缺少 " +
                              ", ".join("[" + s + "]" for s in missing) +
                              "。请把这些标记写在 answer 的事实后；保留已有证据，不要重复检索。")
-        service_receipts = state.get('business', {}).get('receipts', []) if state.get('policy') in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2'} else []
+        service_receipts = state.get('business', {}).get('receipts', []) if state.get('policy') in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2','business_deep_v1','business_native_v1'} else []
         if status in {"answered", "partial_success"} and not citations and not service_receipts:
             raise ValueError("有结论的回答必须提供已读取的证据")
         sources = []
@@ -125,7 +125,7 @@ class Harness:
             if row["status"] != "running":
                 return
             updated = (c.execute("UPDATE messages SET content=? WHERE run_id=? AND role='assistant'",
-                                 (answer, run['id'])).rowcount if state.get('policy') == 'business_multi_v6' else 0)
+                                 (answer, run['id'])).rowcount if state.get('policy') in {'business_multi_v6','business_deep_v1','business_native_v1'} else 0)
             if not updated:
                 c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), run["conversation_id"], "assistant", answer, run["id"], time.time()))
             c.execute("UPDATE runs SET status=?,answer=?,citations=?,state=?,updated_at=? WHERE id=?",
@@ -163,6 +163,12 @@ class Harness:
         raise ValueError("未知工具")
 
     def execute(self, run_id):
+        if self.settings.agent_policy == 'business_native_v1':
+            from .harness.native_application import execute
+            return execute(self, run_id)
+        if self.settings.agent_policy == 'business_deep_v1':
+            from .harness.application import execute
+            return execute(self, run_id)
         if self.settings.agent_policy in {'business_multi_v1','business_multi_v2','business_multi_v3','business_multi_v4','business_multi_v5','business_multi_v6','business_single_v2'}:
             from .business_runtime import execute
             return execute(self, run_id)

@@ -1,0 +1,45 @@
+{
+  "scope": "four authored browser requests and two authored HTTP input cases; local shared-GPU observations",
+  "browser_passed": 4,
+  "browser_total": 4,
+  "browser_seconds_p50": 24.161037081852555,
+  "browser_seconds_p95_nearest_rank": 44.57403211854398,
+  "browser_actor_tokens": 51614,
+  "browser_runs": [
+    {
+      "id": "87a94f5f81c84f26b5955189be4a622e",
+      "seconds": 44.57403211854398,
+      "status": "answered"
+    },
+    {
+      "id": "5b62249cf0094186b6144a51c45fa2d1",
+      "seconds": 31.060578532516956,
+      "status": "answered"
+    },
+    {
+      "id": "1331561a3462420e9c0803cb0955f874",
+      "seconds": 12.26434156857431,
+      "status": "answered"
+    },
+    {
+      "id": "3c538de720044d91bd7676691457d10b",
+      "seconds": 17.261495631188154,
+      "status": "answered"
+    }
+  ],
+  "http_cases": [
+    {
+      "case": "log",
+      "passed": true,
+      "seconds": 74.23434711433947
+    },
+    {
+      "case": "screenshot",
+      "passed": true,
+      "seconds": 41.09429663605988
+    }
+  ],
+  "unique_engineering_checks": 68,
+  "http_source": "http_final/summary.json",
+  "deployed_check_passed": true
+}

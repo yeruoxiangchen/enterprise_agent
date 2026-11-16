@@ -1,0 +1,49 @@
+{
+  "state": "passed",
+  "checks": {
+    "current_native_multi_agent": true,
+    "actual_delegation": true,
+    "cited_answer": true,
+    "user_confirmation_then_admin_resolution": true,
+    "followup_answered": true,
+    "model_calls_recorded": true,
+    "one_configured_upstream": true,
+    "requests_completed": true,
+    "complete_application_usage": true,
+    "token_usage_matches": true,
+    "no_held_quota": true
+  },
+  "scope": "Real deployed application + native multi-agent + existing Qwen3-8B + Go gateway; dedicated test document and test ticket",
+  "model": "kb-qwen3-8b",
+  "agent_policy": "business_native_v1",
+  "application_tokens": 28268,
+  "gateway_tokens": 28268,
+  "account_used_delta": 28268,
+  "held_tokens": 0,
+  "delegations": [
+    {
+      "run_id": "5037708100f545aa8c10a901d478b9a8",
+      "kind": "delegation_bound",
+      "payload": {
+        "subagent_type": "evidence",
+        "request_ids": [
+          "5037708100f545aa8c10a901d478b9a8"
+        ],
+        "proposed_description": "检索所选知识库，说明处理建议并引用来源；然后创建标题为“网关联调-VPN登录故障”的技术支持工单草稿，描述写明操作系统、错误码和现象，等待用户确认提交。",
+        "bound_description": "Authoritative customer requests (verbatim):\n[{\"request_id\":\"5037708100f545aa8c10a901d478b9a8\",\"text\":\"这是一项网关联调测试：我在 Windows 11 上登录 VPN，出现 HTTP 401 Authentication failed。请先检索所选知识库，说明处理建议并引用来源；然后创建标题为“网关联调-VPN登录故障”的技术支持工单草稿，描述写明操作系统、错误码和现象，等待我本人确认提交。\"}]\nCarry out only the part within your specialist tools. Preserve the original conditions, negations and cancellations. Use actual receipts for completed work. The supervisor selected your specialist role; the customer messages define the task."
+      }
+    },
+    {
+      "run_id": "5037708100f545aa8c10a901d478b9a8",
+      "kind": "delegation_bound",
+      "payload": {
+        "subagent_type": "service",
+        "request_ids": [
+          "5037708100f545aa8c10a901d478b9a8"
+        ],
+        "proposed_description": "Create a service-ticket draft with the title '网关联调-VPN登录故障' and the description containing the operating system, error code, and phenomenon as specified. Ensure the draft is ready for the user to confirm submission.",
+        "bound_description": "Authoritative customer requests (verbatim):\n[{\"request_id\":\"5037708100f545aa8c10a901d478b9a8\",\"text\":\"这是一项网关联调测试：我在 Windows 11 上登录 VPN，出现 HTTP 401 Authentication failed。请先检索所选知识库，说明处理建议并引用来源；然后创建标题为“网关联调-VPN登录故障”的技术支持工单草稿，描述写明操作系统、错误码和现象，等待我本人确认提交。\"}]\nCarry out only the part within your specialist tools. Preserve the original conditions, negations and cancellations. Use actual receipts for completed work. The supervisor selected your specialist role; the customer messages define the task."
+      }
+    }
+  ]
+}
