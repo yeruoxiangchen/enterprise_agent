@@ -1,5 +1,23 @@
 # 业务专家 RL 同题对照 · 2026-11-17
 
+## 01:02 UTC 评分修正与重新训练
+
+首轮 `specialists_rpp_paired32_20261117_r1` 已主动停止，原始轨迹、检查点及 32 题零更新基线保留。发现 `assess_only` 仅要求完成两个只读检查，却被新增的全序约束误判。训练前半程有 6 条此类有效轨迹因此得到 0 分；基线中有 1 题同样受影响。这是评分约束错误，不能归因为模型失败。
+
+冻结修订数据 `business-v4`：保持 v3 的用户请求、初始状态和实体值，去除只读评估题中未明确要求的两项检查之间的先后顺序约束。必须检查正确的用户/工单/操作、禁止尝试、目标终态及无关对象约束继续保留。v4 任务版本独立，v3 文件保持原样。
+
+重新训练使用 `specialists_rpp_paired32_20261117_r2`：从底座重新初始化专家 LoRA，固定主管，REINFORCE++，4 轮 × 4 任务 × 2 采样，共 32 条训练轨迹。完整 32 题开发集在训练后评估一次。原零更新基线经真实调用、回执和最终状态重新评分为 25/32，复用前逐题核对请求/初始状态、源码、原始结果哈希及零更新阶段；其中 1 题的评分修正单独记录。基线分数的变化属于评分校准。
+
+基线不进入优化器，模型输入和业务执行核心与首轮相同，首轮学习到的权重不进入新轮次。复用明细在 `baseline-reuse.json`，原始奖励跨度和修正后的分数分别保留。`review.json` 会重新核对这条来源链。
+
+```bash
+bash scripts/agent_rl.sh launch --tag specialists_rpp_paired32_20261117_r2 \
+  --gpus 5,6 --train-role specialists --adv-estimator reinforce_plus_plus \
+  --steps 4 --batch-size 4 --group-size 2 --val-limit 32 \
+  --baseline-from specialists_rpp_paired32_20261117_r1 \
+  --checkpoint-interval 2 --max-minutes 55
+```
+
 ## 失败归因与数据修订
 
 前一轮 `specialists_rpp_short_20261116_r1` 的四题开发检查为 2/4。逐条审阅后，两道失败的实际行为为：
@@ -13,7 +31,7 @@
 
 该数据复用公开 crm-agent-bench 工具、环境与判分模块，属于自建业务任务。开发题不送入优化器；本轮不调用组合留出集。v2/v3 的分数不作直接增益对比。
 
-## 冻结实验协议
+## 首轮冻结实验协议（已停止）
 
 - 固定主管 Qwen3-8B；训练业务专家共享 Qwen3-8B LoRA，rank16、alpha32、all-linear。
 - 直接复用 Agent Lightning 0.3.1 与 veRL 0.6.0 的 REINFORCE++，学习率 1e-6、KL 0.001。

@@ -10,8 +10,9 @@ import random
 
 DATA_ROOT = Path('/data/zjr/enterprise_kb_agent/rl')
 BENCH_ROOT = Path('/data/zjr/enterprise_kb_agent/benchmarks/crm-agent-bench')
-VERSION = 'business-rl-v3'
-DATASET_NAME = 'business-v3'
+VERSION = 'business-rl-v4'
+DATASET_NAME = 'business-v4'
+FIXTURE_VERSION = 'business-rl-v3'
 FAMILIES = ('lookup', 'conditional_reassign', 'close', 'delete_no_permission',
             'delete_dependency', 'comment', 'assess_only', 'cancel')
 
@@ -38,7 +39,7 @@ def make_task(split: str, index: int, seed: int = 20261116) -> dict:
 
     if split not in ('train', 'dev', 'heldout') or index < 0:
         raise ValueError('Unknown split or negative task index')
-    digest = hashlib.sha256(f'{VERSION}:{seed}:{split}:{index}'.encode()).hexdigest()
+    digest = hashlib.sha256(f'{FIXTURE_VERSION}:{seed}:{split}:{index}'.encode()).hexdigest()
     rng = random.Random(digest)
     family = FAMILIES[index % len(FAMILIES)]
     state = copy.deepcopy(create_environment('itsm').get_state())
@@ -115,12 +116,15 @@ def make_task(split: str, index: int, seed: int = 20261116) -> dict:
     order = list(actions)
     if family == 'delete_dependency':
         order = ['get_ticket', 'check_dependencies', 'check_permission']
+    if family == 'assess_only':
+        # The request asks for both read-only checks, not their relative order.
+        order = None
     if split == 'heldout':
         # A composition absent from train/dev: inspect a different ticket first.
         other = identifiers['TCK-1003']
         request = f'First look up {other}. Then handle the following separate request: {request}'
         actions.insert(0, 'get_ticket')
-        order.insert(0, 'get_ticket')
+        if order is not None:order.insert(0, 'get_ticket')
         arguments['get_ticket'] = [{'ticket_id': other}, {'ticket_id': ticket_id}]
     messages.append(f'I am {user}. {request}')
     messages.extend(extra_turns)

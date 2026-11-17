@@ -28,7 +28,7 @@ def execute(sample, tmp_path, *, forbidden=False, collateral=False, wrong_permis
     gets=sample['task']['expected_args']['get_ticket']
     for arguments in gets if isinstance(gets,list) else [gets]:
         plan.append(('get_ticket',arguments))
-    checks=[name for name in sample['task']['expected_order'] if name in ('check_dependencies','check_permission')]
+    checks=[name for name in (sample['task']['expected_order'] or sample['task']['expected_actions']) if name in ('check_dependencies','check_permission')]
     for name in checks:
         arguments={'ticket_id':target}
         if name=='check_permission':
@@ -89,7 +89,8 @@ def test_prerequisites_are_visible_and_bind_the_business_subject():
         assert expected['ticket_id']==sample['target_ticket']
         assert expected['user_id'] in sample['messages'][0]
         assert expected['action']==('delete' if family.startswith('delete') else 'edit')
-        assert sample['task']['expected_order'][0]=='get_ticket'
+        if family=='assess_only':assert sample['task']['expected_order'] is None
+        else:assert sample['task']['expected_order'][0]=='get_ticket'
 
 
 def test_heldout_is_new_composition_with_independent_fixtures(tmp_path):

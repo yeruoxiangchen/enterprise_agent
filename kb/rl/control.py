@@ -45,7 +45,8 @@ def run_job(args):
     status['adv_estimator']=args.adv_estimator
     status.update(val_before_train=args.val_before_train,val_limit=args.val_limit,
                   batch_size=args.batch_size,group_size=args.group_size,
-                  dataset=DATASET_NAME,checkpoint_interval=args.checkpoint_interval)
+                  dataset=DATASET_NAME,checkpoint_interval=args.checkpoint_interval,
+                  baseline_from=args.baseline_from)
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -70,6 +71,11 @@ def run_job(args):
     services=ModelServices(folder,lambda stage,**data:save(stage='start_frozen_specialist',model_loading=data))
     try:
         write_json(folder/'dataset-manifest.json',verify_dataset(DATA_ROOT/'datasets'/DATASET_NAME))
+        if args.baseline_from:
+            from .baseline import inherit_baseline
+            inherited=inherit_baseline(DATA_ROOT/'outputs'/args.baseline_from,folder,
+                DATA_ROOT/'datasets'/DATASET_NAME,limit=args.val_limit,train_role=args.train_role)
+            save(inherited_baseline_cases=inherited['count'])
         devices=args.gpus.split(',')
         if len(devices)!=2 or len(set(devices))!=2 or not all(d.isdigit() for d in devices):
             raise ValueError('Specify two distinct physical GPU indices')
@@ -204,6 +210,7 @@ def main():
     parser.add_argument('--val-limit',type=int,default=4)
     parser.add_argument('--val-before-train',action='store_true')
     parser.add_argument('--checkpoint-interval',type=int,default=0)
+    parser.add_argument('--baseline-from',default='')
     parser.add_argument('--max-minutes',type=float,default=90)
     args=parser.parse_args()
     if (args.steps<1 or args.batch_size<1 or args.group_size<2 or args.max_minutes<=0
@@ -211,6 +218,10 @@ def main():
         parser.error('Use positive steps/batch/time and at least two trajectories per task')
     if Path(args.tag).name!=args.tag or args.tag in ('.','..'):
         parser.error('Use a plain run tag')
+    if args.baseline_from and (Path(args.baseline_from).name!=args.baseline_from or args.baseline_from in ('.','..')):
+        parser.error('Use a plain baseline tag')
+    if args.baseline_from and args.val_before_train:
+        parser.error('Select inherited baseline or live pretraining validation')
     folder=DATA_ROOT/'outputs'/args.tag
     if args.command=='prepare':
         print(json.dumps(prepare(DATA_ROOT/'datasets'/DATASET_NAME),ensure_ascii=False,indent=2))

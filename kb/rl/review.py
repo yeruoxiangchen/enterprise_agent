@@ -28,6 +28,8 @@ def outcome_stats(rows):
             'p95_seconds':percentile([row['seconds'] for row in rows],.95),
             'mean_tokens':statistics.mean(row['tokens'] for row in rows),
             'mean_model_calls':statistics.mean(row['model_calls'] for row in rows),
+            'forbidden_attempt_episodes':sum(not row['checks'].get('forbidden_attempts',True) for row in rows),
+            'order_only_failures':sum([key for key,value in row['checks'].items() if not value]==['order'] for row in rows),
             'usage_missing_calls':sum(row['usage_missing_calls'] for row in rows)}
 
 
@@ -100,6 +102,20 @@ def review(folder):
         row=json.loads(path.read_text())
         records.append(row)
         paths.append(path)
+    inherited=list(sorted((folder/'inherited-baseline').glob('*/*/result.json')))
+    for path in inherited:
+        row=json.loads(path.read_text())
+        lineage=row['baseline_lineage']
+        source=Path(lineage['source_result'])
+        if hashlib.sha256(source.read_bytes()).hexdigest()!=lineage['source_result_sha256']:
+            raise ValueError('Inherited raw baseline changed')
+        from .baseline import rescore
+        sample=next(sample for sample in samples if sample['id']==row['task_id'])
+        corrected=rescore(sample,json.loads(source.read_text()))
+        if any(corrected[key]!=row[key] for key in ('reward','checks','failures')):
+            raise ValueError('Inherited grading differs from actual source behavior')
+        records.append(row)
+        paths.append(path)
     compared=compare_results(records,expected,steps=state['steps'])
     training=[row for row in records if row['split']=='train']
     train_raw=(dataset/'train.jsonl').read_bytes()
@@ -114,11 +130,22 @@ def review(folder):
         raise ValueError('Training trajectory was not from the frozen training split')
     summary=json.loads((folder/'trajectory-summary.json').read_text())
     traces={row['rollout_id']:row for row in summary['rows']}
+    source_traces={}
     token_checks=[]
     for path,row in zip(paths,records,strict=True):
-        trace=traces.get(path.parent.parent.name)
+        lineage=row.get('baseline_lineage')
+        trace_rows=traces
+        expected_reward=row['reward']
+        if lineage:
+            source_run=Path(lineage['source_result']).parents[3]
+            if source_run not in source_traces:
+                original_summary=json.loads((source_run/'trajectory-summary.json').read_text())
+                source_traces[source_run]={item['rollout_id']:item for item in original_summary['rows']}
+            trace_rows=source_traces[source_run]
+            expected_reward=lineage['source_reward']
+        trace=trace_rows.get(path.parent.parent.name)
         completed=row['policy_model_calls_completed']
-        token_checks.append(bool(trace and trace['reward']==row['reward']
+        token_checks.append(bool(trace and trace['reward']==expected_reward
             and trace['triplets']==completed
             and (trace['token_ids_complete'] if completed else trace['token_ids_complete'] is None)))
     if not all(token_checks):raise ValueError('Role counts, actual token traces or reward attribution differ')
@@ -152,6 +179,7 @@ def review(folder):
             nonzero+=int(torch.count_nonzero(tensor))
             squared_norm+=float(torch.sum(tensor.double().square()))
     report={'status':'reviewed_paired_pilot','dataset':state['dataset'],
+        'inherited_baseline_cases':len(inherited),
         'train_role':state['train_role'],'algorithm':state['adv_estimator'],
         'steps':state['steps'],'physical_gpus':state['gpus'],
         'train':outcome_stats(training),**compared,
@@ -160,6 +188,8 @@ def review(folder):
                                    'development_tasks_in_optimizer':0},
         'learning':{'update_rpcs':len(history),
             'logical_steps_without_update':state['steps']-len(history),
+            'rpcs_with_outcome_advantage':sum(row['learning_signal']['nonzero_tokens']>0 for row in history),
+            'rpcs_with_zero_outcome_advantage':sum(row['learning_signal']['nonzero_tokens']==0 for row in history),
             'optimizer_minibatch_updates':len(gradients),
             'gradient_norm_min':min(gradients),'gradient_norm_max':max(gradients),
             'positive_advantage_tokens':sum(row['learning_signal']['positive_tokens'] for row in history),
@@ -173,7 +203,8 @@ def review(folder):
     failures=[]
     for path,row in zip(paths,records,strict=True):
         if row['split']!='dev' or row['reward']:continue
-        events=[json.loads(line) for line in (path.parent/'events.jsonl').read_text().splitlines()]
+        event_folder=Path(row['baseline_lineage']['source_result']).parent if row.get('baseline_lineage') else path.parent
+        events=[json.loads(line) for line in (event_folder/'events.jsonl').read_text().splitlines()]
         failures.append({'task_id':row['task_id'],'family':row['family'],
             'phase':row['evaluation_phase'],'failed_checks':{
                 key:value for key,value in row['checks'].items() if not value},
