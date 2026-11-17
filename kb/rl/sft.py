@@ -1,6 +1,6 @@
 """Verified successful business trajectories -> native TRL SFTTrainer.
 
-Train on the original assistant token IDs from the training proxy, preserving
+Train on the original assistant token IDs from the proxy or vLLM, preserving
 the exact tools, tool results and template in their original prompt. User and
 tool tokens stay masked. No conversation is reconstructed from final answers.
 """
@@ -27,7 +27,7 @@ def data_path(path):
     return path
 
 
-def verified_rows(record, result, *, max_length=8192):
+def verified_rows(record, result, *, max_length=8192, clean_only=True):
     """Rescore real actions/state before admitting a whole training episode."""
     from .baseline import rescore
     rollout = record['rollout']
@@ -40,6 +40,9 @@ def verified_rows(record, result, *, max_length=8192):
         raise ValueError('SFT result is bound to a different task payload')
     if rescore(sample, result)['reward'] != 1. or result['reward'] != 1.:
         return [], 'business_verification_failed'
+    if clean_only and (result.get('routing_errors') or any(
+            e.get('result')!='satisfied' for e in result.get('review_evaluations',[]))):
+        return [], 'repaired_episode'
     triplets = record['triplets']
     expected = result['policy_model_calls_completed']
     if len(triplets) != expected:
@@ -48,6 +51,8 @@ def verified_rows(record, result, *, max_length=8192):
         return [], 'no_selected_role_actions'
     rows = []
     for turn, triplet in enumerate(triplets):
+        if triplet['response'].get('finish_reason')=='length':
+            return [], 'truncated_response'
         prompt, response = triplet['prompt'].get('token_ids'), triplet['response'].get('token_ids')
         if not prompt or not response or any(type(i) is not int or i < 0 for i in prompt + response):
             raise ValueError('SFT requires complete original integer token IDs')
@@ -58,6 +63,7 @@ def verified_rows(record, result, *, max_length=8192):
                 'split': 'train', 'task_sha256': result['task_sha256'],
                 'rollout_id': rollout['rollout_id'], 'turn': turn,
                 'train_role': result['train_role'], 'business_reward': 1.}}
+        row['provenance']['token_source']=record.get('source_format','agent-lightning-proxy')
         rows.append(row)
     return rows, 'accepted'
 
@@ -101,6 +107,7 @@ def export_successes(run, output, *, max_length=8192):
         'rows': len(rows), 'train_role_rows': dict(counts), 'successful_episodes_by_family': dict(families),
         'skipped': dict(skipped), 'max_length': max_length, 'dataset_sha256': digest(data),
         'format': 'original token IDs, response-only completion_mask; TRL 0.21.0',
+        'clean_only':True,
         'heldout_used': False}
     write_json(output/'manifest.json', report)
     return report
@@ -110,7 +117,7 @@ def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5,train_rol
     """Standard response-only LoRA SFT; defaults fit one otherwise-free 3090."""
     from datasets import Dataset
     from peft import LoraConfig
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers import AutoModelForCausalLM, AutoTokenizer,TrainerCallback
     from trl import SFTConfig, SFTTrainer
     import torch
     dataset, output = data_path(dataset), data_path(output)
@@ -135,7 +142,11 @@ def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5,train_rol
         max_length=manifest['max_length'], packing=False, completion_only_loss=True,
         dataset_kwargs={'skip_prepare_dataset': True}, report_to='none',
         logging_steps=1, save_strategy='no', seed=20261117)
-    trainer = SFTTrainer(model=model, processing_class=tokenizer, args=args,
+    class Progress(TrainerCallback):
+        def on_log(self,args,state,control,logs=None,**kwargs):
+            write_json(output/'progress.json',{'global_step':state.global_step,'total_steps':steps,
+                'logs':logs,'cuda_peak_allocated_mib':torch.cuda.max_memory_allocated()/1024**2 if cuda else None})
+    trainer = SFTTrainer(model=model, processing_class=tokenizer, args=args,callbacks=[Progress()],
         train_dataset=Dataset.from_list([{k: row[k] for k in ('input_ids','completion_mask')} for row in rows]),
         peft_config=LoraConfig(r=16, lora_alpha=32, lora_dropout=0.,
                               target_modules='all-linear', task_type='CAUSAL_LM'))
@@ -148,6 +159,8 @@ def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5,train_rol
         tokenizer.save_pretrained(str(output/'adapter'))
         write_json(output/'result.json', {'status': 'complete', 'global_step': trainer.state.global_step,
             'metrics': result.metrics, 'adapter': str(output/'adapter'),
+            'cuda_peak_allocated_mib':torch.cuda.max_memory_allocated()/1024**2 if cuda else None,
+            'log_history':trainer.state.log_history,
             'successful_episodes_by_family': manifest['successful_episodes_by_family']})
         return result.metrics
     finally:

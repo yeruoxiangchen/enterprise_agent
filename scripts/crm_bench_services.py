@@ -137,7 +137,7 @@ class ModelServices:
         write(self.output/'services.json', self.owned)
 
     def start(self, role, gpu, *, max_model_len=None, memory_fraction=GPU_MEMORY_FRACTION,
-              tensor_parallel_size=1):
+              tensor_parallel_size=1, model_path=None):
         default_context = 16384 if role == 'actor' else 12288
         context = default_context if max_model_len is None else max_model_len
         if type(context) is not int or not 0 < context <= default_context:
@@ -153,7 +153,10 @@ class ModelServices:
             if index not in snapshots or not gpu_has_room(snapshots[index], memory_fraction):
                 raise RuntimeError(f'GPU {index} has insufficient headroom before {role} startup: {snapshots.get(index)}')
         snapshot = snapshots[gpu] if tensor_parallel_size==1 else {index:snapshots[index]for index in group}
-        model = RUNTIME/'models/Qwen3-8B' if role == 'actor' else Path('/data/zjr/models/Qwen3-VL-8B-Instruct')
+        if model_path is not None and role!='actor':
+            raise ValueError('Custom model paths are supported for text actors')
+        model = (Path(model_path).resolve() if model_path is not None else
+                 RUNTIME/'models/Qwen3-8B' if role == 'actor' else Path('/data/zjr/models/Qwen3-VL-8B-Instruct'))
         if not (model/'config.json').is_file():
             raise FileNotFoundError(model)
         with socket.socket() as sock:
