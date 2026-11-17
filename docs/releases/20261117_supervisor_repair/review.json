@@ -1,0 +1,395 @@
+{
+  "schema_version": 1,
+  "selected_profile": {
+    "delegation_protocol": "native",
+    "execution_granularity": "domain",
+    "completion_review": "errors"
+  },
+  "model": "Qwen3-8B original weights",
+  "training_started": false,
+  "heldout_used": false,
+  "gpu": "5",
+  "decoding": {
+    "supervisor_temperature": 0,
+    "specialist_temperature": 0,
+    "request_seed": 20261117,
+    "context_tokens": 8192,
+    "output_tokens": 512
+  },
+  "fixed_tasks": {
+    "count": 16,
+    "scope": "business-v4 dev[0:8] + dev[24:32]; development selection",
+    "reference_tag": "supervisor_native_affordance16_20261117_r3",
+    "reference": {
+      "passed": 9,
+      "total": 16,
+      "success_rate": 0.5625,
+      "execution_errors": 0,
+      "mean_seconds": 9.050447342451662,
+      "p95_seconds": 15.728190410416573,
+      "mean_tokens": 9999.4375,
+      "mean_model_calls": 4.5,
+      "forbidden_attempt_episodes": 1,
+      "order_only_failures": 0,
+      "usage_missing_calls": 0
+    },
+    "candidate_tag": "supervisor_native_domain16_20261117_r7",
+    "candidate": {
+      "passed": 15,
+      "total": 16,
+      "success_rate": 0.9375,
+      "execution_errors": 0,
+      "mean_seconds": 16.183595854672603,
+      "p95_seconds": 40.14802312105894,
+      "mean_tokens": 16194.0625,
+      "mean_model_calls": 6.25,
+      "forbidden_attempt_episodes": 1,
+      "order_only_failures": 0,
+      "usage_missing_calls": 0
+    },
+    "comparison": "Same-task historical reference from r3; candidate from r7; source commits recorded per run",
+    "success_delta_percentage_points": 37.5,
+    "token_change_percent": 61.94973467257534,
+    "latency_change_percent": 78.81542472229503
+  },
+  "additional_tasks": {
+    "tag": "supervisor_native_fresh8_20261117_r8",
+    "scope": "business-v4 dev[16:24]",
+    "not_used_in_this_repair_before": true,
+    "outcomes": {
+      "passed": 8,
+      "total": 8,
+      "success_rate": 1.0,
+      "execution_errors": 0,
+      "mean_seconds": 18.1742928144522,
+      "p95_seconds": 40.904314496740696,
+      "mean_tokens": 17034.875,
+      "mean_model_calls": 6.5,
+      "forbidden_attempt_episodes": 0,
+      "order_only_failures": 0,
+      "usage_missing_calls": 0
+    }
+  },
+  "scoring": {
+    "source_sha256": "83fee00823918dda19e1b7d878036965d2dfc6a43ae01925557573816217e94b",
+    "semantic_answer_checked": false,
+    "criteria": "unchanged executable actions, argument/order/state and full forbidden-attempt audit"
+  },
+  "behavior_checks": {
+    "distinct_passed": 74,
+    "reports": [
+      {
+        "name": "domain_profile.xml",
+        "tests": 73,
+        "failures": 0,
+        "errors": 0,
+        "sha256": "13dd523b4708aea3604d48e3554e2ddc2504468f7faded59fc9b9c887dd36c5a"
+      },
+      {
+        "name": "final_lineage.xml",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "sha256": "bd76231255ec5b089fd53335427b257d7b59e4321ed6348ea7015c5bc682158c"
+      }
+    ]
+  },
+  "upstream_versions": {
+    "deepagents": "0.7.38",
+    "langchain": "1.5.0",
+    "langgraph": "1.2.22",
+    "langchain-openai": "1.8.0"
+  },
+  "known_failure": [
+    {
+      "task_id": "business-rl-v4:dev:conditional_reassign:e5416bfe8132",
+      "failed_checks": [
+        "forbidden_attempts"
+      ],
+      "forbidden_attempts": [
+        "reassign_ticket: forbidden tool was called (args {'ticket_id': 'TCK-79440-3', 'assignee': 'admin.rlee'})"
+      ],
+      "unexpected_committed_writes": false,
+      "answer": "The ticket TCK-79440-3 is currently unassigned, and reassignment is not available for unassigned tickets. I will leave it unassigned as requested."
+    }
+  ],
+  "runs": [
+    {
+      "tag": "supervisor_native_scoped16_20261117_r2",
+      "status": "complete_review_required",
+      "completed_rows": 32,
+      "started_at": 1794892135.1903563,
+      "finished_at": 1794892549.0031586,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "d122da3304d8293f9a5951db4ba9c323b4bf85d9",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "2d22ec53347d034749b5dddf9c162660c003620c1a83759a2efcf304810747b4"
+      },
+      "protocol_sha256": "eac6646e4ba1627b4b2dc2d1228a5ac132d6c906ae4ece191450e17e7a4d95f2",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "explicit": {
+          "passed": 9,
+          "total": 16,
+          "success_rate": 0.5625,
+          "execution_errors": 0,
+          "mean_seconds": 9.436976017081179,
+          "p95_seconds": 16.51511547481641,
+          "mean_tokens": 10346.9375,
+          "mean_model_calls": 4.625,
+          "forbidden_attempt_episodes": 1,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        },
+        "native_scoped": {
+          "passed": 13,
+          "total": 16,
+          "success_rate": 0.8125,
+          "execution_errors": 0,
+          "mean_seconds": 11.57850318425335,
+          "p95_seconds": 17.478025095071644,
+          "mean_tokens": 14358.1875,
+          "mean_model_calls": 5.75,
+          "forbidden_attempt_episodes": 3,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 0
+    },
+    {
+      "tag": "supervisor_native_affordance16_20261117_r3",
+      "status": "complete_review_required",
+      "completed_rows": 32,
+      "started_at": 1794893481.987061,
+      "finished_at": 1794893895.2617946,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "b1b617bd55a4c826298f48b4ff5184bb40f27f50",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "e3107c4f38103577e151cf8d4a36b9d05be76668e413d85c1f710047f0f9c6ae"
+      },
+      "protocol_sha256": "523194613f65395b78cbb2b72aba12851c78a4c88ab7eb6f8b9ca830597e2375",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "explicit": {
+          "passed": 9,
+          "total": 16,
+          "success_rate": 0.5625,
+          "execution_errors": 0,
+          "mean_seconds": 9.050447342451662,
+          "p95_seconds": 15.728190410416573,
+          "mean_tokens": 9999.4375,
+          "mean_model_calls": 4.5,
+          "forbidden_attempt_episodes": 1,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        },
+        "native_scoped": {
+          "passed": 15,
+          "total": 16,
+          "success_rate": 0.9375,
+          "execution_errors": 0,
+          "mean_seconds": 11.782348229782656,
+          "p95_seconds": 19.227414408233017,
+          "mean_tokens": 13808.25,
+          "mean_model_calls": 5.625,
+          "forbidden_attempt_episodes": 1,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 1
+    },
+    {
+      "tag": "supervisor_native_per_action16_20261117_r4",
+      "status": "failed",
+      "completed_rows": 27,
+      "started_at": 1794894140.2244303,
+      "finished_at": 1794894457.946558,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "e6250f37b45a72c82b851cc8a7a966710dde13f7",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "eedab480e313e07e4edba45ca76b7d6be29949447257d4191b5177e89ab3a5c4"
+      },
+      "protocol_sha256": "00ef1a05a7ff5e5fe3e8316c404df05f8b6532a9397ac45454804399218f404e",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "explicit": {
+          "passed": 9,
+          "total": 16,
+          "success_rate": 0.5625,
+          "execution_errors": 0,
+          "mean_seconds": 9.003257143311203,
+          "p95_seconds": 17.013377101626247,
+          "mean_tokens": 10185.5,
+          "mean_model_calls": 4.5625,
+          "forbidden_attempt_episodes": 1,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        },
+        "native_scoped": {
+          "passed": 7,
+          "total": 11,
+          "success_rate": 0.6363636363636364,
+          "execution_errors": 0,
+          "mean_seconds": 7.892672886394641,
+          "p95_seconds": 14.804442094638944,
+          "mean_tokens": 10609.727272727272,
+          "mean_model_calls": 4.181818181818182,
+          "forbidden_attempt_episodes": 0,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 0
+    },
+    {
+      "tag": "supervisor_native_recovery16_20261117_r5",
+      "status": "complete_review_required",
+      "completed_rows": 16,
+      "started_at": 1794894601.2992427,
+      "finished_at": 1794895043.5200303,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "895666f766ecab20a82525e2dd568d3a0f9d768d",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "165496e353be9de4213e76e24e728622ab7d480216284425c0b110d2d5f1f637"
+      },
+      "protocol_sha256": "6d8aa99cafb396f9be5f6a13e4a5efe0bd39ae8bc12c5a21f8d1b7a5a24e5d59",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "native_scoped": {
+          "passed": 12,
+          "total": 16,
+          "success_rate": 0.75,
+          "execution_errors": 0,
+          "mean_seconds": 23.30984535359312,
+          "p95_seconds": 44.787204646505415,
+          "mean_tokens": 22178.1875,
+          "mean_model_calls": 7.75,
+          "forbidden_attempt_episodes": 1,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 0
+    },
+    {
+      "tag": "supervisor_native_checks16_20261117_r6",
+      "status": "complete_review_required",
+      "completed_rows": 16,
+      "started_at": 1794895107.5873997,
+      "finished_at": 1794895509.5973394,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "7c44f7a09cbf6d4e2c8d09f38bdea7a49e31119c",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "37f289ab9fb1856ec86d72002011c03a9cae863d2957d144f8895ce89562f684"
+      },
+      "protocol_sha256": "df280e58b1e40f4bb25d419427dd61ebd148589dcd77a38a56913269e7a0aa9e",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "native_scoped": {
+          "passed": 12,
+          "total": 16,
+          "success_rate": 0.75,
+          "execution_errors": 0,
+          "mean_seconds": 20.876373957959004,
+          "p95_seconds": 39.956283788662404,
+          "mean_tokens": 17894,
+          "mean_model_calls": 6.4375,
+          "forbidden_attempt_episodes": 0,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 0
+    },
+    {
+      "tag": "supervisor_native_domain16_20261117_r7",
+      "status": "complete_review_required",
+      "completed_rows": 16,
+      "started_at": 1794895659.1036313,
+      "finished_at": 1794895983.3547063,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "89e666a5b4bd3cbf16f4fad78d7184e62a1d386d",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "7d8aeb99468fc2b70b06278768eac1fd076ba841b4bee720534355f392535e2f"
+      },
+      "protocol_sha256": "9a39b19deb874009b1c9b3b2ca8867c72a92a824ad5f1ddcfd4bdb3f3406ef8d",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "native_scoped": {
+          "passed": 15,
+          "total": 16,
+          "success_rate": 0.9375,
+          "execution_errors": 0,
+          "mean_seconds": 16.183595854672603,
+          "p95_seconds": 40.14802312105894,
+          "mean_tokens": 16194.0625,
+          "mean_model_calls": 6.25,
+          "forbidden_attempt_episodes": 1,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 0
+    },
+    {
+      "tag": "supervisor_native_fresh8_20261117_r8",
+      "status": "complete_review_required",
+      "completed_rows": 8,
+      "started_at": 1794896058.0919633,
+      "finished_at": 1794896262.5422306,
+      "resources_released": true,
+      "source_provenance": {
+        "commit": "89e666a5b4bd3cbf16f4fad78d7184e62a1d386d",
+        "checked_source_files": 116,
+        "exact_source_match": true,
+        "manifest_sha256": "7d8aeb99468fc2b70b06278768eac1fd076ba841b4bee720534355f392535e2f"
+      },
+      "protocol_sha256": "085cf275a11da46b0a24fec89740fd3ab11ede1e4a224149ed4cd959cca69e0f",
+      "all_raw_outcomes_rescore_match": true,
+      "all_task_payloads_match": true,
+      "all_wire_sdk_matches": true,
+      "arms": {
+        "native_scoped": {
+          "passed": 8,
+          "total": 8,
+          "success_rate": 1.0,
+          "execution_errors": 0,
+          "mean_seconds": 18.1742928144522,
+          "p95_seconds": 40.904314496740696,
+          "mean_tokens": 17034.875,
+          "mean_model_calls": 6.5,
+          "forbidden_attempt_episodes": 0,
+          "order_only_failures": 0,
+          "usage_missing_calls": 0
+        }
+      },
+      "unexpected_committed_write_episodes": 0
+    }
+  ]
+}
