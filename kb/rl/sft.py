@@ -106,7 +106,7 @@ def export_successes(run, output, *, max_length=8192):
     return report
 
 
-def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5):
+def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5,train_role='specialists'):
     """Standard response-only LoRA SFT; defaults fit one otherwise-free 3090."""
     from datasets import Dataset
     from peft import LoraConfig
@@ -118,8 +118,8 @@ def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5):
     raw = (dataset/'train.jsonl').read_bytes()
     if digest(raw) != manifest['dataset_sha256'] or not manifest['rows']:
         raise ValueError('SFT dataset is empty or its frozen hash changed')
-    if set(manifest['train_role_rows']) != {'specialists'}:
-        raise ValueError('This SFT job trains the shared specialist policy only')
+    if train_role not in ('supervisor','specialists') or set(manifest['train_role_rows']) != {train_role}:
+        raise ValueError('SFT dataset must contain only the selected trainable agent role')
     if output.exists():
         raise FileExistsError('Use a new SFT output directory')
     tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
@@ -140,7 +140,8 @@ def train(dataset, output, *, model_path, steps=32, learning_rate=1e-5):
         peft_config=LoraConfig(r=16, lora_alpha=32, lora_dropout=0.,
                               target_modules='all-linear', task_type='CAUSAL_LM'))
     write_json(output/'training-input.json', {'model': str(model_path), 'dataset': str(dataset),
-        'dataset_sha256': manifest['dataset_sha256'], 'steps': steps, 'library': 'trl==0.21.0'})
+        'dataset_sha256': manifest['dataset_sha256'], 'steps': steps,'train_role':train_role,
+        'library': 'trl==0.21.0'})
     try:
         result = trainer.train()
         trainer.save_model(str(output/'adapter'))
@@ -190,6 +191,7 @@ def main():
     fit.add_argument('--output', type=Path, required=True)
     fit.add_argument('--model', default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     fit.add_argument('--steps', type=int, default=32)
+    fit.add_argument('--train-role',choices=('supervisor','specialists'),default='specialists')
     merge = sub.add_parser('merge')
     merge.add_argument('--adapter', type=Path, required=True)
     merge.add_argument('--output', type=Path, required=True)
@@ -198,7 +200,7 @@ def main():
     if args.command == 'export':
         report = export_successes(args.run, args.output, max_length=args.max_length)
     elif args.command == 'train':
-        report = train(args.dataset, args.output, model_path=args.model, steps=args.steps)
+        report = train(args.dataset, args.output, model_path=args.model, steps=args.steps,train_role=args.train_role)
     else:
         report = merge_adapter(args.adapter, args.output, base_model=args.base_model)
     print(json.dumps(report, ensure_ascii=False, indent=2))

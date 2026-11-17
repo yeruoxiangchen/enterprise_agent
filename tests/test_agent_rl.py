@@ -229,3 +229,35 @@ def test_programming_failure_stops_training_while_policy_budget_gets_zero(tmp_pa
     else:
         with pytest.raises(RuntimeError,match='broken integration'):
             asyncio.run(episode)
+
+
+@pytest.mark.parametrize('train_role',['supervisor','specialists'])
+def test_business_reviewer_uses_frozen_endpoint_and_never_adds_policy_actions(tmp_path,monkeypatch,train_role):
+    import asyncio
+    from kb.rl.runtime import run_episode
+    from kb.context import ContextBudget
+    from test_deep_harness import ScriptModel,call
+    from test_native_harness import answer
+    from test_native_completion_review import grade
+    sample=make_task('train',FAMILIES.index('comment'))
+    arguments=sample['task']['expected_args']['add_ticket_comment']
+    root=ScriptModel(replies=[call('get_ticket',{'ticket_id':sample['target_ticket']},'read'),
+        call('add_ticket_comment',arguments,'bad'),answer('I will delegate.'),
+        call('task',{'subagent_type':'ticket_operations__tickets__execute',
+                     'description':'Add the exact requested comment.'},'task'),answer('Comment added.')])
+    child=ScriptModel(replies=[call('add_ticket_comment',arguments,'write'),answer('Comment added.')])
+    reviewer=ScriptModel(replies=[grade(False),grade(True)])
+    resources=[]
+    def models(**kwargs):
+        role=kwargs['metadata']['rl_role'];resources.append((role,kwargs['base_url']))
+        return reviewer if role=='frozen_reviewer'else root if role in ('supervisor','frozen_supervisor')else child
+    monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
+    result=asyncio.run(run_episode(sample,{'url':'http://train.local/v1','model':'policy'},
+        {'url':'http://fixed.local/v1','model':'base'},tmp_path/'episode',
+        model_factory=models,train_role=train_role,delegation_protocol='native',completion_review='errors'))
+    assert result['reward']==1,result
+    assert ('frozen_reviewer','http://fixed.local/v1') in resources
+    assert result['role_model_calls']['frozen_reviewer']['completed']==2
+    assert result['policy_model_calls_completed']==(5 if train_role=='supervisor'else 2)
+    assert len(result['review_evaluations'])==2 and result['model_calls']==9
+    assert 'expected_state' not in str(root.seen)+str(child.seen)+str(reviewer.seen)

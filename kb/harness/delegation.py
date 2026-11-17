@@ -30,7 +30,10 @@ def task_schema(original, writes):
 
 
 class DelegationBindings:
-    def __init__(self, journal, specs, groups, emit):
+    def __init__(self, journal, specs, groups, emit, *, protocol='explicit'):
+        if protocol not in ('explicit','native'):
+            raise ValueError('Unknown delegation protocol')
+        self.protocol = protocol
         self.journal, self.specs, self.emit = journal, specs, emit
         self.groups = {name: set(cap['tools']) for name, cap in groups.items()}
         self.groups.setdefault('general-purpose', {s.name for s in specs.values() if not s.write})
@@ -68,23 +71,28 @@ class DelegationBindings:
             originals = [{'request_id': row['id'], 'text': row['question']} for row in
                 self.journal.db.execute('SELECT id,question FROM native_requests ORDER BY rowid')]
             role = args.get('subagent_type')
-            allowed = args.pop('allowed_write_tools', [])
             errors = []
             if not isinstance(role, str):
                 errors.append('subagent_type must be a string')
+            elif role not in self.groups:
+                errors.append('Unknown subagent_type; select an advertised specialist')
             if not isinstance(args.get('description'), str):
                 errors.append('description must be a string')
+            capability = self.groups.get(role, ()) if isinstance(role, str) else ()
+            writes = {n for n in capability if self.specs[n].write}
+            # Native task(description, subagent_type) selects an actual
+            # capability-scoped graph. Explicit historical scopes may narrow
+            # it further, but are not required from the supervisor.
+            allowed = args.pop('allowed_write_tools', sorted(writes) if self.protocol=='native' else [])
             if not isinstance(allowed, list) or any(not isinstance(n, str) for n in allowed):
                 errors.append('allowed_write_tools must be a list of tool names')
                 allowed = []
-            capability = self.groups.get(role, ()) if isinstance(role, str) else ()
-            writes = {n for n in capability if self.specs[n].write}
             if set(allowed) - writes:
                 errors.append('write allowlist exceeds the selected specialist capability')
             parent = self.current(config)
             if parent is not None and set(allowed) - set(parent['allowed_write_tools']):
                 errors.append('a nested task cannot widen its parent write allowlist')
-            contract = {'version': 1, 'subagent_type': role,
+            contract = {'version': 1, 'protocol':self.protocol, 'subagent_type': role,
                 'objective': args.get('description', ''),
                 'authoritative_customer_requests': originals,
                 'allowed_write_tools': sorted(set(allowed)) if not errors else [],

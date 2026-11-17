@@ -20,7 +20,8 @@ def write_json(path, value):
 
 async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7,
                       context_tokens=8192, output_tokens=512, max_calls=24,
-                      timeout_seconds=180, model_factory=None,train_role='supervisor'):
+                      timeout_seconds=180, model_factory=None,train_role='supervisor',
+                      delegation_protocol='explicit',completion_review=False):
     from langchain_openai import ChatOpenAI
     from harness.tools.environment import create_environment
     import harness.tools.domains  # noqa: F401
@@ -58,6 +59,10 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
                      temperature if root_trainable else 0)
     child_model=model(child_resource,'frozen_specialist' if root_trainable else 'specialist_policy',
                       0 if root_trainable else temperature)
+    roles={'*':child_model}
+    if completion_review:
+        frozen_resource=child_resource if root_trainable else root_resource
+        roles['reviewer']=model(frozen_resource,'frozen_reviewer',0)
     cfg = Settings(root=folder, mode='agent', llm_url=supervisor['url'],
         llm_model=supervisor['model'], llm_key='local',
         tokenize_url=specialist['url'].removesuffix('/v1')+'/tokenize',
@@ -69,10 +74,10 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
     adapter = NativeCRMAdapter(environment, cfg,
         yaml.safe_load((BENCH_ROOT/'src/agents/itsm.yaml').read_text()),
         (BENCH_ROOT/'src/tasks/policies/itsm_policy.md').read_text(), folder,
-        model=root_model, role_models={'*': child_model}, fork_subagents=True,
+        model=root_model, role_models=roles, fork_subagents=True,
         operation_permissions=True, prepare_operations=True,
         specialist_owned_checks=True, require_dependency_confirmation=True,
-        bind_user_request=True)
+        bind_user_request=True,delegation_protocol=delegation_protocol,completion_review=completion_review)
     started = time.monotonic()
     turns = []
     error = None
@@ -113,6 +118,10 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
             environment=environment.get_state(), audit=adapter.tool_calls,
             effects=adapter.engine.journal.records(),
             train_role=train_role,
+            harness_profile={'delegation_protocol':delegation_protocol,
+                             'completion_review':completion_review},
+            review_status=adapter.engine.last_review_status,
+            review_evaluations=adapter.engine.review_evaluations,
             supervisor={'model':root_resource['model'],'temperature':temperature if root_trainable else 0,
                         'trainable':root_trainable},
             specialist={'model':child_resource['model'],'temperature':0 if root_trainable else temperature,

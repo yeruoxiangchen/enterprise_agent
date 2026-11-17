@@ -86,6 +86,7 @@ def run_job(args):
                   dataset=DATASET_NAME,checkpoint_interval=args.checkpoint_interval,
                   baseline_from=args.baseline_from)
     status['policy_model']=args.policy_model
+    status.update(delegation_protocol=args.delegation_protocol,completion_review=args.completion_review)
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -114,7 +115,8 @@ def run_job(args):
             from .baseline import inherit_baseline
             inherited=inherit_baseline(DATA_ROOT/'outputs'/args.baseline_from,folder,
                 DATA_ROOT/'datasets'/DATASET_NAME,limit=args.val_limit,train_role=args.train_role,
-                policy_model=args.policy_model)
+                policy_model=args.policy_model,delegation_protocol=args.delegation_protocol,
+                completion_review=args.completion_review)
             save(inherited_baseline_cases=inherited['count'])
         devices=args.gpus.split(',')
         if len(devices)!=2 or len(set(devices))!=2 or not all(d.isdigit() for d in devices):
@@ -147,6 +149,8 @@ def run_job(args):
         ray_dir.mkdir(parents=True,exist_ok=True)
         env.update(KB_RL_RUN_DIR=str(folder),KB_RL_SPECIALIST_URL=expert['url']+'/v1',
                    KB_RL_TRAIN_ROLE=args.train_role,
+                   KB_RL_DELEGATION_PROTOCOL=args.delegation_protocol,
+                   KB_RL_COMPLETION_REVIEW=args.completion_review,
                    KB_RL_SPECIALIST_MODEL=expert['model'],AGL_MANAGED_STORE='0',
                    AGENTOPS_API_KEY='',RAY_TMPDIR=str(ray_dir),WANDB_MODE='offline',
                    PYTHONUNBUFFERED='1')
@@ -242,6 +246,8 @@ def main():
     parser.add_argument('--gpu-wait-minutes',type=float,default=0,
                         help='Opt-in GPU queue budget before the separate compute time budget')
     parser.add_argument('--train-role',choices=('supervisor','specialists'),default='supervisor')
+    parser.add_argument('--delegation-protocol',choices=('explicit','native'),default='explicit')
+    parser.add_argument('--completion-review',choices=('none','errors','always'),default='none')
     parser.add_argument('--policy-model',default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--steps',type=int,default=2)

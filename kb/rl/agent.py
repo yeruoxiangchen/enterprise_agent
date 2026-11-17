@@ -26,6 +26,9 @@ class BusinessAgent(agl.LitAgent[dict]):
              'model':os.environ['KB_RL_SPECIALIST_MODEL']},folder,
             temperature=temperature,
             train_role=os.environ.get('KB_RL_TRAIN_ROLE','supervisor'),
+            delegation_protocol=os.environ.get('KB_RL_DELEGATION_PROTOCOL','explicit'),
+            completion_review={'none':False,'errors':'errors','always':True}[
+                os.environ.get('KB_RL_COMPLETION_REVIEW','none')],
             context_tokens=int(os.environ.get('KB_RL_CONTEXT','8192')),
             output_tokens=int(os.environ.get('KB_RL_OUTPUT_TOKENS','512')))
         result.update(task_sha256=task_sha256,evaluation_phase=phase)

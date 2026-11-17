@@ -48,7 +48,8 @@ def test_read_only_assessment_accepts_both_check_orders_without_rewriting_behavi
     assert rescore(sample,wrong)['reward']==0
 
 
-@pytest.mark.parametrize('problem',[None,'changed_input','changed_runtime','wrong_task','updated_policy','changed_policy'])
+@pytest.mark.parametrize('problem',[None,'changed_input','changed_runtime','wrong_task','updated_policy','changed_policy',
+                                  'changed_protocol','changed_review'])
 def test_reuse_checks_immutable_source_input_runtime_and_policy(tmp_path,fixture,monkeypatch,problem):
     import kb.rl.baseline as baseline
     sample,old,original=fixture
@@ -74,7 +75,9 @@ def test_reuse_checks_immutable_source_input_runtime_and_policy(tmp_path,fixture
     write(path,original)
     if problem:
         with pytest.raises(ValueError):inherit_baseline(source,output,dataset,limit=1,train_role='specialists',
-            policy_model='different_sft_base' if problem=='changed_policy' else None)
+            policy_model='different_sft_base' if problem=='changed_policy' else None,
+            delegation_protocol='native'if problem=='changed_protocol'else'explicit',
+            completion_review='errors'if problem=='changed_review'else'none')
     else:
         report=inherit_baseline(source,output,dataset,limit=1,train_role='specialists')
         assert report['count']==1 and len(report['grade_corrections'])==1

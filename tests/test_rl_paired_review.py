@@ -29,12 +29,13 @@ def test_paired_report_keeps_regressions_and_measures_inference_cost():
     assert result['arms']['baseline']['p95_seconds']==10
 
 
-@pytest.mark.parametrize('problem',['missing','duplicate','changed_task','updated_baseline','different_decoding'])
+@pytest.mark.parametrize('problem',['missing','duplicate','changed_task','updated_baseline','different_decoding','different_harness'])
 def test_bad_pairing_is_rejected(problem):
     rows=[record('one','baseline',0),record('one','trained',1)]
     if problem=='missing':rows.pop()
     elif problem=='duplicate':rows.append(copy.deepcopy(rows[1]))
     elif problem=='changed_task':rows[1]['task_sha256']='other'
     elif problem=='updated_baseline':rows[0]['evaluation_phase']['completed_updates']=1
+    elif problem=='different_harness':rows[1]['harness_profile']={'delegation_protocol':'native'}
     else:rows[1]['specialist']['temperature']=.7
     with pytest.raises(ValueError):compare_results(rows,{'one':'hash-one'},steps=8)

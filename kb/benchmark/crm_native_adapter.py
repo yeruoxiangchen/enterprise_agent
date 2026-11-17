@@ -15,7 +15,8 @@ class NativeCRMAdapter:
     def __init__(self, environment, settings, config, policy, output, seed=42, model=None, shared_context=False,
                  completion_review=False, require_dependency_confirmation=False,
                  fork_subagents=False, operation_permissions=False, prepare_operations=False,
-                 specialist_owned_checks=False, role_models=None, bind_user_request=False):
+                 specialist_owned_checks=False, role_models=None, bind_user_request=False,
+                 delegation_protocol='explicit'):
         self.environment, self.settings = environment, settings
         self.output = Path(output)
         self.output.mkdir(parents=True, exist_ok=True)
@@ -48,6 +49,7 @@ class NativeCRMAdapter:
             completion_review=completion_review,interrupt_on=interrupt_on,
             fork_subagents=fork_subagents,tool_routes=routes,
             role_models=role_models,bind_user_request=bind_user_request,
+            delegation_protocol=delegation_protocol,
             supervisor_read_tools={'get_ticket','list_tickets','get_business_hours'}if specialist_owned_checks else None)
         if prepare_operations:
             from kb.harness.crm_preparation import prepare

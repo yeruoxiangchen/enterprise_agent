@@ -85,7 +85,7 @@ def test_actual_trl_lora_step_uses_response_mask_and_saves_adapter(tmp_path, mon
     dataset = tmp_path/'dataset';dataset.mkdir()
     (dataset/'train.jsonl').write_bytes(raw)
     (dataset/'manifest.json').write_text(json.dumps({'dataset_sha256':sft.digest(raw),'rows':1,
-        'train_role_rows':{'specialists':1},'max_length':128,
+        'train_role_rows':{'supervisor':1},'max_length':128,
         'successful_episodes_by_family':{'unit':1}}))
     from trl.trainer.sft_trainer import DataCollatorForLanguageModeling
     batch = DataCollatorForLanguageModeling(tokenizer.pad_token_id)([row])
@@ -93,7 +93,7 @@ def test_actual_trl_lora_step_uses_response_mask_and_saves_adapter(tmp_path, mon
     assert torch.equal(batch['labels'][0,len(prompt):], torch.tensor(ids[len(prompt):]))
     output = tmp_path/'sft'
     monkeypatch.setattr(sft,'DATA_ROOT',tmp_path)
-    metrics = sft.train(dataset,output,model_path=model_path,steps=1)
+    metrics = sft.train(dataset,output,model_path=model_path,steps=1,train_role='supervisor')
     assert metrics['train_loss'] > 0
     assert json.loads((output/'result.json').read_text())['global_step'] == 1
     tensors = load_file(str(output/'adapter/adapter_model.safetensors'))

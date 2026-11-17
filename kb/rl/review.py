@@ -63,6 +63,8 @@ def compare_results(records, expected, *, steps):
         before,after=arms['baseline'][task_id],arms['trained'][task_id]
         if any(before[key]!=after[key] for key in ('family','train_role','supervisor','specialist')):
             raise ValueError('Role, decoding or family changed between evaluation arms')
+        if before.get('harness_profile')!=after.get('harness_profile'):
+            raise ValueError('Harness profile changed between evaluation arms')
         for kind,row in (('baseline',before),('trained',after)):
             families[row['family']][kind].append(row)
         paired.append({'task_id':task_id,'family':before['family'],
