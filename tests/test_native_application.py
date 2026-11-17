@@ -35,12 +35,12 @@ def test_native_http_delegation_binds_original_request_and_cites_owned_document(
     def inspect(messages):
         text=str(messages)
         assert original in text and 'authenticated_application_context'in text and 'member'in text
-        assert 'If no draft is requested, create one.'not in str(messages[-1])
+        assert 'Original user requests take priority' in str(messages[-1])
         for message in messages:
             for tool_call in getattr(message,'tool_calls',[]):
                 if tool_call['name']=='task':
-                    assert original in tool_call['args']['description']
-                    assert 'If no draft is requested, create one.'not in tool_call['args']['description']
+                    assert tool_call['args']['description'] == 'If no draft is requested, create one.'
+                    assert 'Delegated business contract v1:' not in tool_call['args']['description']
         return call('search_documents',{'query':'VPN连接故障'},'search')
     model=ScriptModel(replies=[call('task',{'subagent_type':specialist,'description':
         'If no draft is requested, create one.'},'delegate'),inspect,answer(f'先检查网络 [{label}]。'),answer('先检查网络。')])
@@ -64,7 +64,8 @@ def test_native_draft_confirmation_admin_resolution_and_next_turn_lookup(system,
     def confirm(messages):
         assert 'resolved'in str(messages)and '连接已恢复'in str(messages)
         return answer('工单已解决，连接已恢复。')
-    model=ScriptModel(replies=[call('task',{'subagent_type':'service','description':'准备草稿。'},'delegate'),
+    model=ScriptModel(replies=[call('task',{'subagent_type':'service','description':'准备草稿。',
+        'allowed_write_tools':['prepare_ticket_draft']},'delegate'),
         call('prepare_ticket_draft',{'title':'VPN连接故障','description':'Windows VPN无法连接，已检查网络。'},'draft'),
         answer('已生成草稿，等待确认。'),answer('已生成草稿，请在服务工单页面确认提交。'),lookup,confirm])
     configure(cfg,monkeypatch,model);login(client)
@@ -94,7 +95,8 @@ def test_native_attachment_facts_and_followup_are_bound_to_authenticated_user(sy
     foreign=analyze(db,cfg,admin,'private.log',b'private service 500')
     model=ScriptModel(replies=[call('task',{'subagent_type':'evidence','description':'读取材料。'},'evidence'),
         call('read_incident',{'incident_id':incident['id']},'read'),answer('已读取材料。'),
-        call('task',{'subagent_type':'service','description':'生成草稿。'},'service'),
+        call('task',{'subagent_type':'service','description':'生成草稿。',
+            'allowed_write_tools':['prepare_ticket_draft']},'service'),
         call('prepare_ticket_draft',{'title':'VPN故障','description':'认证失败。'},'draft'),
         answer('草稿已创建。'),answer('草稿待确认。')])
     configure(cfg,monkeypatch,model);login(client)
@@ -109,7 +111,8 @@ def test_native_attachment_facts_and_followup_are_bound_to_authenticated_user(sy
 def test_native_disconnect_after_commit_resumes_checkpoint_without_duplicate_write(system, monkeypatch):
     cfg,db,client,base,*_=system
     def disconnect(messages):raise ConnectionError('Injected model disconnection after commit')
-    model=ScriptModel(replies=[call('task',{'subagent_type':'service','description':'生成草稿。'},'delegate'),
+    model=ScriptModel(replies=[call('task',{'subagent_type':'service','description':'生成草稿。',
+        'allowed_write_tools':['prepare_ticket_draft']},'delegate'),
         call('prepare_ticket_draft',{'title':'VPN故障','description':'VPN连接失败。'},'draft'),
         disconnect,answer('草稿已经保存。'),answer('草稿待确认，请在工单页面提交。')])
     configure(cfg,monkeypatch,model);login(client)
@@ -134,7 +137,8 @@ def test_native_cancel_before_mutation_and_runtime_mismatch_cannot_resume(system
         db.execute('UPDATE runs SET cancel_requested=1')
         return call('prepare_ticket_draft',{'title':'VPN','description':'连接失败。'},'cancelled-write')
     configure(cfg,monkeypatch,ScriptModel(replies=[
-        call('task',{'subagent_type':'service','description':'准备草稿。'},'delegate'),cancel_after_delegation]))
+        call('task',{'subagent_type':'service','description':'准备草稿。',
+            'allowed_write_tools':['prepare_ticket_draft']},'delegate'),cancel_after_delegation]))
     login(client)
     result=ask(client,db,cfg,base,'请准备VPN故障草稿。')
     assert result['status']=='cancelled'and not result['can_resume'],result

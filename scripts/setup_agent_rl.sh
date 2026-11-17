@@ -34,6 +34,7 @@ PY
     -r "$task_source/requirements.rl-proxy.lock"
 done
 "$KB_RL_ROOT/envs/trainer/bin/python" -B -m pip install --no-deps --force-reinstall 'verl==0.6.0'
+"$KB_RL_ROOT/envs/trainer/bin/python" -B -m pip install --no-deps 'trl==0.21.0'
 for task_kind in runner trainer; do
   "$KB_RL_ROOT/envs/$task_kind/bin/python" -B -m pip freeze > "$KB_RL_ROOT/logs/$task_kind-packages.txt"
 done

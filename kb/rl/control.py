@@ -47,6 +47,7 @@ def run_job(args):
                   batch_size=args.batch_size,group_size=args.group_size,
                   dataset=DATASET_NAME,checkpoint_interval=args.checkpoint_interval,
                   baseline_from=args.baseline_from)
+    status['policy_model']=args.policy_model
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -74,7 +75,8 @@ def run_job(args):
         if args.baseline_from:
             from .baseline import inherit_baseline
             inherited=inherit_baseline(DATA_ROOT/'outputs'/args.baseline_from,folder,
-                DATA_ROOT/'datasets'/DATASET_NAME,limit=args.val_limit,train_role=args.train_role)
+                DATA_ROOT/'datasets'/DATASET_NAME,limit=args.val_limit,train_role=args.train_role,
+                policy_model=args.policy_model)
             save(inherited_baseline_cases=inherited['count'])
         devices=args.gpus.split(',')
         if len(devices)!=2 or len(set(devices))!=2 or not all(d.isdigit() for d in devices):
@@ -143,6 +145,7 @@ def run_job(args):
                 '--dataset',str(DATA_ROOT/'datasets'/DATASET_NAME),'--store',store_url,
                 '--steps',str(args.steps),'--batch-size',str(args.batch_size),
                 '--group-size',str(args.group_size),'--val-limit',str(args.val_limit)]
+        common+=['--model',args.policy_model]
         common+=['--adv-estimator',args.adv_estimator]
         if args.val_before_train:common+=['--val-before-train']
         common+=['--checkpoint-interval',str(args.checkpoint_interval)]
@@ -203,6 +206,7 @@ def main():
     parser.add_argument('--tag',default='supervisor_grpo_short_20261116')
     parser.add_argument('--gpus',default='5,6')
     parser.add_argument('--train-role',choices=('supervisor','specialists'),default='supervisor')
+    parser.add_argument('--policy-model',default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--steps',type=int,default=2)
     parser.add_argument('--batch-size',type=int,default=2)

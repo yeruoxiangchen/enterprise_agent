@@ -31,6 +31,7 @@ from langgraph.config import get_config
 from langgraph.types import Command
 
 from .journal import Journal, canonical
+from .delegation import DelegationBindings, task_schema
 
 
 class NativeBudgetExceeded(RuntimeError):
@@ -151,6 +152,10 @@ class NativeHarness:
         self.journal.db.execute('CREATE TABLE IF NOT EXISTS native_output_repairs '
                                 '(request_id TEXT PRIMARY KEY, attempts INTEGER NOT NULL)')
         self.journal.db.commit()
+        capabilities = getattr(port, 'specialists', None) or {
+            domain: {'tools': [s.name for s in self.specs.values() if s.domain == domain]}
+            for domain in {s.domain for s in self.specs.values()}}
+        self.delegations = DelegationBindings(self.journal, self.specs, capabilities, self.emit)
         def counted_model(candidate):
             profile = dict(candidate.profile or {})
             if context_budget:
@@ -246,17 +251,7 @@ class NativeHarness:
         return self._execute_business(spec, arguments, attempt)
 
     def _bind_delegation(self, call):
-        originals = [{'request_id': row['id'], 'text': row['question']} for row in
-            self.journal.db.execute('SELECT id,question FROM native_requests ORDER BY rowid')]
-        args = dict(call['args'])
-        description = ('Authoritative customer requests (verbatim):\n' + canonical(originals) +
-            '\nCarry out only the part within your specialist tools. Preserve the original '
-            'conditions, negations and cancellations. Use actual receipts for completed work. '
-            'The supervisor selected your specialist role; the customer messages define the task.')
-        self.emit('delegation_bound', {'subagent_type': args.get('subagent_type'),
-            'request_ids': [row['request_id'] for row in originals],
-            'proposed_description': args.get('description'), 'bound_description': description})
-        return {**call, 'args': {**args, 'description': description}}
+        return self.delegations.bind(call, self.request_id, get_config())
 
     def _business_snapshot(self):
         enrich=getattr(self.port,'progress_snapshot',None)
@@ -280,6 +275,18 @@ class NativeHarness:
         def native_context(request, handler):
             self.cancelled()
             request = request.override(model_settings={**request.model_settings, 'parallel_tool_calls': False})
+            contract = self.delegations.current(get_config()) if self.bind_user_request else None
+            tools = []
+            for advertised in request.tools:
+                name = getattr(advertised, 'name', '')
+                target = self.routes[name].target if name in self.routes else name
+                if target in self.specs and not self.delegations.allows(target, contract):
+                    continue
+                if name == 'task' and self.bind_user_request:
+                    advertised = advertised.model_copy(update={'args_schema': task_schema(advertised.args_schema,
+                        [s.name for s in self.specs.values() if s.write])})
+                tools.append(advertised)
+            request = request.override(tools=tools)
             if self.routes:
                 tools = []
                 for advertised in request.tools:
@@ -315,17 +322,15 @@ class NativeHarness:
                     if not isinstance(message, AIMessage):
                         continue
                     if self.bind_user_request:
-                        # Normalize before the AI tool call is checkpointed.
-                        # Forked children inherit that parent message as well
-                        # as the actual tool arguments; both must agree.
-                        message.tool_calls = [self._bind_delegation(call) if call['name'] == 'task' else call
-                                              for call in message.tool_calls]
-                        raw_calls = message.additional_kwargs.get('tool_calls')
-                        if raw_calls:
-                            normalized = {call['id']: call for call in message.tool_calls}
-                            message.additional_kwargs['tool_calls'] = [{**raw,
-                                'function': {**raw['function'], 'arguments': canonical(normalized[raw['id']]['args'])}}
-                                if raw.get('id') in normalized and raw.get('function') else raw for raw in raw_calls]
+                        # Persist the boundary before checkpointing while
+                        # retaining the provider's original typed arguments in
+                        # supervisor history. Inject the authoritative contract
+                        # only at the task execution boundary. Otherwise the
+                        # next supervisor call copies the internal envelope
+                        # instead of using the advertised task schema.
+                        for call in message.tool_calls:
+                            if call['name'] == 'task':
+                                self._bind_delegation(call)
                     self.emit('model_response', {'content': message.content,
                         'tool_calls': message.tool_calls, 'usage': message.usage_metadata})
                     for call in message.tool_calls:
@@ -350,20 +355,35 @@ class NativeHarness:
         @wrap_tool_call
         def business_gateway(request, handler):
             name = request.tool_call['name']
-            if (name == 'task' and self.bind_user_request and not
-                    request.tool_call['args'].get('description', '').startswith('Authoritative customer requests (verbatim):')):
-                # Compatibility with an interrupted pre-normalization call.
-                return handler(request.override(tool_call=self._bind_delegation(request.tool_call)))
+            if name == 'task' and self.bind_user_request:
+                bound = self._bind_delegation(request.tool_call)
+                row = self.journal.db.execute('SELECT contract FROM native_delegations WHERE call_id=?',
+                                              (bound['id'],)).fetchone()
+                errors = json.loads(row['contract'])['errors']
+                if errors:
+                    return ToolMessage(content=canonical({'status': 'refused', 'errors': errors}),
+                                       tool_call_id=bound['id'], name='task')
+                return handler(request.override(tool_call=bound))
             route = self.routes.get(name)
             if name not in self.specs and route is None:
                 return handler(request)
             attempt = next((a for a in reversed(self.attempts) if a['id'] == request.tool_call['id']), None)
+            spec = self.specs[route.target if route else name]
+            contract = self.delegations.current(get_config()) if self.bind_user_request else None
+            if not self.delegations.allows(spec.name, contract):
+                result = {'status': 'refused', 'value': {'error': 'delegation_scope_violation',
+                    'allowed_write_tools': contract['allowed_write_tools']}}
+                if attempt:
+                    attempt.update(result=canonical(result), ok=False, backend_executed=False,
+                                   business_outcome='rejected')
+                self.emit('delegation_scope_refused', {'tool': name, 'call_id': request.tool_call['id'],
+                    'allowed_write_tools': contract['allowed_write_tools']})
+                return ToolMessage(content=canonical(result), tool_call_id=request.tool_call['id'], name=name)
             if request.tool is None:
                 response = handler(request)
                 if attempt:
                     attempt['result'] = canonical({'error': 'unadvertised_tool', 'message': response.content})
                 return response
-            spec = self.specs[route.target if route else name]
             result = self._execute_business(spec, request.tool_call['args'], attempt, route)
             if route and route.describe_result:
                 description = route.describe_result(result, request.tool_call['args'])
@@ -472,7 +492,9 @@ class NativeHarness:
         return create_deep_agent(model=self.model, tools=[*self._tools(reads), inspect_progress, reconcile_operation],
             subagents=children, system_prompt=common + '\nYou are the supervisor Agent. Handle simple lookups '
                 'directly. Delegate business changes and coherent specialist work through task. Give the '
-                'specialist the relevant user facts and requested result. Answer when the task is done '
+                'specialist a concrete scoped objective and allowed_write_tools: [] for observation; '
+                'list exact intended write tool names for authorized execution. Permission checks alone '
+                'need no write tools. Preserve original user conditions. Answer when the task is done '
                 'or refused; ask the user only for genuinely missing input.',
             middleware=[*self._middleware(), *review], backend=self.backend, checkpointer=self.saver,
             interrupt_on=self.interrupt_on,

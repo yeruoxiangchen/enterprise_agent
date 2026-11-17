@@ -31,11 +31,14 @@ def rescore(sample,original):
     return score_task(sample,adapter,error=original['error'])
 
 
-def inherit_baseline(source,output,dataset,*,limit,train_role):
+def inherit_baseline(source,output,dataset,*,limit,train_role,policy_model=None):
     source,output,dataset=map(lambda p:Path(p).resolve(),(source,output,dataset))
     if not all(path.is_relative_to(DATA_ROOT) for path in (source,output,dataset)):
         raise ValueError('Baseline lineage must stay on project data storage')
     old_state=json.loads((source/'status.json').read_text())
+    original_model='/data/zjr/enterprise_kb_agent/models/Qwen3-8B'
+    if old_state.get('policy_model',original_model)!=(policy_model or original_model):
+        raise ValueError('Policy initialization changed; run a new live baseline')
     if not old_state['resources_released'] or old_state['train_role']!=train_role:
         raise ValueError('Release the source job and preserve its trainable role')
     if old_state.get('trace_export_exit')!=0:

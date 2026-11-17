@@ -56,11 +56,30 @@ class StrictBusinessDaemon(AgentModeDaemon):
             raise NoPolicyActions({'training/skipped_no_policy_actions':1,
                 'training/n_rollouts':len(rewards),'training/reward':sum(rewards)/len(rewards)})
         data,metrics=super().get_train_data_batch(*args,**kwargs)
+        # Discard the entire rollout if any one of its calls cannot be trained.
+        # Partial episodes would change the effective episode denominator.
+        drop=data.batch['is_drop_mask'].bool().tolist()
+        ids=data.non_tensor_batch['rollout_id_list']
+        excluded={rid for rid,invalid in zip(ids,drop) if invalid}
+        metrics['training/whole_rollouts_excluded']=len(excluded)
+        keep=[index for index,rid in enumerate(ids) if rid not in excluded]
+        if not keep:
+            raise NoPolicyActions({**metrics,'training/skipped_no_eligible_rollouts':1})
+        data=data[keep]
         metrics['training/common_prompt_padding_removed']=trim_shared_prompt_padding(data)
         return data,metrics
 
 
 class BusinessTrainer(AgentLightningTrainer):
+    def __init__(self,*args,**kwargs):
+        import ray
+        from verl.trainer.ppo.utils import Role
+        from .rollout_worker import BusinessAsyncActorWorker
+        workers=dict(kwargs['role_worker_mapping'])
+        workers[Role.ActorRollout]=ray.remote(BusinessAsyncActorWorker)
+        kwargs['role_worker_mapping']=workers
+        super().__init__(*args,**kwargs)
+
     def _validate(self):
         # Use the upstream evaluator with an immutable phase label. Both arms
         # use the same native graph, task bytes, frozen role and decoding.
@@ -80,11 +99,16 @@ class BusinessTrainer(AgentLightningTrainer):
         return metrics
 
     def _train_step(self,batch_dict):
+        import agentlightning.verl.trainer as upstream
+        from .rollout_training import rollout_advantage
+        original=upstream.compute_advantage
+        upstream.compute_advantage=rollout_advantage
         try:return super()._train_step(batch_dict)
         except NoPolicyActions as exc:
             self.agent_mode_daemon.clear_data_and_server()
             self.async_rollout_manager.sleep()
             return exc.metrics
+        finally:upstream.compute_advantage=original
 
     def init_workers(self):
         # veRL 0.6's replica creates this actor through the module symbol; the
@@ -112,9 +136,11 @@ class BusinessTrainer(AgentLightningTrainer):
             if not torch.isfinite(active).all():raise RuntimeError('Non-finite policy advantages')
             signal={'positive_tokens':int((active>0).sum()),'negative_tokens':int((active<0).sum()),
                     'nonzero_tokens':int(active.count_nonzero())}
+            rollout_metrics=batch.meta_info.get('rollout_advantage_metrics',{})
             result=original(batch)
             completed+=1
             record={'completed_updates':completed,'learning_signal':signal,
+                    'rollout_metrics':rollout_metrics,
                     'metrics':result.meta_info.get('metrics',{})}
             write_json(Path(os.environ['KB_RL_RUN_DIR'])/'policy-updates.json',record)
             with (Path(os.environ['KB_RL_RUN_DIR'])/'policy-update-history.jsonl').open('a')as stream:

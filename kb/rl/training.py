@@ -29,7 +29,10 @@ def training_config(run_dir, model_path, *, steps=20, batch_size=4, group_size=4
                       'target_modules':'all-linear',
                       'override_config':{'_attn_implementation':'sdpa'},
                       'use_remove_padding':False,'enable_gradient_checkpointing':True},
-            'actor': {'strategy':'fsdp2','ppo_mini_batch_size':4,'ppo_micro_batch_size_per_gpu':1,
+            # The legacy trainer rounds rows to this size. One keeps all rows;
+            # RolloutPPOActor owns the full-batch optimizer boundary.
+            'actor': {'strategy':'fsdp2','ppo_mini_batch_size':1,'ppo_micro_batch_size_per_gpu':1,
+                      'ppo_epochs':1,'policy_loss':{'loss_mode':'per_rollout_mean'},
                       'use_dynamic_bsz':False,'optim':{'lr':1e-6},
                       'use_kl_loss':True,'kl_loss_coef':0.001,'entropy_coeff':0,
                       'fsdp_config':{'model_dtype':'bfloat16','param_offload':True,'optimizer_offload':True,
