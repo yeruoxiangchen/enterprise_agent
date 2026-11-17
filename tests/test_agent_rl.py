@@ -243,7 +243,7 @@ def test_business_reviewer_uses_frozen_endpoint_and_never_adds_policy_actions(tm
     arguments=sample['task']['expected_args']['add_ticket_comment']
     root=ScriptModel(replies=[call('get_ticket',{'ticket_id':sample['target_ticket']},'read'),
         call('add_ticket_comment',arguments,'bad'),answer('I will delegate.'),
-        call('task',{'subagent_type':'ticket_operations__tickets__execute',
+        call('task',{'subagent_type':'ticket_operations__tickets__add_ticket_comment',
                      'description':'Add the exact requested comment.'},'task'),answer('Comment added.')])
     child=ScriptModel(replies=[call('add_ticket_comment',arguments,'write'),answer('Comment added.')])
     reviewer=ScriptModel(replies=[grade(False),grade(True)])

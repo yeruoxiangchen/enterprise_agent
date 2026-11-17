@@ -2,7 +2,7 @@
 import pytest
 
 from kb.harness.native import NativeHarness, NativeApprovalRequired
-from kb.harness.contracts import ToolOutcome
+from kb.harness.contracts import ToolOutcome, ToolSpec
 from test_deep_harness import ScriptModel, Port, call
 from test_native_harness import answer
 from test_native_completion_review import grade
@@ -39,6 +39,29 @@ def test_native_observer_has_no_write_capability_even_when_the_overall_goal_has_
         assert engine.attempts[0]['backend_executed'] is False
         assert engine.attempts[0]['business_outcome']=='rejected'
         assert engine.routing_errors()
+    finally:engine.close()
+
+
+def test_execution_graph_cannot_substitute_another_domain_mutation(tmp_path):
+    class TwoWritePort(Port):
+        def tools(self):
+            return [*super().tools(),ToolSpec('erase','Erase status.',
+                {'type':'object','properties':{}},'service',True)]
+    root=ScriptModel(replies=[call('task',{'subagent_type':'service__change',
+        'description':'Change the status.'},'task'),answer('Closed.')])
+    child=ScriptModel(replies=[call('erase',{},'substitute'),
+        call('change',{'value':'Closed'},'write'),answer('Closed.')])
+    port=TwoWritePort()
+    engine=NativeHarness(model=root,role_models={'*':child},port=port,workspace=tmp_path,
+        namespace='scope',fork_subagents=True,bind_user_request=True,delegation_protocol='native')
+    try:
+        assert engine.invoke('Change status to Closed.','r')=='Closed.'
+        assert port.writes==1 and 'erase'not in child.bindings[0]
+        assert engine.capabilities['service__change']['tools']==['lookup','change']
+        assert 'service__execute'not in engine.capabilities
+        assert engine.attempts[0]['business_outcome']=='rejected'
+        assert engine.attempts[0]['backend_executed']is False
+        assert [r['name']for r in engine.journal.records()]==['change']
     finally:engine.close()
 
 

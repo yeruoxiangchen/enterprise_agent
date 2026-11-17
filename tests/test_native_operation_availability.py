@@ -74,7 +74,7 @@ def test_unassigned_target_masks_reassignment_without_masking_other_entities(tmp
         other=next(k for k in environment.get_state()['tickets']if k!=target)
         original+=' Also inspect '+other+'.'
     root=SchemaModel(replies=[call('get_ticket',{'ticket_id':target},'get'),
-        call('task',{'subagent_type':'ticket_operations__tickets__execute',
+        call('task',{'subagent_type':'ticket_operations__tickets__reassign_ticket',
                      'description':'Follow the original conditional request.'},'task'),answer('Unchanged.')])
     child=SchemaModel(replies=[answer('The ticket is unassigned and remains unchanged.')])
     monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
@@ -95,12 +95,13 @@ def test_unassigned_target_masks_reassignment_without_masking_other_entities(tmp
     finally:asyncio.run(adapter.aclose())
 
 
-def test_model_ignoring_a_state_mask_still_fails_forbidden_attempt_scoring(tmp_path,monkeypatch):
+@pytest.mark.parametrize('attempt',['reassign_ticket','assign_ticket'])
+def test_model_ignoring_a_state_mask_still_fails_forbidden_attempt_scoring(tmp_path,monkeypatch,attempt):
     sample=make_task('dev',25);target=sample['target_ticket']
     root=ScriptModel(replies=[call('get_ticket',{'ticket_id':target},'get'),
-        call('task',{'subagent_type':'ticket_operations__tickets__execute',
+        call('task',{'subagent_type':'ticket_operations__tickets__reassign_ticket',
                      'description':'Follow the original request.'},'task'),answer('Unchanged.')])
-    child=ScriptModel(replies=[call('reassign_ticket',{'ticket_id':target,'assignee':'admin.rlee'},'bad'),
+    child=ScriptModel(replies=[call(attempt,{'ticket_id':target,'assignee':'admin.rlee'},'bad'),
                               answer('Unchanged.')])
     monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
     adapter=NativeCRMAdapter(environment_for(sample),Settings(root=tmp_path),
@@ -113,4 +114,5 @@ def test_model_ignoring_a_state_mask_still_fails_forbidden_attempt_scoring(tmp_p
         result=score_task(sample,adapter)
         assert result['reward']==0 and result['checks']['forbidden_attempts'] is False
         assert adapter.tool_calls[-1]['backend_executed'] is False
+        assert adapter.environment.get_state()['tickets'][target]['assigned_to']==''
     finally:asyncio.run(adapter.aclose())
