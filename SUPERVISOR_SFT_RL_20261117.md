@@ -102,3 +102,10 @@ bash scripts/agent_rl.sh bootstrap launch --tag supervisor_sft_rl_20261117_r2 \
 ```
 
 [逐类结果与离线恢复摘要](docs/releases/20261117_supervisor_recovery/review.json)。
+
+### r2恢复队列
+
+恢复代码 `9fa7ee7`，PID `3398154`，复用 r1 原始记录完成72条去重监督样本，
+8类业务覆盖检查通过。与离线恢复的数据逐条核对input_ids和completion_mask完全一致。
+当前等待GPU5、6；等卡期间不加载CUDA模型，保留原显存门槛。
+监视／停止使用上方 r2 命令，计算预算120分钟，初始等卡另计。

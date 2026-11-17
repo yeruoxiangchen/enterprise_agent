@@ -1,5 +1,7 @@
 # 知页 · 企业本地知识库与问答系统
 
+2026-11-17，主管SFT/RL首轮停在采集门槛：实际53条、业务通过42条、优化器更新0；整条过滤纠错轨迹造成覆盖不足。已修复为可验证回复监督，复用原数据得到72条去重主管样本、覆盖8类业务。恢复队列`supervisor_sft_rl_20261117_r2`（PID3398154）等待GPU5、6，不重复采集；原始任务评分和失败记录保留。[审阅、修复与监视命令](SUPERVISOR_SFT_RL_20261117.md)。
+
 2026-11-17，主管成功轨迹SFT→RL流水线已启动：GPU5、6，train划分原始token采样和执行结果筛选，达标后16次LoRA SFT、同题验证，再进入2次轨迹级REINFORCE++更新。已核对首条真实8B采集的token及CRM执行回执，运行预算120分钟。入口为`bash scripts/agent_rl.sh bootstrap watch --tag supervisor_sft_rl_20261117_r1`。[方法、检查与运行记录](SUPERVISOR_SFT_RL_20261117.md)。
 
 2026-11-17，主管原生委派与恢复修复完成：领域配置固定开发16题15/16（旧接口同题记录9/16），追加8题8/8；最终两组均无接口异常、无额外提交写入。74项相关行为检查通过。平均耗时16.18秒、平均token16,194，增加的检查与恢复开销已记录。RL入口默认使用native/domain/errors，单操作图保留为实验选项。[改动及逐轮结果](SUPERVISOR_REPAIR_20261117.md)、[验收摘要](docs/releases/20261117_supervisor_repair/README.md)。
