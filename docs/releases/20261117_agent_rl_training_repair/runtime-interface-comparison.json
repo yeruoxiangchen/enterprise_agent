@@ -1,0 +1,96 @@
+{
+  "count": 8,
+  "old_passed": 7.0,
+  "new_passed": 5.0,
+  "scope": "Same task payloads, no-update base policies; runtime API changed. This compares interfaces, not RL gains.",
+  "rows": [
+    {
+      "task_id": "business-rl-v4:dev:delete_no_permission:e7cd73171b59",
+      "family": "delete_no_permission",
+      "task_sha256": "dfcbcd40d157814da132c070b29005b9e81484cc7552cbcc12f4143e5ade0664",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 1.0,
+      "old_expert_calls": 3,
+      "new_expert_calls": 3,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-ef1bb0250c1b/at-1faa464e/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-7e595a28fd2f/at-709f2619/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:close:b0f172f4f8ed",
+      "family": "close",
+      "task_sha256": "13213322e935616f704abd1ded4d200854fba49b70c9eaac5bceb523cb44e912",
+      "old_runtime_baseline": 0.0,
+      "new_runtime_baseline": 0.0,
+      "old_expert_calls": 7,
+      "new_expert_calls": 3,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-23d137913077/at-cdd7b44c/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-86179691ae3c/at-c55f7aa5/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:assess_only:c59b0a4cbe4a",
+      "family": "assess_only",
+      "task_sha256": "d08937407369890b85a9fdecf6ecee31185c51613377a2112b7d7baf3deb46ff",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 1.0,
+      "old_expert_calls": 3,
+      "new_expert_calls": 4,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-a5d67b570b32/at-7c9bc247/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-3558c1200993/at-708cde46/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:delete_dependency:db11abbdb541",
+      "family": "delete_dependency",
+      "task_sha256": "9e2ec0034793e3e2718f0ef9a0af0269ef2370eb41fbe3676adc693cdf77ea5e",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 1.0,
+      "old_expert_calls": 3,
+      "new_expert_calls": 3,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-7cba34f4b7c2/at-3a6e319d/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-9b8a60ed8dd4/at-bcf27a22/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:lookup:2c8790a8fbb6",
+      "family": "lookup",
+      "task_sha256": "c5bd454e7bb022044b9c12b68f5763be41e6a1b7bad80098a81d82d6aaef498b",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 1.0,
+      "old_expert_calls": 0,
+      "new_expert_calls": 0,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-fdff70fa20cd/at-8e7c9481/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-dc52e18b486f/at-26103def/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:comment:af58f84b483c",
+      "family": "comment",
+      "task_sha256": "8b1bd708db8b694f87ff85453379bbcef9c5c78045cf4bafb5ec37651ce00142",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 0.0,
+      "old_expert_calls": 2,
+      "new_expert_calls": 0,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-b0cbe836df09/at-cf85077e/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-e64327b22f49/at-d5dfa6b2/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:conditional_reassign:5a67054eb4fc",
+      "family": "conditional_reassign",
+      "task_sha256": "a25b72f01792a2f695f78db68d1e2100c0e09bdb5c3bb4525c5d70b1cb5ad0ab",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 0.0,
+      "old_expert_calls": 2,
+      "new_expert_calls": 0,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-fe1ccfe9d08a/at-4be7c7ec/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-f58ce14e2b3c/at-03a8b772/result.json"
+    },
+    {
+      "task_id": "business-rl-v4:dev:cancel:59ef64640d14",
+      "family": "cancel",
+      "task_sha256": "fb58ab15ea494a2fe46d382985567da1d9a9da2ec61f45442965ec4717d2f681",
+      "old_runtime_baseline": 1.0,
+      "new_runtime_baseline": 1.0,
+      "old_expert_calls": 0,
+      "new_expert_calls": 0,
+      "old_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rpp_paired32_20261117_r2/inherited-baseline/ro-7d0701323574/at-e4df7e8b/result.json",
+      "new_result": "/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3/rollouts/ro-4157b235abba/at-7f0ea28b/result.json"
+    }
+  ]
+}

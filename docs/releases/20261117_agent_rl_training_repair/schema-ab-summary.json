@@ -1,0 +1,83 @@
+{
+  "status": "reviewed",
+  "training_started": false,
+  "arms": {
+    "current_enum": {
+      "passed": 5,
+      "total": 8,
+      "success_rate": 0.625,
+      "execution_errors": 0,
+      "mean_seconds": 9.54706082562916,
+      "p95_seconds": 16.18114088345319,
+      "mean_tokens": 10685.25,
+      "mean_model_calls": 4.75,
+      "forbidden_attempt_episodes": 0,
+      "order_only_failures": 0,
+      "usage_missing_calls": 0
+    },
+    "no_enum": {
+      "passed": 5,
+      "total": 8,
+      "success_rate": 0.625,
+      "execution_errors": 0,
+      "mean_seconds": 9.497734255390242,
+      "p95_seconds": 16.373370644450187,
+      "mean_tokens": 10497.5,
+      "mean_model_calls": 4.75,
+      "forbidden_attempt_episodes": 0,
+      "order_only_failures": 0,
+      "usage_missing_calls": 0
+    }
+  },
+  "cases": [
+    {
+      "task_id": "business-rl-v4:dev:lookup:2c8790a8fbb6",
+      "family": "lookup",
+      "current_enum": 1.0,
+      "no_enum": 1.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:conditional_reassign:5a67054eb4fc",
+      "family": "conditional_reassign",
+      "current_enum": 0.0,
+      "no_enum": 0.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:close:b0f172f4f8ed",
+      "family": "close",
+      "current_enum": 0.0,
+      "no_enum": 1.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:delete_no_permission:e7cd73171b59",
+      "family": "delete_no_permission",
+      "current_enum": 1.0,
+      "no_enum": 1.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:delete_dependency:db11abbdb541",
+      "family": "delete_dependency",
+      "current_enum": 1.0,
+      "no_enum": 0.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:comment:af58f84b483c",
+      "family": "comment",
+      "current_enum": 0.0,
+      "no_enum": 0.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:assess_only:c59b0a4cbe4a",
+      "family": "assess_only",
+      "current_enum": 1.0,
+      "no_enum": 1.0
+    },
+    {
+      "task_id": "business-rl-v4:dev:cancel:59ef64640d14",
+      "family": "cancel",
+      "current_enum": 1.0,
+      "no_enum": 1.0
+    }
+  ],
+  "wire_sdk_all_match": true
+}

@@ -122,8 +122,8 @@ def run_job(args):
         leases,snapshot=acquire_gpu_leases(devices,DATA_ROOT,
             wait_minutes=args.gpu_wait_minutes,report=save)
         deadline=time.monotonic()+args.max_minutes*60
-        save(compute_budget_started_at=time.time())
-        save(stage='start_frozen_specialist',gpu_snapshot=snapshot)
+        save(stage='start_frozen_specialist',gpu_snapshot=snapshot,
+             compute_budget_started_at=time.time(),blocked_gpus={})
         services.start('actor',devices[1],memory_fraction=.78,max_model_len=8192)
         async def ready():
             await asyncio.wait_for(services.ready(),timeout=min(720,max(1,deadline-time.monotonic())))
