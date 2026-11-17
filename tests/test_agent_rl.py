@@ -254,7 +254,7 @@ def test_business_reviewer_uses_frozen_endpoint_and_never_adds_policy_actions(tm
     monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
     result=asyncio.run(run_episode(sample,{'url':'http://train.local/v1','model':'policy'},
         {'url':'http://fixed.local/v1','model':'base'},tmp_path/'episode',
-        model_factory=models,train_role=train_role,delegation_protocol='native',completion_review='errors'))
+        model_factory=models,train_role=train_role,delegation_protocol='native',completion_review='errors',execution_granularity='operation'))
     assert result['reward']==1,result
     assert ('frozen_reviewer','http://fixed.local/v1') in resources
     assert result['role_model_calls']['frozen_reviewer']['completed']==2

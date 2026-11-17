@@ -1,13 +1,16 @@
 """Build observation/execution SubAgent specs from the actual tool catalogue.
 
-The public task API stays native. Selecting an observation graph gives no write
-tools; each execution graph has one declared mutation and its domain's reads.
+The public task API stays native. Observation graphs have no write tools.
+Execution graphs use domain capabilities by default; operation-level splitting
+remains an explicit experiment. Executors share the declared read-only checks.
 No customer-text classification, task labels or benchmark-specific routing.
 """
 from __future__ import annotations
 
 
-def native_capabilities(groups, specs):
+def native_capabilities(groups, specs, *, granularity='domain'):
+    if granularity not in ('domain','operation'):
+        raise ValueError('Unknown execution capability granularity')
     result={}
     # Shared observations include cross-domain permission/dependency checks.
     # Writes remain isolated; actual backend authorization still applies to reads.
@@ -19,7 +22,8 @@ def native_capabilities(groups, specs):
         if not writes:
             result[role]={**cap,'model_role':role}
             continue
-        executors={name:role+('__execute'if len(writes)==1 else'__'+name)for name in writes}
+        executors=({name:role+('__execute'if len(writes)==1 else'__'+name)for name in writes}
+            if granularity=='operation'else{'*':role+'__execute'})
         for executor in executors.values():
             if executor in reserved:
                 raise ValueError('Generated execution role collides with the backend catalogue: '+executor)
@@ -35,7 +39,8 @@ def native_capabilities(groups, specs):
                 'The supervisor owns subsequent actions and delegation; return observations '
                 'without promising to perform those actions.'}
         for name,executor in executors.items():
-            result[executor]={**cap,'tools':[*observations,name],'model_role':role,
-                'description':'Execute '+name+': '+specs[name].description+
+            selected=writes if name=='*'else[name]
+            result[executor]={**cap,'tools':[*observations,*selected],'model_role':role,
+                'description':'Execute requested changes: '+'; '.join(specs[n].description for n in selected)+
                     '. Follow the user conditions and report actual completed operations.'}
     return result

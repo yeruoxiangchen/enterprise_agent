@@ -87,6 +87,7 @@ def run_job(args):
                   baseline_from=args.baseline_from)
     status['policy_model']=args.policy_model
     status.update(delegation_protocol=args.delegation_protocol,completion_review=args.completion_review)
+    status['execution_granularity']=args.execution_granularity
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -116,7 +117,7 @@ def run_job(args):
             inherited=inherit_baseline(DATA_ROOT/'outputs'/args.baseline_from,folder,
                 DATA_ROOT/'datasets'/DATASET_NAME,limit=args.val_limit,train_role=args.train_role,
                 policy_model=args.policy_model,delegation_protocol=args.delegation_protocol,
-                completion_review=args.completion_review)
+                completion_review=args.completion_review,execution_granularity=args.execution_granularity)
             save(inherited_baseline_cases=inherited['count'])
         devices=args.gpus.split(',')
         if len(devices)!=2 or len(set(devices))!=2 or not all(d.isdigit() for d in devices):
@@ -150,6 +151,7 @@ def run_job(args):
         env.update(KB_RL_RUN_DIR=str(folder),KB_RL_SPECIALIST_URL=expert['url']+'/v1',
                    KB_RL_TRAIN_ROLE=args.train_role,
                    KB_RL_DELEGATION_PROTOCOL=args.delegation_protocol,
+                   KB_RL_EXECUTION_GRANULARITY=args.execution_granularity,
                    KB_RL_COMPLETION_REVIEW=args.completion_review,
                    KB_RL_SPECIALIST_MODEL=expert['model'],AGL_MANAGED_STORE='0',
                    AGENTOPS_API_KEY='',RAY_TMPDIR=str(ray_dir),WANDB_MODE='offline',
@@ -250,6 +252,8 @@ def main():
                         help='Native task API with scoped observation/execution roles; explicit replays the old adapter')
     parser.add_argument('--completion-review',choices=('none','errors','always'),default='errors',
                         help='Frozen root-only reviewer after actual routing errors')
+    parser.add_argument('--execution-granularity',choices=('domain','operation'),default='domain',
+                        help='Domain specialists by default; operation-level graphs remain experimental')
     parser.add_argument('--policy-model',default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--steps',type=int,default=2)

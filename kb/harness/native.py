@@ -104,12 +104,15 @@ class NativeHarness:
                  max_tools=48, context_budget=None, cancelled=None, shared_context=False,
                  completion_review=False, interrupt_on=None, fork_subagents=False, tool_routes=(),
                  supervisor_read_tools=None, event=None, bind_user_request=False, completion_validator=None,
-                 role_models=None, delegation_protocol='explicit'):
+                 role_models=None, delegation_protocol='explicit', execution_granularity='domain'):
         if completion_review not in (False,True,'errors'):
             raise ValueError('Use disabled, always, or error-triggered completion review')
         if delegation_protocol not in ('explicit','native'):
             raise ValueError('Unknown delegation protocol')
         self.delegation_protocol=delegation_protocol
+        if execution_granularity not in ('domain','operation'):
+            raise ValueError('Unknown execution capability granularity')
+        self.execution_granularity=execution_granularity
         self.root = Path(workspace)
         self.root.mkdir(parents=True, exist_ok=True)
         self.port, self.namespace = port, namespace
@@ -138,7 +141,7 @@ class NativeHarness:
         groups = getattr(port, 'specialists', None) or {
             domain:{'tools':[s.name for s in self.specs.values() if s.domain==domain]}
             for domain in {s.domain for s in self.specs.values()}}
-        self.capabilities=native_capabilities(groups,self.specs) if delegation_protocol=='native' else groups
+        self.capabilities=native_capabilities(groups,self.specs,granularity=execution_granularity) if delegation_protocol=='native' else groups
         unknown_roles = set(self.role_models) - {'supervisor', '*', 'reviewer', 'general-purpose', *self.capabilities}
         if unknown_roles:
             raise ValueError('Unknown model roles: '+', '.join(sorted(unknown_roles)))
@@ -320,7 +323,8 @@ class NativeHarness:
                 for advertised in request.tools:
                     name=getattr(advertised,'name','')
                     blockers=availability['blocked_operations'].get(name,{})
-                    if requested and requested<=set(blockers):
+                    if (requested and requested<=set(blockers)and contract is not None
+                            and len(contract['allowed_write_tools'])<=1):
                         removed.append(name)
                         continue
                     if blockers:

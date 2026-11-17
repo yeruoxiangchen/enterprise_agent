@@ -27,6 +27,7 @@ class BusinessAgent(agl.LitAgent[dict]):
             temperature=temperature,
             train_role=os.environ.get('KB_RL_TRAIN_ROLE','supervisor'),
             delegation_protocol=os.environ.get('KB_RL_DELEGATION_PROTOCOL','native'),
+            execution_granularity=os.environ.get('KB_RL_EXECUTION_GRANULARITY','domain'),
             completion_review={'none':False,'errors':'errors','always':True}[
                 os.environ.get('KB_RL_COMPLETION_REVIEW','errors')],
             context_tokens=int(os.environ.get('KB_RL_CONTEXT','8192')),

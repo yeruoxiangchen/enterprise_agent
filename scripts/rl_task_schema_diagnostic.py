@@ -29,7 +29,7 @@ from kb.rl.role_usage import RoleUsage
 
 
 async def case(sample, arm, folder, service, deadline, *, protocol='explicit',review=False,
-               specialist_temperature=.7):
+               specialist_temperature=.7,execution_granularity='domain'):
     import yaml
     from langchain_openai import ChatOpenAI
     from kb.benchmark.crm_native_adapter import NativeCRMAdapter
@@ -62,7 +62,7 @@ async def case(sample, arm, folder, service, deadline, *, protocol='explicit',re
         model=model('frozen_supervisor',0),role_models=roles,
         fork_subagents=True,operation_permissions=True,prepare_operations=True,
         specialist_owned_checks=True,require_dependency_confirmation=True,bind_user_request=True,
-        delegation_protocol=protocol,completion_review=review)
+        delegation_protocol=protocol,completion_review=review,execution_granularity=execution_granularity)
     started, turns, error = time.monotonic(), [], None
     try:
         for text in sample['messages']:
@@ -80,7 +80,8 @@ async def case(sample, arm, folder, service, deadline, *, protocol='explicit',re
             'usage_missing_calls':adapter.usage_missing_calls,'role_model_calls':counts,
             'policy_model_calls_completed':counts['specialist_base']['completed'],
             'audit':adapter.tool_calls,'effects':adapter.engine.journal.records(),
-            'harness_profile':{'delegation_protocol':protocol,'completion_review':review},
+            'harness_profile':{'delegation_protocol':protocol,'completion_review':review,
+                'execution_granularity':execution_granularity},
             'review_evaluations':adapter.engine.review_evaluations,
             'review_status':adapter.engine.last_review_status,
             'routing_errors':adapter.engine.routing_errors(),
@@ -143,6 +144,7 @@ async def run(args):
         if args.mode=='schema_ab' else 'Test native handoffs, scoped roles, observed operation availability and root-only error review.'),
         'arms':[d[0]for d in definitions],'model':'Qwen3-8B base, no adapter or training',
         'supervisor_temperature':0,'specialist_temperature':specialist_temperature,'request_seed':20261117,
+        'execution_granularity':args.execution_granularity,
         'context_tokens':8192,'output_tokens':512,
         'model_source':str(Path(native.__file__).resolve()),
         'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
@@ -170,7 +172,8 @@ async def run(args):
                     raise TimeoutError('Diagnostic time budget reached')
                 progress('case',arm=arm,family=sample['family'],completed=len(rows))
                 result=await case(sample,arm,root/'cases'/arm/str(index),services.owned['actor'],deadline,
-                                  protocol=protocol,review=review,specialist_temperature=specialist_temperature)
+                                  protocol=protocol,review=review,specialist_temperature=specialist_temperature,
+                                  execution_granularity=args.execution_granularity)
                 rows.append(result)
                 write_json(root/'rows.json',rows)
         selected=None
@@ -187,7 +190,8 @@ async def run(args):
                     label='validation_'+arm
                     progress('validation',arm=label,family=sample['family'],completed=len(rows))
                     result=await case(sample,label,root/'cases'/label/str(index),services.owned['actor'],deadline,
-                                      protocol=protocol,review=review,specialist_temperature=specialist_temperature)
+                                      protocol=protocol,review=review,specialist_temperature=specialist_temperature,
+                                      execution_granularity=args.execution_granularity)
                     rows.append(result);write_json(root/'rows.json',rows)
         report = {'status':'reviewed','training_started':False,
             'selected_profile':selected[0]if selected else None,
@@ -215,6 +219,7 @@ if __name__=='__main__':
     parser.add_argument('--max-minutes',type=float,default=22)
     parser.add_argument('--mode',choices=('schema_ab','supervisor_repair','supervisor_validation','supervisor_fresh8','supervisor_candidate16'),default='schema_ab')
     parser.add_argument('--specialist-temperature',type=float,default=None)
+    parser.add_argument('--execution-granularity',choices=('domain','operation'),default='domain')
     parser.add_argument('--validation-offset',type=int,default=24)
     args=parser.parse_args()
     if Path(args.tag).name!=args.tag or args.tag in ('.','..') or args.max_minutes<=0:

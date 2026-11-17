@@ -21,7 +21,7 @@ def write_json(path, value):
 async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7,
                       context_tokens=8192, output_tokens=512, max_calls=24,
                       timeout_seconds=180, model_factory=None,train_role='supervisor',
-                      delegation_protocol='explicit',completion_review=False):
+                      delegation_protocol='explicit',completion_review=False,execution_granularity='domain'):
     from langchain_openai import ChatOpenAI
     from harness.tools.environment import create_environment
     import harness.tools.domains  # noqa: F401
@@ -77,7 +77,8 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
         model=root_model, role_models=roles, fork_subagents=True,
         operation_permissions=True, prepare_operations=True,
         specialist_owned_checks=True, require_dependency_confirmation=True,
-        bind_user_request=True,delegation_protocol=delegation_protocol,completion_review=completion_review)
+        bind_user_request=True,delegation_protocol=delegation_protocol,completion_review=completion_review,
+        execution_granularity=execution_granularity)
     started = time.monotonic()
     turns = []
     error = None
@@ -119,7 +120,7 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
             effects=adapter.engine.journal.records(),
             train_role=train_role,
             harness_profile={'delegation_protocol':delegation_protocol,
-                             'completion_review':completion_review},
+                             'completion_review':completion_review,'execution_granularity':execution_granularity},
             review_status=adapter.engine.last_review_status,
             review_evaluations=adapter.engine.review_evaluations,
             routing_errors=adapter.engine.routing_errors(),

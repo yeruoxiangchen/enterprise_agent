@@ -83,7 +83,7 @@ def test_unassigned_target_masks_reassignment_without_masking_other_entities(tmp
         (BENCH_ROOT/'src/tasks/policies/itsm_policy.md').read_text(),tmp_path,
         model=root,role_models={'*':child},fork_subagents=True,operation_permissions=True,
         prepare_operations=True,specialist_owned_checks=True,bind_user_request=True,
-        delegation_protocol='native')
+        delegation_protocol='native',execution_granularity='operation')
     try:
         asyncio.run(adapter.run(original,[]))
         schema=child.schemas[0]
@@ -108,7 +108,7 @@ def test_model_ignoring_a_state_mask_still_fails_forbidden_attempt_scoring(tmp_p
         yaml.safe_load((BENCH_ROOT/'src/agents/itsm.yaml').read_text()),
         (BENCH_ROOT/'src/tasks/policies/itsm_policy.md').read_text(),tmp_path,
         model=root,role_models={'*':child},fork_subagents=True,operation_permissions=True,
-        specialist_owned_checks=True,bind_user_request=True,delegation_protocol='native')
+        specialist_owned_checks=True,bind_user_request=True,delegation_protocol='native',execution_granularity='operation')
     try:
         asyncio.run(adapter.run(sample['messages'][0],[]))
         result=score_task(sample,adapter)
@@ -133,7 +133,7 @@ def test_single_operation_executor_can_complete_cross_domain_permission_checks(t
         (BENCH_ROOT/'src/tasks/policies/itsm_policy.md').read_text(),tmp_path,
         model=root,role_models={'*':child},fork_subagents=True,operation_permissions=True,
         prepare_operations=True,specialist_owned_checks=True,bind_user_request=True,
-        delegation_protocol='native')
+        delegation_protocol='native',execution_granularity='operation')
     try:
         asyncio.run(adapter.run(sample['messages'][0],[]))
         result=score_task(sample,adapter)

@@ -52,3 +52,4 @@ def test_new_rl_jobs_use_repaired_profile_with_explicit_historical_replay(monkey
     assert len(captured)==1
     assert captured[0].delegation_protocol==protocol
     assert captured[0].completion_review==review
+    assert captured[0].execution_granularity=='domain'

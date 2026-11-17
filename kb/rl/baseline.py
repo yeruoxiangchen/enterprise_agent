@@ -32,7 +32,7 @@ def rescore(sample,original):
 
 
 def inherit_baseline(source,output,dataset,*,limit,train_role,policy_model=None,
-                     delegation_protocol='explicit',completion_review='none'):
+                     delegation_protocol='explicit',completion_review='none',execution_granularity='domain'):
     source,output,dataset=map(lambda p:Path(p).resolve(),(source,output,dataset))
     if not all(path.is_relative_to(DATA_ROOT) for path in (source,output,dataset)):
         raise ValueError('Baseline lineage must stay on project data storage')
@@ -41,7 +41,8 @@ def inherit_baseline(source,output,dataset,*,limit,train_role,policy_model=None,
     if old_state.get('policy_model',original_model)!=(policy_model or original_model):
         raise ValueError('Policy initialization changed; run a new live baseline')
     if (old_state.get('delegation_protocol','explicit')!=delegation_protocol or
-            old_state.get('completion_review','none')!=completion_review):
+            old_state.get('completion_review','none')!=completion_review or
+            old_state.get('execution_granularity','domain')!=execution_granularity):
         raise ValueError('Harness profile changed; run a new live baseline')
     if not old_state['resources_released'] or old_state['train_role']!=train_role:
         raise ValueError('Release the source job and preserve its trainable role')

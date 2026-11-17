@@ -53,7 +53,7 @@ def test_execution_graph_cannot_substitute_another_domain_mutation(tmp_path):
         call('change',{'value':'Closed'},'write'),answer('Closed.')])
     port=TwoWritePort()
     engine=NativeHarness(model=root,role_models={'*':child},port=port,workspace=tmp_path,
-        namespace='scope',fork_subagents=True,bind_user_request=True,delegation_protocol='native')
+        namespace='scope',fork_subagents=True,bind_user_request=True,delegation_protocol='native',execution_granularity='operation')
     try:
         assert engine.invoke('Change status to Closed.','r')=='Closed.'
         assert port.writes==1 and 'erase'not in child.bindings[0]
