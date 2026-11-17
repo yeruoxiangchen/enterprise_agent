@@ -3,16 +3,23 @@
 本轮训练主管的条件理解、原生委派和完整收尾；专家、Rubric 复核器使用原始
 Qwen3-8B。网页模型继续由原服务配置管理。
 
+当前方案采用 `verified_calls`：从业务执行通过的轨迹中选择可验证回复；
+纠错轨迹只监督正确工具调用，错误调用和自然语言结尾保持为零损失上下文。
+SFT覆盖8类业务，仍未解出的未分配条件分支列为RL训练重点。r1的原始方案和
+停止原因保留在后文，业务执行评分继续统计全部禁用尝试。
+
 ## 方法与实现
 
-- 成功轨迹筛选：从 `business-v4/train` 的前32个独立任务采样，每任务最多4次。
+- 成功轨迹筛选：优先复用已结束采集的原始记录；新采集从 `business-v4/train` 的前32个独立任务采样，每任务最多4次。
   调用真实 DeepAgents 图及 CRM 工具，原执行断言给出结果。覆盖8类业务、至少
-  每类2个不同任务，以及改派条件的已分配／未分配分支后提前停止。
+  每类2个不同任务后进入SFT；未解决的条件分支单独记录并保留在RL训练和验证中。
 - 原始 token：直接使用 vLLM `return_token_ids` 的 prompt/response ID，核对 SDK
   解析、token usage 和主管调用计数。数据标记为 `vllm-return-token-ids-v1`；
   Agent Lightning 轨迹导出器继续支持其原生代理格式。两者共用实际业务结果验证。
-- 干净数据：失败、路由错误、复核纠错、截断及任一完整调用超过4096 tokens的轨迹
-  保留原记录并退出 SFT；模型输入不含期望动作或目标状态。只对主管当前回复监督，
+- 数据核验：业务失败轨迹退出SFT；业务成功但发生纠错的轨迹逐回复核对原请求、
+  JSON Schema、SDK解析、原始token、实际回执和错误账本，只保留正确调用。
+  截断、超4096 tokens和错误回复不作为目标，原上下文完整保留。
+  模型输入不含期望动作或目标状态。只对主管当前合格回复监督，
   历史、用户消息、工具结果、专家和复核器响应均不作为目标。
 - SFT：复用 [TRL 0.21 SFTTrainer](https://huggingface.co/docs/trl/v0.21.0/sft_trainer)
   的 `completion_mask` 和 PEFT LoRA，rank16、alpha32、all-linear、lr1e-5、
@@ -42,12 +49,13 @@ Qwen3-8B。网页模型继续由原服务配置管理。
 不重启失败标签。停止操作只处理本轮登记的进程及 GPU 租约。
 
 ```bash
-bash scripts/agent_rl.sh bootstrap launch --tag supervisor_sft_rl_20261117_r1 --gpus 5,6
-bash scripts/agent_rl.sh bootstrap watch --tag supervisor_sft_rl_20261117_r1
-bash scripts/agent_rl.sh bootstrap stop --tag supervisor_sft_rl_20261117_r1
+bash scripts/agent_rl.sh bootstrap launch --tag supervisor_sft_rl_20261117_r2 \
+  --reuse-collection supervisor_sft_rl_20261117_r1 --selection-policy verified_calls --gpus 5,6
+bash scripts/agent_rl.sh bootstrap watch --tag supervisor_sft_rl_20261117_r2
+bash scripts/agent_rl.sh bootstrap stop --tag supervisor_sft_rl_20261117_r2
 ```
 
-运行输出：`/data/zjr/enterprise_kb_agent/rl/outputs/supervisor_sft_rl_20261117_r1`。
+恢复运行输出：`/data/zjr/enterprise_kb_agent/rl/outputs/supervisor_sft_rl_20261117_r2`。
 关键记录依次为 `collection-summary.json`、`data-gate.json`、`sft/progress.json`、
 `sft/result.json`、`sft-comparison.json`。RL 使用独立的同名 `_rl` 输出目录，
 完成后自动调用原有同题审阅，核对实际更新、策略版本和原始 token 归因。
@@ -69,3 +77,28 @@ add_ticket_comment，业务评分1、路由错误0。源快照117个文件与提
 SFT与RL效果由后续运行结果记录。
 
 启动摘要：[startup.json](docs/releases/20261117_supervisor_sft_rl/startup.json)。
+
+## r1结束审阅与恢复
+
+实际运行26分14秒，在采集门槛停止，SFT与RL优化器更新均为0，拥有的GPU进程已释放。
+真实结果文件53条，状态字段最后停在52；新代码已修正逐条写回计数。
+53条中42条通过原业务评分、运行异常0；旧筛选保留12条，因纠错丢弃30条，业务失败11条。
+缺口是两个删除评估类别的无错轨迹，以及未分配分支的成功示范；后者8次均有禁用改派尝试。
+
+新筛选复用42条实际业务成功轨迹，核对原始wire与回执后保留94条主管回复，
+屏蔽60条错误工具调用、50条纠错结尾、3条截断输出。去重后为72条SFT目标，
+覆盖8类业务；原始token未重构。未分配分支继续作为RL难例，原业务分数仍为0。
+
+SFT的冷启动覆盖与RL的改进目标分别记录：SFT学习已有可执行正例，RL继续从完整
+训练划分采样、接收未解决任务的实际反馈。现有REINFORCE++使用全局批次优势归一化，
+具体实现和许可见vendor记录；方法依据[REINFORCE++论文](https://arxiv.org/abs/2501.03262)。
+回复监督沿用[TRL的prompt-completion训练](https://huggingface.co/docs/trl/v0.21.0/sft_trainer)。
+
+恢复命令使用新标签，r1及其数据、状态和失败记录保持原样：
+
+```bash
+bash scripts/agent_rl.sh bootstrap launch --tag supervisor_sft_rl_20261117_r2 \
+  --reuse-collection supervisor_sft_rl_20261117_r1 --selection-policy verified_calls --gpus 5,6
+```
+
+[逐类结果与离线恢复摘要](docs/releases/20261117_supervisor_recovery/review.json)。

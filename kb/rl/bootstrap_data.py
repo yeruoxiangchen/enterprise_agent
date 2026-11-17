@@ -7,6 +7,8 @@ and fitting is TRL. No conversation is reconstructed from a final answer.
 from __future__ import annotations
 
 from collections import Counter
+import hashlib
+import json
 from pathlib import Path
 
 from native_rl_diagnostic import WireCapture
@@ -51,7 +53,7 @@ def token_record(sample,result,calls,rollout_id):
         'triplets':triplets}
 
 
-async def collect_one(sample,supervisor,specialist,root,index,*,seed,max_length=4096):
+async def collect_one(sample,supervisor,specialist,root,index,*,seed,max_length=4096,selection_policy='clean_episode'):
     import httpx
     from langchain_openai import ChatOpenAI
     if sample['split']!='train':raise ValueError('SFT collection accepts the training split only')
@@ -74,13 +76,14 @@ async def collect_one(sample,supervisor,specialist,root,index,*,seed,max_length=
         if result['reward']!=1.:
             return result,[],'business_verification_failed'
         record=token_record(sample,result,wire.rows,identifier)
+        record['wire_root']=str((Path(root)/'wire'/identifier).resolve())
         write_json(Path(root)/'traces'/f'{identifier}.json',record)
-        admitted,reason=verified_rows(record,result,max_length=max_length)
+        admitted,reason=verified_rows(record,result,max_length=max_length,selection_policy=selection_policy)
         return result,admitted,reason
     finally:client.close()
 
 
-def coverage(rows):
+def coverage(rows,*,require_branches=True):
     """Require clean examples from every family and both conditional branches."""
     from .tasks import FAMILIES
     counts=Counter();branches=Counter();seen=set()
@@ -93,8 +96,53 @@ def coverage(rows):
             assigned=bool(sample['task']['initial_state']['tickets'][sample['target_ticket']]['assigned_to'])
             branches['assigned'if assigned else'unassigned']+=1
     missing=[f for f in FAMILIES if counts[f]<2]
+    gaps=[f'conditional_reassign:{b}'for b in ('assigned','unassigned')if branches[b]<1]
     return {'successful_clean_episodes_by_family':dict(counts),'conditional_branches':dict(branches),
-        'missing_families':missing,'passed':not missing and all(branches[b]>=1 for b in ('assigned','unassigned'))}
+        'missing_families':missing,'rl_focus_gaps':gaps,
+        'passed':not missing and (not require_branches or not gaps)}
+
+
+def reuse_collection(source,target,train,*,selection_policy='verified_calls',max_length=4096):
+    """Derive targets without changing or resampling an ended collection."""
+    from .tasks import DATA_ROOT,unpack_task
+    source,target=Path(source).resolve(),Path(target).resolve()
+    if not all(p.is_relative_to(DATA_ROOT.resolve())for p in (source,target)):
+        raise ValueError('Collection lineage must stay on project data storage')
+    state=json.loads((source/'status.json').read_text())
+    if not state.get('resources_released'):raise ValueError('Wait for source collection resource release')
+    if state.get('train_role')!='supervisor'or state.get('base_model')!=str(DATA_ROOT.parent/'models/Qwen3-8B'):
+        raise ValueError('Source collection role or base model differs')
+    expected={'delegation_protocol':'native','execution_granularity':'domain','completion_review':'errors'}
+    if state.get('profile')!=expected:raise ValueError('Source harness profile differs')
+    before=json.loads((source/'source-manifest.json').read_text())
+    after=json.loads((target/'source-manifest.json').read_text())
+    core=[n for n in before if n.startswith('kb/harness/')or n in(
+        'kb/benchmark/crm_native_adapter.py','kb/rl/runtime.py','kb/config.py','kb/context.py',
+        'scripts/crm_bench_services.py')]
+    if not core or any(before[n]!=after.get(n)for n in core):raise ValueError('Source execution code differs')
+    expected_tasks={s['id']:pack_task(s)['task_sha256']for s in train}
+    retained=[];lineage=[]
+    (target/'traces').mkdir(exist_ok=False);(target/'rollouts').mkdir(exist_ok=False)
+    for path in sorted((source/'traces').glob('*.json')):
+        raw=path.read_bytes();record=json.loads(raw);sample=unpack_task(record['rollout']['input'])
+        if sample['split']!='train'or expected_tasks.get(sample['id'])!=record['rollout']['input']['task_sha256']:
+            raise ValueError('Collection example does not match the frozen training split')
+        ident=record['rollout']['rollout_id']
+        results=list((source/'rollouts'/ident).glob('*/result.json'))
+        if len(results)!=1:raise ValueError('Ambiguous original collection attempt')
+        result=json.loads(results[0].read_text())
+        record['wire_root']=str(source/'wire'/ident)
+        record['derived_from']={'trace':str(path),'sha256':hashlib.sha256(raw).hexdigest(),
+            'result':str(results[0]),'result_sha256':hashlib.sha256(results[0].read_bytes()).hexdigest()}
+        admitted,reason=verified_rows(record,result,max_length=max_length,selection_policy=selection_policy)
+        write_json(target/'traces'/path.name,record)
+        (target/'rollouts'/ident).symlink_to(source/'rollouts'/ident,target_is_directory=True)
+        retained.append((sample,result,admitted))
+        lineage.append({'task_id':sample['id'],'rows':len(admitted),'reason':reason,**record['derived_from']})
+    report={'source':str(source),'selection_policy':selection_policy,'original_episodes':len(retained),
+        'selected_responses':sum(len(r[2])for r in retained),'lineage':lineage}
+    write_json(target/'reused-collection.json',report)
+    return retained
 
 
 def check_adapter(path):

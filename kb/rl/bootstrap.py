@@ -53,6 +53,8 @@ class Job:
             'profile':{'delegation_protocol':'native','execution_granularity':'domain','completion_review':'errors'},
             'sft_steps':args.sft_steps,'rl_steps':args.rl_steps,'collect_tasks':args.collect_tasks,
             'collect_attempts':args.collect_attempts,'validation_tasks':16,
+            'reuse_collection':getattr(args,'reuse_collection',''),
+            'selection_policy':getattr(args,'selection_policy','verified_calls'),
             'base_model':str(BASE),'heldout_used':False}
     def save(self,stage=None,**data):
         self.state.update(data,updated_at=time.time())
@@ -95,10 +97,25 @@ class Job:
             rows.append(result);write_json(self.folder/f'{name}-rows.json',rows)
         self.save(name,completed=len(samples));return rows
     async def work(self):
-        from .bootstrap_data import collect_one,coverage
+        from .bootstrap_data import collect_one,coverage,reuse_collection
         from .sft import export_successes
         dataset=DATA_ROOT/'datasets'/DATASET_NAME
         write_json(self.folder/'dataset-manifest.json',verify_dataset(dataset))
+        policy=self.args.selection_policy
+        def curation(kept):return coverage(kept,require_branches=policy=='clean_episode')
+        train_all=list(map(json.loads,(dataset/'train.jsonl').read_text().splitlines()))
+        kept=None
+        sft_data=DATA_ROOT/'datasets'/f'{self.args.tag}_sft'
+        manifest=None
+        if self.args.reuse_collection:
+            self.save('reuse_collection')
+            kept=reuse_collection(DATA_ROOT/'outputs'/self.args.reuse_collection,self.folder,
+                train_all,selection_policy=policy)
+            gate=curation(kept);write_json(self.folder/'data-gate.json',gate)
+            self.save('reuse_data_checked',completed=len(kept),curation=gate)
+            if not gate['passed']:raise RuntimeError('Reused corpus lacks warm-start skill coverage')
+            manifest=export_successes(self.folder,sft_data,max_length=4096,selection_policy=policy)
+            self.save('data_ready',sft_dataset=str(sft_data),sft_rows=manifest['rows'],curation=gate)
         devices=self.args.gpus.split(',')
         if len(devices)!=2 or len(set(devices))!=2:raise ValueError('Use two distinct physical GPUs')
         self.leases,snapshot=acquire_gpu_leases(devices,DATA_ROOT,wait_minutes=self.args.gpu_wait_minutes,
@@ -110,18 +127,21 @@ class Job:
         _,specialist=await self.server('frozen_specialists',devices[1],BASE)
         val=list(map(json.loads,(dataset/'dev.jsonl').read_text().splitlines()))
         val=val[:16]
-        train=list(map(json.loads,(dataset/'train.jsonl').read_text().splitlines()))[:self.args.collect_tasks]
+        train=train_all[:self.args.collect_tasks]
         if len(train)!=self.args.collect_tasks:raise ValueError('Not enough distinct training fixtures')
         plan=[(s,k)for k in range(self.args.collect_attempts)for s in train]
         # Randomize within each pass while retaining fixture coverage before resampling.
         randomizer=random.Random(20261118)
         for start in range(0,len(plan),len(train)):
             block=plan[start:start+len(train)];randomizer.shuffle(block);plan[start:start+len(train)]=block
-        kept=[];counts={};collect_deadline=min(self.deadline,time.monotonic()+self.args.collect_minutes*60)
+        reused=kept is not None
+        if kept is None:kept=[]
+        counts={};collect_deadline=min(self.deadline,time.monotonic()+self.args.collect_minutes*60)
         for i,(sample,attempt)in enumerate(plan):
+            if reused:break
             self.budget()
             if time.monotonic()>=collect_deadline:break
-            current=coverage(kept)
+            current=curation(kept)
             needs_branch=False
             if sample['family']=='conditional_reassign':
                 assigned=bool(sample['task']['initial_state']['tickets'][sample['target_ticket']]['assigned_to'])
@@ -130,15 +150,15 @@ class Job:
             self.save('collect_supervisor',completed=len(kept),total=len(plan),task=sample['id'],
                 curation=current,rejections=counts,plan_position=i)
             result,admitted,reason=await collect_one(sample,supervisor,specialist,self.folder,i,
-                seed=20261118+i,max_length=4096)
+                seed=20261118+i,max_length=4096,selection_policy=policy)
             kept.append((sample,result,admitted));counts[reason]=counts.get(reason,0)+1
             write_json(self.folder/'collection-summary.json',{'completed':len(kept),'planned':len(plan),
-                'curation':coverage(kept),'outcomes':counts})
-            if coverage(kept)['passed']:break
-        gate=coverage(kept);write_json(self.folder/'data-gate.json',gate)
+                'curation':curation(kept),'outcomes':counts})
+            self.save(completed=len(kept),curation=curation(kept),rejections=counts)
+            if curation(kept)['passed']:break
+        gate=curation(kept);write_json(self.folder/'data-gate.json',gate)
         if not gate['passed']:raise RuntimeError('Clean supervisor corpus lacks required families/conditional branches; inspect data-gate.json')
-        sft_data=DATA_ROOT/'datasets'/f'{self.args.tag}_sft'
-        manifest=export_successes(self.folder,sft_data,max_length=4096)
+        if manifest is None:manifest=export_successes(self.folder,sft_data,max_length=4096,selection_policy=policy)
         self.save('data_ready',sft_dataset=str(sft_data),sft_rows=manifest['rows'],curation=gate)
         before=await self.evaluate('baseline',supervisor,specialist,val)
         await supervisor_service.close()
@@ -236,8 +256,12 @@ def main():
     parser.add_argument('--rl-steps',type=int,default=2)
     parser.add_argument('--max-minutes',type=float,default=120)
     parser.add_argument('--gpu-wait-minutes',type=float,default=120)
+    parser.add_argument('--reuse-collection',default='')
+    parser.add_argument('--selection-policy',choices=('clean_episode','verified_calls'),default='verified_calls')
     args=parser.parse_args()
     if Path(args.tag).name!=args.tag or args.tag in ('.','..'):parser.error('Use a plain tag')
+    if args.reuse_collection and (Path(args.reuse_collection).name!=args.reuse_collection or args.reuse_collection in ('.','..')):
+        parser.error('Use a plain source collection tag')
     if min(args.collect_tasks,args.collect_attempts,args.sft_steps,args.rl_steps,args.max_minutes,args.collect_minutes)<=0:
         parser.error('Use positive data/training/time budgets')
     folder=DATA_ROOT/'outputs'/args.tag

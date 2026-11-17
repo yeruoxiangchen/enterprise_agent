@@ -1,0 +1,105 @@
+{
+  "reviewed_at": "2026-11-17T11:44:55.358657+00:00",
+  "source_tag": "supervisor_sft_rl_20261117_r1",
+  "status": "failed",
+  "stopped_stage": "collect_supervisor",
+  "resources_released": true,
+  "actual_episodes": 53,
+  "stale_status_counter": 52,
+  "business_passed": 42,
+  "runtime_errors": 0,
+  "whole_episode_curation": {
+    "accepted": 12,
+    "repaired_episode": 30,
+    "business_verification_failed": 11
+  },
+  "families": {
+    "assess_only": {
+      "sampled": 3,
+      "business_passed": 2,
+      "forbidden_attempts": 1,
+      "runtime_errors": 0
+    },
+    "cancel": {
+      "sampled": 2,
+      "business_passed": 2,
+      "forbidden_attempts": 0,
+      "runtime_errors": 0
+    },
+    "close": {
+      "sampled": 2,
+      "business_passed": 2,
+      "forbidden_attempts": 0,
+      "runtime_errors": 0
+    },
+    "comment": {
+      "sampled": 2,
+      "business_passed": 2,
+      "forbidden_attempts": 0,
+      "runtime_errors": 0
+    },
+    "conditional_reassign": {
+      "sampled": 10,
+      "business_passed": 2,
+      "forbidden_attempts": 8,
+      "runtime_errors": 0
+    },
+    "delete_dependency": {
+      "sampled": 16,
+      "business_passed": 15,
+      "forbidden_attempts": 0,
+      "runtime_errors": 0
+    },
+    "delete_no_permission": {
+      "sampled": 16,
+      "business_passed": 15,
+      "forbidden_attempts": 0,
+      "runtime_errors": 0
+    },
+    "lookup": {
+      "sampled": 2,
+      "business_passed": 2,
+      "forbidden_attempts": 0,
+      "runtime_errors": 0
+    }
+  },
+  "elapsed_seconds": 1574.3647947311401,
+  "sft_optimizer_updates": 0,
+  "rl_optimizer_updates": 0,
+  "recovery_dataset": {
+    "source_run": "/data/zjr/enterprise_kb_agent/rl/outputs/bootstrap_recovery_audit_20261117",
+    "source_manifest_sha256": "ccd6d9f3d9dab6403fc85b738d8a4aa9c6bbac03a35cb5648ddb8b1defdfab6c",
+    "rows": 72,
+    "train_role_rows": {
+      "supervisor": 72
+    },
+    "successful_episodes_by_family": {
+      "comment": 2,
+      "delete_no_permission": 15,
+      "assess_only": 2,
+      "cancel": 2,
+      "conditional_reassign": 2,
+      "lookup": 2,
+      "delete_dependency": 15,
+      "close": 2
+    },
+    "skipped": {
+      "duplicate_call": 22
+    },
+    "max_length": 4096,
+    "dataset_sha256": "77ef2d852172eb37763216c53c5966c13565a7bd1dabe426caac029d191343d3",
+    "format": "original token IDs, response-only completion_mask; TRL 0.21.0",
+    "clean_only": false,
+    "selection_policy": "verified_calls",
+    "heldout_used": false
+  },
+  "raw_verified_responses": 94,
+  "masked_responses": {
+    "invalid_tool_call": 60,
+    "recovery_answer": 50,
+    "truncated": 3
+  },
+  "rl_focus_gaps": [
+    "conditional_reassign:unassigned"
+  ]
+}

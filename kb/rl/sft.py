@@ -27,7 +27,7 @@ def data_path(path):
     return path
 
 
-def verified_rows(record, result, *, max_length=8192, clean_only=True):
+def verified_rows(record, result, *, max_length=8192, clean_only=True,selection_policy='clean_episode'):
     """Rescore real actions/state before admitting a whole training episode."""
     from .baseline import rescore
     rollout = record['rollout']
@@ -40,7 +40,8 @@ def verified_rows(record, result, *, max_length=8192, clean_only=True):
         raise ValueError('SFT result is bound to a different task payload')
     if rescore(sample, result)['reward'] != 1. or result['reward'] != 1.:
         return [], 'business_verification_failed'
-    if clean_only and (result.get('routing_errors') or any(
+    if selection_policy not in ('clean_episode','verified_calls'):raise ValueError('Unknown SFT selection policy')
+    if selection_policy=='clean_episode'and clean_only and (result.get('routing_errors') or any(
             e.get('result')!='satisfied' for e in result.get('review_evaluations',[]))):
         return [], 'repaired_episode'
     triplets = record['triplets']
@@ -49,14 +50,24 @@ def verified_rows(record, result, *, max_length=8192, clean_only=True):
         raise ValueError('Selected-role calls are missing from original token traces')
     if not triplets:
         return [], 'no_selected_role_actions'
+    if selection_policy=='verified_calls':
+        if result['train_role']!='supervisor'or record.get('source_format')!='vllm-return-token-ids-v1':
+            raise ValueError('Verified-call selection requires original native supervisor wire evidence')
+        from .sft_selection import select_responses
+        selected,decisions=select_responses(record,result)
+        selected=set(selected)
+    else:selected=set(range(len(triplets)));decisions=[]
     rows = []
     for turn, triplet in enumerate(triplets):
+        if turn not in selected:continue
         if triplet['response'].get('finish_reason')=='length':
+            if selection_policy=='verified_calls':continue
             return [], 'truncated_response'
         prompt, response = triplet['prompt'].get('token_ids'), triplet['response'].get('token_ids')
         if not prompt or not response or any(type(i) is not int or i < 0 for i in prompt + response):
             raise ValueError('SFT requires complete original integer token IDs')
         if len(prompt) + len(response) > max_length:
+            if selection_policy=='verified_calls':continue
             return [], 'whole_rollout_too_long'
         row = {'input_ids': prompt + response, 'completion_mask': [0]*len(prompt) + [1]*len(response),
             'provenance': {'task_id': sample['id'], 'family': sample['family'],
@@ -64,11 +75,13 @@ def verified_rows(record, result, *, max_length=8192, clean_only=True):
                 'rollout_id': rollout['rollout_id'], 'turn': turn,
                 'train_role': result['train_role'], 'business_reward': 1.}}
         row['provenance']['token_source']=record.get('source_format','agent-lightning-proxy')
+        row['provenance']['selection_policy']=selection_policy
+        if decisions:row['provenance']['response_verification']=decisions[turn]
         rows.append(row)
-    return rows, 'accepted'
+    return rows, 'accepted'if rows else'no_verified_responses'
 
 
-def export_successes(run, output, *, max_length=8192):
+def export_successes(run, output, *, max_length=8192,selection_policy='clean_episode'):
     run, output = data_path(run), data_path(output)
     if output.exists():
         raise FileExistsError('Use a new immutable SFT dataset directory')
@@ -86,7 +99,7 @@ def export_successes(run, output, *, max_length=8192):
             raise ValueError('Each exported rollout needs one unambiguous final attempt')
         result_raw = results[0].read_bytes()
         result = json.loads(result_raw)
-        admitted, reason = verified_rows(record, result, max_length=max_length)
+        admitted, reason = verified_rows(record, result, max_length=max_length,selection_policy=selection_policy)
         if not admitted:
             skipped[reason] += 1
             continue
@@ -107,7 +120,7 @@ def export_successes(run, output, *, max_length=8192):
         'rows': len(rows), 'train_role_rows': dict(counts), 'successful_episodes_by_family': dict(families),
         'skipped': dict(skipped), 'max_length': max_length, 'dataset_sha256': digest(data),
         'format': 'original token IDs, response-only completion_mask; TRL 0.21.0',
-        'clean_only':True,
+        'clean_only':selection_policy=='clean_episode','selection_policy':selection_policy,
         'heldout_used': False}
     write_json(output/'manifest.json', report)
     return report
@@ -199,6 +212,7 @@ def main():
     export.add_argument('--run', type=Path, required=True)
     export.add_argument('--output', type=Path, required=True)
     export.add_argument('--max-length', type=int, default=8192)
+    export.add_argument('--selection-policy',choices=('clean_episode','verified_calls'),default='clean_episode')
     fit = sub.add_parser('train')
     fit.add_argument('--dataset', type=Path, required=True)
     fit.add_argument('--output', type=Path, required=True)
@@ -211,7 +225,7 @@ def main():
     merge.add_argument('--base-model', default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     args = parser.parse_args()
     if args.command == 'export':
-        report = export_successes(args.run, args.output, max_length=args.max_length)
+        report = export_successes(args.run, args.output, max_length=args.max_length,selection_policy=args.selection_policy)
     elif args.command == 'train':
         report = train(args.dataset, args.output, model_path=args.model, steps=args.steps,train_role=args.train_role)
     else:
