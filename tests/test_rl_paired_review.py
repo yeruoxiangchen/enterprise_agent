@@ -19,6 +19,9 @@ def record(task,kind,reward,*,family='close'):
 def test_paired_report_keeps_regressions_and_measures_inference_cost():
     rows=[record('one','baseline',0),record('one','trained',1),
           record('two','baseline',1),record('two','trained',0)]
+    # A legitimate no-action batch may skip an optimizer update. Evaluation
+    # still occurs at logical step 8 with the actual last updated policy.
+    rows[1]['evaluation_phase']['completed_updates']=7
     result=compare_results(rows,{'one':'hash-one','two':'hash-two'},steps=8)
     assert result['success_delta_percentage_points']==0
     assert result['paired']=={'wins':1,'regressions':1,'unchanged':0,'exact_mcnemar_p':1.}

@@ -102,6 +102,16 @@ def review(folder):
         paths.append(path)
     compared=compare_results(records,expected,steps=state['steps'])
     training=[row for row in records if row['split']=='train']
+    train_raw=(dataset/'train.jsonl').read_bytes()
+    if hashlib.sha256(train_raw).hexdigest()!=manifest['splits']['train']['sha256']:
+        raise ValueError('Frozen training file changed')
+    train_expected={sample['id']:pack_task(sample)['task_sha256']
+        for sample in (json.loads(line) for line in train_raw.splitlines())}
+    if len(training)!=state['steps']*state['batch_size']*state['group_size']:
+        raise ValueError('Training trajectory count differs from the frozen budget')
+    if any(row['task_id'] not in train_expected or
+           row.get('task_sha256')!=train_expected[row['task_id']] for row in training):
+        raise ValueError('Training trajectory was not from the frozen training split')
     summary=json.loads((folder/'trajectory-summary.json').read_text())
     traces={row['rollout_id']:row for row in summary['rows']}
     token_checks=[]
@@ -113,13 +123,22 @@ def review(folder):
             and (trace['token_ids_complete'] if completed else trace['token_ids_complete'] is None)))
     if not all(token_checks):raise ValueError('Role counts, actual token traces or reward attribution differ')
     history=[json.loads(line) for line in (folder/'policy-update-history.jsonl').read_text().splitlines()]
-    if len(history)!=state['steps']:raise ValueError('Unexpected number of policy updates')
+    if not 0<len(history)<=state['steps'] or len(history)!=state['completed_updates']:
+        raise ValueError('Update history differs from the actual completed-update counter')
     serving=[json.loads(line) for line in (folder/'served-policy.jsonl').read_text().splitlines()]
     versions=sorted({row['completed_updates'] for row in serving})
     if versions!=list(range(len(history)+1)):
         raise ValueError('A policy version was never sampled through the actual adapter')
     if any(row['adapter_id'] is None for row in serving if row['completed_updates']):
         raise ValueError('An updated-policy request used the base model')
+    def numbers(value):
+        if isinstance(value,(list,tuple)):
+            for item in value:yield from numbers(item)
+        else:yield float(value)
+    gradients=[number for row in history
+        for number in numbers(row['metrics'].get('actor/grad_norm',[]))]
+    if not gradients or not all(math.isfinite(number) for number in gradients):
+        raise ValueError('Missing or non-finite actual training gradients')
     from safetensors import safe_open
     import torch
     adapter=folder/'checkpoints'/f'global_step_{state["steps"]}'/'actor/lora_adapter/adapter_model.safetensors'
@@ -137,7 +156,12 @@ def review(folder):
         'steps':state['steps'],'physical_gpus':state['gpus'],
         'train':outcome_stats(training),**compared,
         'trace_integrity':{'checked':len(records),'matched':sum(token_checks)},
+        'training_data_integrity':{'checked':len(training),'matched':len(training),
+                                   'development_tasks_in_optimizer':0},
         'learning':{'update_rpcs':len(history),
+            'logical_steps_without_update':state['steps']-len(history),
+            'optimizer_minibatch_updates':len(gradients),
+            'gradient_norm_min':min(gradients),'gradient_norm_max':max(gradients),
             'positive_advantage_tokens':sum(row['learning_signal']['positive_tokens'] for row in history),
             'negative_advantage_tokens':sum(row['learning_signal']['negative_tokens'] for row in history),
             'lora_B_tensors':count,'lora_B_nonzero_elements':nonzero,
@@ -146,6 +170,17 @@ def review(folder):
         'resources_released':state['resources_released'],
         'scope':'paired authored business-development tasks; executable outcomes, no final-answer semantic score'}
     write_json(folder/'review.json',report)
+    failures=[]
+    for path,row in zip(paths,records,strict=True):
+        if row['split']!='dev' or row['reward']:continue
+        events=[json.loads(line) for line in (path.parent/'events.jsonl').read_text().splitlines()]
+        failures.append({'task_id':row['task_id'],'family':row['family'],
+            'phase':row['evaluation_phase'],'failed_checks':{
+                key:value for key,value in row['checks'].items() if not value},
+            'delegations':[event['data'] for event in events if event['kind']=='delegation_bound'],
+            'model_tool_schemas':[event['data']['tools'] for event in events if event['kind']=='model_request'],
+            'actual_tool_calls':row['audit'],'conversation':row['turns'],'error':row['error']})
+    write_json(folder/'failure-details.json',failures)
     lines=['# 业务 Agent RL 同题对照复测','',
         f'数据：{state["dataset"]}；专家共享 LoRA；固定主管；上游 REINFORCE++。',
         f'训练 {state["steps"]} 轮，{len(training)} 条真实轨迹；完整开发集 {len(expected)} 题，训练前后各一次。','',
