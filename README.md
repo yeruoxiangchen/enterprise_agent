@@ -1,5 +1,7 @@
 # 知页 · 企业本地知识库与问答系统
 
+2026-11-17，业务专家 RL 扩展为完整 32 题开发集的训练前后同题对照，冻结指令与可执行评分协议，增加分任务成功率、推理耗时和 token 对比。协议与运行记录见 [RL同题对照](AGENT_RL_PAIRED_20261117.md)。
+
 2026-11-16，业务Agent选择性RL训练入口已接入：复用Agent Lightning与veRL，支持GRPO和REINFORCE++，可选择训练主管或专业Agent的LoRA。双3090已完成有效梯度、权重变化、更新后采样与检查点的短训验证，51项检查通过；4题开发检查为2/4，与基线相同。任务、奖励、运行入口及完整结果见 [Agent RL接入记录](AGENT_RL_IMPLEMENTATION_20261116.md)。
 
 [简历固定版本](https://github.com/yeruoxiangchen/enterprise_agent/tree/resume-20261116) · [最新代码](https://github.com/yeruoxiangchen/enterprise_agent/tree/main) · [版本与评测记录](docs/versions.md) · [操作演示](docs/demos/README.md)

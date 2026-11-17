@@ -7,6 +7,23 @@ import pytest
 pytest.importorskip('torch')
 
 
+@pytest.mark.parametrize('step,updates,kind',[(0,0,'baseline'),(8,8,'trained')])
+def test_native_validation_records_the_actual_policy_phase(tmp_path,monkeypatch,step,updates,kind):
+    from kb.rl.verl_contract import BusinessTrainer,AgentLightningTrainer
+    monkeypatch.setenv('KB_RL_RUN_DIR',str(tmp_path))
+    if updates:(tmp_path/'policy-updates.json').write_text(json.dumps({'completed_updates':updates}))
+    def original(instance):
+        phase=json.loads((tmp_path/'evaluation-phase.json').read_text())
+        assert phase['kind']==kind and phase['completed_updates']==updates
+        return {'val/n_rollouts':32}
+    monkeypatch.setattr(AgentLightningTrainer,'_validate',original)
+    trainer=object.__new__(BusinessTrainer)
+    trainer.global_steps=step
+    assert trainer._validate()=={'val/n_rollouts':32}
+    saved=json.loads((tmp_path/'evaluation-history.jsonl').read_text())
+    assert saved['global_step']==step and saved['finished_at']>=saved['started_at']
+
+
 @pytest.mark.parametrize('completed_calls',[0,1])
 def test_annotation_only_episode_is_verified_or_rejected_as_trace_loss(tmp_path,monkeypatch,completed_calls):
     import agentlightning as agl

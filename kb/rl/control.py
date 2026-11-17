@@ -43,6 +43,9 @@ def run_job(args):
             'max_minutes':args.max_minutes,'steps':args.steps,'resources_released':False}
     status['train_role']=args.train_role
     status['adv_estimator']=args.adv_estimator
+    status.update(val_before_train=args.val_before_train,val_limit=args.val_limit,
+                  batch_size=args.batch_size,group_size=args.group_size,
+                  dataset=DATASET_NAME,checkpoint_interval=args.checkpoint_interval)
     deadline=time.monotonic()+args.max_minutes*60
     children=[]
     leases=[]
@@ -135,6 +138,8 @@ def run_job(args):
                 '--steps',str(args.steps),'--batch-size',str(args.batch_size),
                 '--group-size',str(args.group_size),'--val-limit',str(args.val_limit)]
         common+=['--adv-estimator',args.adv_estimator]
+        if args.val_before_train:common+=['--val-before-train']
+        common+=['--checkpoint-interval',str(args.checkpoint_interval)]
         runner_env={**env,'CUDA_VISIBLE_DEVICES':''}
         start('runner',[runner_python,*common,'--role','runner'],runner_env)
         trainer_env={**env,'CUDA_VISIBLE_DEVICES':devices[0]}
@@ -197,9 +202,12 @@ def main():
     parser.add_argument('--batch-size',type=int,default=2)
     parser.add_argument('--group-size',type=int,default=4)
     parser.add_argument('--val-limit',type=int,default=4)
+    parser.add_argument('--val-before-train',action='store_true')
+    parser.add_argument('--checkpoint-interval',type=int,default=0)
     parser.add_argument('--max-minutes',type=float,default=90)
     args=parser.parse_args()
-    if args.steps<1 or args.batch_size<1 or args.group_size<2 or args.max_minutes<=0:
+    if (args.steps<1 or args.batch_size<1 or args.group_size<2 or args.max_minutes<=0
+            or args.val_limit<0 or args.checkpoint_interval<0):
         parser.error('Use positive steps/batch/time and at least two trajectories per task')
     if Path(args.tag).name!=args.tag or args.tag in ('.','..'):
         parser.error('Use a plain run tag')

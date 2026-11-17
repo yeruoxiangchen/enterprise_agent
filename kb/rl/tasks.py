@@ -10,8 +10,8 @@ import random
 
 DATA_ROOT = Path('/data/zjr/enterprise_kb_agent/rl')
 BENCH_ROOT = Path('/data/zjr/enterprise_kb_agent/benchmarks/crm-agent-bench')
-VERSION = 'business-rl-v2'
-DATASET_NAME = 'business-v2'
+VERSION = 'business-rl-v3'
+DATASET_NAME = 'business-v3'
 FAMILIES = ('lookup', 'conditional_reassign', 'close', 'delete_no_permission',
             'delete_dependency', 'comment', 'assess_only', 'cancel')
 
@@ -72,20 +72,23 @@ def make_task(split: str, index: int, seed: int = 20261116) -> dict:
             arguments['reassign_ticket'] = {'ticket_id': ticket_id, 'assignee': 'admin.rlee'}
             forbidden.remove('reassign_ticket')
     elif family == 'close':
-        request = f'The issue on {ticket_id} is resolved. Check its dependencies and close it.'
+        request = (f'The issue on {ticket_id} is resolved. Read the ticket first, '
+                   'check my permission to close it, then check its dependencies and close it.')
         actions += ['check_permission', 'check_dependencies', 'close_ticket']
         arguments['close_ticket'] = {'ticket_id': ticket_id}
         expected['tickets'][ticket_id]['status'] = 'Closed'
         forbidden.remove('close_ticket')
     elif family == 'delete_no_permission':
-        request = f'Please delete {ticket_id} if my account is allowed to delete it. Otherwise leave it unchanged.'
+        request = (f'Read {ticket_id} first, then check whether my account is allowed to delete it. '
+                   'Delete it only if allowed. Otherwise leave it unchanged.')
         actions.append('check_permission')
     elif family == 'delete_dependency':
         user = 'admin.rlee'
         dependency = identifiers['TCK-1001']
         ticket['dependencies'] = [dependency]
         state['tickets'][dependency]['status'] = 'Open'
-        request = (f'Assess deletion of {ticket_id}. Check permission and dependencies. '
+        request = (f'Assess deletion of {ticket_id}. Read the ticket first. '
+                   'Check dependencies, then check my deletion permission; complete both checks. '
                    'If any dependency is open, stop without attempting delete_ticket.')
         actions += ['check_permission', 'check_dependencies']
     elif family == 'comment':
@@ -101,17 +104,30 @@ def make_task(split: str, index: int, seed: int = 20261116) -> dict:
     else:
         request = f'Inspect {ticket_id} and assess closing it, but wait for my confirmation before any change.'
         extra_turns = ['Cancel that request. Keep the ticket open and make no changes.']
+    # Every scored prerequisite is visible in the user's business request.
+    # Bind checks to the actual subject/operation instead of accepting a check
+    # about another ticket or permission. Keep the v2 action/state constraints.
+    if 'check_permission' in actions:
+        arguments['check_permission'] = {'user_id': user, 'ticket_id': ticket_id,
+            'action': 'delete' if family.startswith('delete') else 'edit'}
+    if 'check_dependencies' in actions:
+        arguments['check_dependencies'] = {'ticket_id': ticket_id}
+    order = list(actions)
+    if family == 'delete_dependency':
+        order = ['get_ticket', 'check_dependencies', 'check_permission']
     if split == 'heldout':
         # A composition absent from train/dev: inspect a different ticket first.
         other = identifiers['TCK-1003']
         request = f'First look up {other}. Then handle the following separate request: {request}'
         actions.insert(0, 'get_ticket')
+        order.insert(0, 'get_ticket')
         arguments['get_ticket'] = [{'ticket_id': other}, {'ticket_id': ticket_id}]
     messages.append(f'I am {user}. {request}')
     messages.extend(extra_turns)
     task = Task(id=f'{VERSION}:{split}:{family}:{digest[:12]}', instruction=messages[0],
         domain='itsm', initial_state=state, expected_actions=actions,
-        expected_args=arguments, expected_state=expected, forbidden_actions=forbidden,
+        expected_args=arguments, expected_order=order,
+        expected_state=expected, forbidden_actions=forbidden,
         capabilities=[family], task_set=split, dataset_version=VERSION)
     return {'id': task.id, 'split': split, 'family': family, 'messages': messages,
             'task': asdict(task), 'target_ticket': ticket_id,

@@ -61,6 +61,24 @@ class StrictBusinessDaemon(AgentModeDaemon):
 
 
 class BusinessTrainer(AgentLightningTrainer):
+    def _validate(self):
+        # Use the upstream evaluator with an immutable phase label. Both arms
+        # use the same native graph, task bytes, frozen role and decoding.
+        import os,json,time
+        from pathlib import Path
+        from .runtime import write_json
+        folder=Path(os.environ['KB_RL_RUN_DIR'])
+        state=folder/'policy-updates.json'
+        updates=json.loads(state.read_text())['completed_updates'] if state.exists() else 0
+        phase={'kind':'baseline' if self.global_steps==0 else 'trained',
+               'global_step':self.global_steps,'completed_updates':updates,
+               'started_at':time.time()}
+        write_json(folder/'evaluation-phase.json',phase)
+        metrics=super()._validate()
+        with (folder/'evaluation-history.jsonl').open('a') as stream:
+            stream.write(json.dumps({**phase,'finished_at':time.time(),'metrics':metrics},default=str)+'\n')
+        return metrics
+
     def _train_step(self,batch_dict):
         try:return super()._train_step(batch_dict)
         except NoPolicyActions as exc:

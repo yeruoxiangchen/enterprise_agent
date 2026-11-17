@@ -13,7 +13,7 @@ from kb.rl.reward import score_task
 from kb.rl.training import training_config
 
 
-def execute(sample, tmp_path, *, forbidden=False, collateral=False):
+def execute(sample, tmp_path, *, forbidden=False, collateral=False, wrong_permission=False):
     from harness.tools.environment import create_environment
     import harness.tools.domains
     environment=environment_for(sample)
@@ -28,11 +28,13 @@ def execute(sample, tmp_path, *, forbidden=False, collateral=False):
     gets=sample['task']['expected_args']['get_ticket']
     for arguments in gets if isinstance(gets,list) else [gets]:
         plan.append(('get_ticket',arguments))
-    if 'check_dependencies' in sample['task']['expected_actions']:
-        plan.append(('check_dependencies',{'ticket_id':target}))
-    if 'check_permission' in sample['task']['expected_actions']:
-        operation='delete' if sample['family'].startswith('delete') else 'edit'
-        plan.append(('check_permission',{'user_id':user,'ticket_id':target,'action':operation}))
+    checks=[name for name in sample['task']['expected_order'] if name in ('check_dependencies','check_permission')]
+    for name in checks:
+        arguments={'ticket_id':target}
+        if name=='check_permission':
+            operation='delete' if sample['family'].startswith('delete') else 'edit'
+            arguments.update(user_id=user,action='view' if wrong_permission else operation)
+        plan.append((name,arguments))
     for name in ('reassign_ticket','close_ticket','add_ticket_comment'):
         if name in sample['task']['expected_actions']:
             plan.append((name,sample['task']['expected_args'][name]))
@@ -68,6 +70,26 @@ def test_collateral_change_fails_despite_target_success(tmp_path):
     result=execute(make_task('train',FAMILIES.index('lookup')),tmp_path,collateral=True)
     assert result['checks']['required_actions'] is True
     assert result['reward']==0 and result['checks']['unrelated_tickets_unchanged'] is False
+
+
+def test_checking_view_permission_does_not_satisfy_close_assessment(tmp_path):
+    sample=make_task('train',FAMILIES.index('assess_only'))
+    result=execute(sample,tmp_path,wrong_permission=True)
+    assert result['checks']['required_actions'] is True
+    assert result['checks']['arguments'] is False and result['reward']==0
+
+
+def test_prerequisites_are_visible_and_bind_the_business_subject():
+    for family in ('close','delete_no_permission','delete_dependency','assess_only'):
+        sample=make_task('train',FAMILIES.index(family))
+        instruction=sample['messages'][0].lower()
+        assert 'read' in instruction
+        assert 'permission' in instruction or 'allowed to delete' in instruction
+        expected=sample['task']['expected_args']['check_permission']
+        assert expected['ticket_id']==sample['target_ticket']
+        assert expected['user_id'] in sample['messages'][0]
+        assert expected['action']==('delete' if family.startswith('delete') else 'edit')
+        assert sample['task']['expected_order'][0]=='get_ticket'
 
 
 def test_heldout_is_new_composition_with_independent_fixtures(tmp_path):
@@ -111,6 +133,14 @@ def test_config_uses_upstream_grpo_lora_and_data_storage():
     assert cfg['actor_rollout_ref']['rollout']['engine_kwargs']['vllm']['enable_lora'] is True
     with pytest.raises(ValueError,match='data volume'):
         training_config('/tmp/wrong','cached-model')
+
+
+def test_paired_validation_uses_upstream_pretraining_evaluation_and_periodic_checkpoints():
+    cfg=training_config('/data/zjr/enterprise_kb_agent/rl/outputs/check','cached-model',
+        steps=8,val_before_train=True,checkpoint_interval=4)
+    assert cfg['trainer']['val_before_train'] is True
+    assert cfg['trainer']['test_freq']==8 and cfg['trainer']['save_freq']==4
+    assert cfg['trainer']['max_actor_ckpt_to_keep']==2
 
 
 def test_rollout_requires_updated_adapter_and_rejects_ambiguous_versions():

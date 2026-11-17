@@ -11,7 +11,8 @@ from .tasks import DATA_ROOT, pack_task
 AGL_COMMIT = '6db3c73dc0af2e50fe80e56873a57c1703f1b2a7'
 
 
-def training_config(run_dir, model_path, *, steps=20, batch_size=4, group_size=4,adv_estimator='grpo'):
+def training_config(run_dir, model_path, *, steps=20, batch_size=4, group_size=4,
+                    adv_estimator='grpo', val_before_train=False, checkpoint_interval=0):
     """Adapt the upstream Calc-X LoRA recipe; no custom policy-gradient loss."""
     run_dir = Path(run_dir).resolve()
     if not run_dir.is_relative_to(DATA_ROOT):
@@ -50,9 +51,10 @@ def training_config(run_dir, model_path, *, steps=20, batch_size=4, group_size=4
                         }},
         'trainer': {'n_gpus_per_node':1,'nnodes':1,'critic_warmup':0,
                     'logger':['console'],'project_name':'enterprise-agent-rl',
-                    'experiment_name':run_dir.name,'val_before_train':False,
+                    'experiment_name':run_dir.name,'val_before_train':val_before_train,
                     'total_training_steps':steps,'total_epochs':100,
-                    'save_freq':steps,'test_freq':steps,
+                    'save_freq':checkpoint_interval or steps,'test_freq':steps,
+                    'max_actor_ckpt_to_keep':2,
                     'default_local_dir':str(run_dir/'checkpoints')},
         'critic': {'strategy':'fsdp2'},
         'agentlightning': {'trace_aggregator':{'level':'transition',
@@ -71,6 +73,8 @@ def main():
     parser.add_argument('--group-size',type=int,default=4)
     parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--val-limit',type=int,default=0)
+    parser.add_argument('--val-before-train',action='store_true')
+    parser.add_argument('--checkpoint-interval',type=int,default=0)
     args=parser.parse_args()
     os.environ['AGL_MANAGED_STORE']='0'
     os.environ['AGL_CURRENT_ROLE']=args.role
@@ -78,7 +82,9 @@ def main():
     from .agent import BusinessAgent
     config=training_config(args.run_dir,args.model,steps=args.steps,
                            batch_size=args.batch_size,group_size=args.group_size,
-                           adv_estimator=args.adv_estimator)
+                           adv_estimator=args.adv_estimator,
+                           val_before_train=args.val_before_train,
+                           checkpoint_interval=args.checkpoint_interval)
     if args.role=='algorithm':
         from .verl_contract import StrictBusinessDaemon,BusinessTrainer
         algorithm=agl.VERL(config,daemon_cls=StrictBusinessDaemon,trainer_cls=BusinessTrainer)
