@@ -97,3 +97,15 @@ ToolSpec 自动生成，不根据题目文本手写路由。这样改派 Agent �
 RL 启动入口默认采用 `--delegation-protocol native --completion-review errors`；
 历史试验仍可显式选择 `--delegation-protocol explicit --completion-review none`。
 配置变化和执行代码变化均使旧训练基线复用失效。网页部署没有在这轮重新启动。
+
+### 未知工具恢复缺口
+
+`supervisor_native_per_action16_20261117_r4` 在 27/32 记录后主动停止，资源正常释放。
+单操作子图暴露主管将子 Agent 名称当作函数名的行为；LangChain 返回了未知工具错误，
+本地账本却只记录已知业务工具的越权调用，导致 error review 没有触发，主管只承诺
+委派就结束。完整原始请求与 SDK 解析一致，排除了传输解析问题。
+
+工具中间件现为所有 `request.tool is None` 的错误保留原始反馈并登记；不替换模型
+动作，不把未知函数名偷偷转换成正确 task。继续使用官方 RubricMiddleware 提供反馈
+和重新执行机会。真实图新增任意未知函数错误的恢复检查，并保留一次性写入和用户
+确认检查。后续候选只跑新路径，旧路径三轮均为同 16 题 9/16，逐轮来源分开报告。

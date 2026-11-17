@@ -409,7 +409,10 @@ class NativeHarness:
                 return handler(request.override(tool_call=bound))
             route = self.routes.get(name)
             if name not in self.specs and route is None:
-                return handler(request)
+                response=handler(request)
+                if request.tool is None:
+                    self.record_routing_error(request.tool_call,getattr(response,'content',str(response)))
+                return response
             attempt = next((a for a in reversed(self.attempts) if a['id'] == request.tool_call['id']), None)
             spec = self.specs[route.target if route else name]
             contract = self.delegations.current(get_config()) if self.bind_user_request else None

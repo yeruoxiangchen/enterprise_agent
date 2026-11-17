@@ -106,8 +106,9 @@ def test_error_trigger_skips_clean_results_and_actual_policy_denials(tmp_path,ki
     finally:engine.close()
 
 
-def test_official_error_review_recovers_an_invalid_root_write_without_direct_execution(tmp_path):
-    root=ScriptModel(replies=[call('change',{'value':'Closed'},'bad'),answer('I will delegate it.'),
+@pytest.mark.parametrize('invalid',['change','made_up_function'])
+def test_official_error_review_recovers_an_invalid_root_write_without_direct_execution(tmp_path,invalid):
+    root=ScriptModel(replies=[call(invalid,{'value':'Closed'},'bad'),answer('I will delegate it.'),
         call('task',{'subagent_type':'service__execute','description':'Change status to Closed.'},'task'),answer('Closed.')])
     child=ScriptModel(replies=[call('change',{'value':'Closed'},'write'),answer('Closed.')])
     reviewer=ScriptModel(replies=[grade(False),grade(True)])
@@ -118,7 +119,7 @@ def test_official_error_review_recovers_an_invalid_root_write_without_direct_exe
     try:
         assert engine.invoke('Change status to Closed.','r')=='Closed.'
         assert len(engine.routing_errors())==1 and port.writes==1 and engine.calls==8
-        assert engine.attempts[0]['backend_executed'] is False
+        if invalid=='change':assert engine.attempts[0]['backend_executed'] is False
         assert len(engine.review_evaluations)==2 and engine.last_review_status=='satisfied'
         assert any(getattr(m,'name',None)=='rubric_grader'for m in root.seen[-1])
         assert engine.invoke('Change status to Closed.','r')=='Closed.' and port.writes==1
