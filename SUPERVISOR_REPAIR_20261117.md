@@ -29,7 +29,7 @@
 
 - [DeepAgents Subagents](https://docs.langchain.com/oss/python/deepagents/subagents)：
   原生 SubAgent 声明、工具隔离、fork、任务调用和图检查点；本地版本 0.7.38。
-- [Grading rubrics](https://docs.langchain.com/oss/python/deepagents/rubrics)：
+- [Grading rubrics](https://docs.langchain.com/oss/python/deepagents/rubric)：
   实际调用安装包的 `deepagents.middleware.rubric.RubricMiddleware`。
 - LangChain 的 `wrap_model_call` / `wrap_tool_call` 与 `hook_config`，继续负责实际
   工具可见性、执行拦截和根节点恢复入口。
@@ -61,3 +61,19 @@
 `/data/zjr/enterprise_kb_agent/rl/outputs/supervisor_native_scoped16_20261117_r2`。
 源代码快照在同一项目 `rl/source/supervisor_native_scoped16_20261117_r2`。
 仅实际通过后的配置才进入后续主管 SFT / RL。
+
+实测 explicit 9/16、native_scoped 13/16，执行异常均为 0；均值耗时分别为
+9.44s、11.58s，均值 token 分别为 10,346.94、14,358.19。新路径恢复了评论、
+正向改派和两道关单，但被禁止操作的尝试次数由 1 增至 3，因此这轮仍需修复。
+三道失败都发生在已知状态不允许操作时：无负责人仍尝试改派，以及有开放依赖仍尝试
+删除。自然语言最终回答正确，原始工具调用仍使它们失败，评分保留。
+该轮 116 个执行源文件已逐文件对应 Git `d122da3`。
+
+### 当前状态约束修复
+
+通过 LangChain `ModelRequest.override(tools=...)`，把后台已有的操作前置条件用于
+模型的工具可见性：只使用当前版本下实际取得的 get_ticket / check_dependencies
+回执。单个目标操作不可用时移除该工具；多个目标时保留工具，对 ticket_id 声明
+具体受限实体。未知状态不自动读取，外部状态变化令旧回执失效。
+删除入口也校验已知开放依赖；模型若无视工具声明仍发出调用，原始尝试照常记入
+审计并按失败计分。这是业务 API 的状态约束工程，没有引入新的学习算法。

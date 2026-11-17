@@ -1,8 +1,8 @@
-"""One-factor, no-training task-schema comparison on frozen business fixtures.
+"""No-training native-handoff checks on frozen business fixtures.
 
-Reuse native DeepAgents, actual CRM execution/scoring, the local model lifecycle
-and raw-wire capture. The optional arm removes only the write-name enum from
-the advertised task schema; persisted scopes and execution guards stay enabled.
+Reuse DeepAgents, actual CRM execution/scoring, the local model lifecycle and
+raw-wire capture. Schema-only and repaired-supervisor comparisons remain
+separate modes; source snapshots identify the exact implementation tested.
 """
 from __future__ import annotations
 
@@ -134,7 +134,7 @@ async def run(args):
         [('explicit',original,'explicit',False),('native',original,'native',False),
          ('native_review',original,'native','errors')])
     write_json(root/'protocol.json',{'purpose':('Does the write-name enum cause supervisor routing regressions?'
-        if args.mode=='schema_ab' else 'Restore native task ABI and test root-only error review with scoped roles.'),
+        if args.mode=='schema_ab' else 'Test native handoffs, scoped roles, observed operation availability and root-only error review.'),
         'arms':[d[0]for d in definitions],'model':'Qwen3-8B base, no adapter or training',
         'supervisor_temperature':0,'specialist_temperature':specialist_temperature,'request_seed':20261117,
         'context_tokens':8192,'output_tokens':512,

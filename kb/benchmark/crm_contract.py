@@ -17,7 +17,7 @@ PERMISSION_ALIASES = {
     'add_ticket_comment': 'edit', 'close_ticket': 'edit', 'assign_ticket': 'assign',
     'reassign_ticket': 'assign', 'delete_ticket': 'delete', 'escalate_ticket': 'escalate',
 }
-TICKET_ID = re.compile(r'(?<![\w-])TCK-[A-Za-z0-9]+(?![\w-])', re.I)
+TICKET_ID = re.compile(r'(?<![\w-])TCK-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*(?![\w-])', re.I)
 SCOPE_REPLY = ('I can help look up and manage IT service tickets, check service desk hours, '
                'and check ticket dependencies or account permissions. Which would you like help with?')
 SCOPE_REPLY_ZH = '我可以查询和办理 IT 工单、查询服务台营业时间，以及核对工单依赖和账户权限。你想办理哪一项？'

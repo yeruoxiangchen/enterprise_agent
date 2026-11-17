@@ -8,6 +8,7 @@ shared budgets. Planning, delegation, message repair and compaction are upstream
 from __future__ import annotations
 
 import fcntl
+from copy import deepcopy
 import hashlib
 import json
 import sqlite3
@@ -312,6 +313,28 @@ class NativeHarness:
                         advertised = advertised.model_copy(update={'args_schema': route.parameters_for_request()})
                     tools.append(advertised)
                 request = request.override(tools=tools)
+            if self.delegation_protocol=='native'and hasattr(self.port,'operation_availability'):
+                availability=self.port.operation_availability()
+                requested=set(availability['requested_tickets'])
+                tools=[];removed=[]
+                for advertised in request.tools:
+                    name=getattr(advertised,'name','')
+                    blockers=availability['blocked_operations'].get(name,{})
+                    if requested and requested<=set(blockers):
+                        removed.append(name)
+                        continue
+                    if blockers:
+                        schema=deepcopy(advertised.args_schema if isinstance(advertised.args_schema,dict)
+                                        else advertised.args_schema.model_json_schema())
+                        field=schema.get('properties',{}).get('ticket_id')
+                        if field is not None:
+                            field['not']={'enum':sorted(blockers)}
+                            field['description']=field.get('description','')+' Current observed restrictions: '+canonical(blockers)
+                            advertised=advertised.model_copy(update={'args_schema':schema})
+                    tools.append(advertised)
+                request=request.override(tools=tools)
+                if availability['blocked_operations']:
+                    self.emit('operation_availability',{'removed_tools':removed,**availability})
             if self.shared_context:
                 context = {'quoted_customer_messages': request.state.get('quoted_customer_messages', []),
                            'actual_business_receipts': self._business_snapshot()}

@@ -136,6 +136,37 @@ class CRMPort:
         value=self.proofs.get((name,canonical(args)))
         return value[1] if value and value[0]==self.version() else None
 
+    def operation_availability(self):
+        """Expose known backend state conflicts without running hidden reads.
+
+        Facts come only from fresh actual tool receipts. Unknown state stays
+        unknown, and multiple requested tickets keep their distinct scopes.
+        This is an API affordance, not a customer-intent or goal classifier.
+        """
+        from kb.benchmark.crm_contract import ticket_ids
+        version=self.version()
+        blocked={}
+        for (name,raw),(observed_version,value)in self.proofs.items():
+            if observed_version!=version:continue
+            ticket=json.loads(raw).get('ticket_id')
+            if not ticket:continue
+            reasons={}
+            if name=='get_ticket':
+                if not value.get('assigned_to'):
+                    reasons['reassign_ticket']='The ticket is unassigned; reassignment is unavailable.'
+                if value.get('assigned_to'):
+                    reasons['assign_ticket']='The ticket already has an assignee; initial assignment is unavailable.'
+                if value.get('status')=='Closed':
+                    reasons['close_ticket']='The ticket is already Closed; no additional closure is needed.'
+            elif name=='check_dependencies'and value.get('open_dependencies'):
+                reasons['delete_ticket']='The ticket has open dependencies; deletion is unavailable.'
+            for operation,reason in reasons.items():
+                blocked.setdefault(operation,{})[ticket]=reason
+        requested=ticket_ids(self.user_messages[-1])if self.user_messages else set()
+        if not requested:
+            requested=set().union(*(ticket_ids(text)for text in self.user_messages))
+        return {'requested_tickets':sorted(requested),'blocked_operations':blocked}
+
     def execute(self,name,arguments,operation_id):
         ticket=arguments.get('ticket_id')
         blocked=None;retryable=True
@@ -168,6 +199,9 @@ class CRMPort:
                 blocked='Dependencies were checked. Verify ticket-specific delete permission again now, then retry deletion.'
             elif not(self._proof('check_permission',permissions[-1][1]['arguments'])or{}).get('allowed'):
                 blocked='The latest ticket-specific delete permission check did not authorize this deletion.'
+            elif self.operation_availability()['blocked_operations'].get(name,{}).get(ticket):
+                blocked=self.operation_availability()['blocked_operations'][name][ticket]
+                retryable=False
         if blocked:
             value={'error':'precondition'if retryable else'business_state_conflict','message':blocked,'retryable':retryable}
             self.audit.append({'id':operation_id,'name':name,'arguments':arguments,
