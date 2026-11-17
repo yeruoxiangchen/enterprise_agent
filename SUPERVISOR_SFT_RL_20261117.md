@@ -58,3 +58,14 @@ bash scripts/agent_rl.sh bootstrap stop --tag supervisor_sft_rl_20261117_r1
 覆盖条件及重复任务处理、比较退步门禁、失败子进程清理和跨服务权重路径。
 实际缩小 Qwen3 完成 TRL 更新、adapter保存及合并权重比较。
 真实8B的采样、优化器更新与最终效果写入本轮运行记录。
+
+## 启动记录
+
+2026-11-17 07:04:38 UTC，代码 `dfecece`，队列 PID `2838522`，GPU5、6。
+运行已进入真实主管轨迹采集；首条合格评论任务得到3次主管原始回复，
+prompt长度1902/2035/2162、response长度30/65/51，实际执行 get_ticket 和
+add_ticket_comment，业务评分1、路由错误0。源快照117个文件与提交逐一对应。
+21项去重行为检查通过，包含实际缩小Qwen3的TRL更新及adapter合并。
+SFT与RL效果由后续运行结果记录。
+
+启动摘要：[startup.json](docs/releases/20261117_supervisor_sft_rl/startup.json)。

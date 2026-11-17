@@ -1,0 +1,48 @@
+{
+  "rollout": "collect-0000",
+  "task_id": "business-rl-v4:train:comment:27a058af7125",
+  "reward": 1.0,
+  "train_role": "supervisor",
+  "supervisor_responses": 3,
+  "token_source": "vllm-return-token-ids-v1",
+  "token_lengths": [
+    {
+      "prompt": 1902,
+      "response": 30
+    },
+    {
+      "prompt": 2035,
+      "response": 65
+    },
+    {
+      "prompt": 2162,
+      "response": 51
+    }
+  ],
+  "actual_tools": [
+    "get_ticket",
+    "add_ticket_comment"
+  ],
+  "routing_errors": 0,
+  "tag": "supervisor_sft_rl_20261117_r1",
+  "pid": 2838522,
+  "physical_gpus": [
+    "5",
+    "6"
+  ],
+  "source_provenance": {
+    "commit": "dfecece66d5dc70164a4edab96cfc8f4e5c1f318",
+    "source_files": 117,
+    "exact_source_match": true,
+    "source_manifest_sha256": "8e630ca7f756464c883ad65bd6721ad269cc93456ed8c92802c96d21ab1c4644"
+  },
+  "planned_sft_updates": 16,
+  "planned_rl_updates": 2,
+  "compute_budget_minutes": 120,
+  "phase": "real supervisor trajectory collection",
+  "inference_memory_mib_at_acceptance": {
+    "5": 19164,
+    "6": 19164
+  },
+  "distinct_behavior_checks_passed": 21
+}
