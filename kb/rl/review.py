@@ -9,7 +9,7 @@ from pathlib import Path
 import statistics
 
 from .runtime import write_json
-from .tasks import DATA_ROOT, pack_task
+from .tasks import DATA_ROOT, FAMILIES, pack_task
 
 
 def percentile(values, fraction):
@@ -180,9 +180,19 @@ def review(folder):
             squared_norm+=float(torch.sum(tensor.double().square()))
     report={'status':'reviewed_paired_pilot','dataset':state['dataset'],
         'inherited_baseline_cases':len(inherited),
+        'baseline_grade_corrections':len(json.loads((folder/'baseline-reuse.json').read_text())['grade_corrections']) if inherited else 0,
+        'training_code_commit':json.loads((folder/'code-provenance.json').read_text()).get('commit') if (folder/'code-provenance.json').exists() else None,
+        'training_source_manifest_sha256':hashlib.sha256((folder/'source-manifest.json').read_bytes()).hexdigest(),
+        'reviewer_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'train_role':state['train_role'],'algorithm':state['adv_estimator'],
         'steps':state['steps'],'physical_gpus':state['gpus'],
         'train':outcome_stats(training),**compared,
+        'training_family_coverage':{family:{
+            'trajectories':sum(row['family']==family for row in training),
+            'passed':sum(row['family']==family and row['reward']==1 for row in training),
+            'expert_participated':sum(row['family']==family and row['policy_model_calls_completed']>0 for row in training),
+            'successful_expert_episodes':sum(row['family']==family and row['policy_model_calls_completed']>0 and row['reward']==1 for row in training)
+            } for family in FAMILIES},
         'trace_integrity':{'checked':len(records),'matched':sum(token_checks)},
         'training_data_integrity':{'checked':len(training),'matched':len(training),
                                    'development_tasks_in_optimizer':0},
@@ -226,6 +236,10 @@ def review(folder):
         f'轨迹、奖励与实际策略调用核对：{sum(token_checks)}/{len(records)}；LoRA B L2={math.sqrt(squared_norm):.8f}。',
         '评分保持二值业务结果、必要检查、正确参数和顺序、禁止尝试及无关状态不变；自然语言答复语义另行评估。',
         '本轮任务来自参数化业务环境，结果不折算为公开 ITSM66 成绩。','']
+    if inherited:
+        lines+= [f'训练前基线复用 {len(inherited)} 条零更新时的原始行为，已核对执行代码、请求及初始状态；'
+                 f'评分校准 {report["baseline_grade_corrections"]} 题，单独记录在 baseline-reuse.json。',
+                 '复用结果保留原始来源哈希、原始奖励和修正后评分，未进入优化器。','']
     (folder/'comparison.md').write_text('\n'.join(lines))
     return report
 
