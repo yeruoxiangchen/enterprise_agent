@@ -122,6 +122,7 @@ async def run_episode(sample, supervisor, specialist, folder, *, temperature=0.7
                              'completion_review':completion_review},
             review_status=adapter.engine.last_review_status,
             review_evaluations=adapter.engine.review_evaluations,
+            routing_errors=adapter.engine.routing_errors(),
             supervisor={'model':root_resource['model'],'temperature':temperature if root_trainable else 0,
                         'trainable':root_trainable},
             specialist={'model':child_resource['model'],'temperature':0 if root_trainable else temperature,

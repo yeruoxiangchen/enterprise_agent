@@ -116,3 +116,30 @@ def test_model_ignoring_a_state_mask_still_fails_forbidden_attempt_scoring(tmp_p
         assert adapter.tool_calls[-1]['backend_executed'] is False
         assert adapter.environment.get_state()['tickets'][target]['assigned_to']==''
     finally:asyncio.run(adapter.aclose())
+
+
+def test_single_operation_executor_can_complete_cross_domain_permission_checks(tmp_path,monkeypatch):
+    sample=make_task('dev',FAMILIES.index('close'));target=sample['target_ticket']
+    root=ScriptModel(replies=[call('get_ticket',{'ticket_id':target},'get'),
+        call('task',{'subagent_type':'ticket_operations__tickets__close_ticket',
+            'description':'Check permissions and dependencies, then close as requested.'},'task'),answer('Closed.')])
+    child=ScriptModel(replies=[call('check_operation_permission',
+        {'user_id':'agent.jsmith','operation':'close_ticket','ticket_id':target},'permission'),
+        call('check_dependencies',{'ticket_id':target},'dependencies'),
+        call('close_ticket',{'ticket_id':target},'write'),answer('Closed after the checks.')])
+    monkeypatch.setattr(ContextBudget,'count',lambda *args:(100,'test'))
+    adapter=NativeCRMAdapter(environment_for(sample),Settings(root=tmp_path),
+        yaml.safe_load((BENCH_ROOT/'src/agents/itsm.yaml').read_text()),
+        (BENCH_ROOT/'src/tasks/policies/itsm_policy.md').read_text(),tmp_path,
+        model=root,role_models={'*':child},fork_subagents=True,operation_permissions=True,
+        prepare_operations=True,specialist_owned_checks=True,bind_user_request=True,
+        delegation_protocol='native')
+    try:
+        asyncio.run(adapter.run(sample['messages'][0],[]))
+        result=score_task(sample,adapter)
+        assert result['reward']==1,result
+        assert 'check_operation_permission'in child.bindings[0]
+        assert 'assign_ticket'not in child.bindings[0]and 'delete_ticket'not in child.bindings[0]
+        assert [a['name']for a in adapter.tool_calls]==[
+            'get_ticket','check_permission','check_dependencies','close_ticket']
+    finally:asyncio.run(adapter.aclose())

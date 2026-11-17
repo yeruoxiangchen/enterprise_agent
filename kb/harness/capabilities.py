@@ -9,6 +9,9 @@ from __future__ import annotations
 
 def native_capabilities(groups, specs):
     result={}
+    # Shared observations include cross-domain permission/dependency checks.
+    # Writes remain isolated; actual backend authorization still applies to reads.
+    observations=[name for name,spec in specs.items()if not spec.write]
     reserved=set(groups)|{'general-purpose'}
     for role,cap in groups.items():
         reads=[name for name in cap['tools'] if not specs[name].write]
@@ -32,7 +35,7 @@ def native_capabilities(groups, specs):
                 'The supervisor owns subsequent actions and delegation; return observations '
                 'without promising to perform those actions.'}
         for name,executor in executors.items():
-            result[executor]={**cap,'tools':[*reads,name],'model_role':role,
+            result[executor]={**cap,'tools':[*observations,name],'model_role':role,
                 'description':'Execute '+name+': '+specs[name].description+
                     '. Follow the user conditions and report actual completed operations.'}
     return result

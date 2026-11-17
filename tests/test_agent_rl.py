@@ -260,4 +260,6 @@ def test_business_reviewer_uses_frozen_endpoint_and_never_adds_policy_actions(tm
     assert result['role_model_calls']['frozen_reviewer']['completed']==2
     assert result['policy_model_calls_completed']==(5 if train_role=='supervisor'else 2)
     assert len(result['review_evaluations'])==2 and result['model_calls']==9
+    assert len(result['routing_errors'])==1
+    assert result['routing_errors'][0]['tool']=='add_ticket_comment'
     assert 'expected_state' not in str(root.seen)+str(child.seen)+str(reviewer.seen)
