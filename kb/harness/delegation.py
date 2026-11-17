@@ -70,10 +70,15 @@ class DelegationBindings:
             role = args.get('subagent_type')
             allowed = args.pop('allowed_write_tools', [])
             errors = []
+            if not isinstance(role, str):
+                errors.append('subagent_type must be a string')
+            if not isinstance(args.get('description'), str):
+                errors.append('description must be a string')
             if not isinstance(allowed, list) or any(not isinstance(n, str) for n in allowed):
                 errors.append('allowed_write_tools must be a list of tool names')
                 allowed = []
-            writes = {n for n in self.groups.get(role, ()) if self.specs[n].write}
+            capability = self.groups.get(role, ()) if isinstance(role, str) else ()
+            writes = {n for n in capability if self.specs[n].write}
             if set(allowed) - writes:
                 errors.append('write allowlist exceeds the selected specialist capability')
             parent = self.current(config)

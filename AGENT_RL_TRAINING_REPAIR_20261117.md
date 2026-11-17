@@ -16,6 +16,7 @@
 - LangChain 模型中间件过滤实际可见工具；工具中间件再次校验执行范围。
 - 每个 task call 的范围在 SQLite 持久化，通过原生
   `lc_subagent_tool_call_id` 元数据定位，避免任务之间串用权限。
+- 模型生成的错误参数返回工具反馈供主管纠正，不将其混同为运行时代码异常。
 - 嵌套任务只能继续收窄范围。观察任务的模型即使生成写调用，也不会执行后台写入。
 - 用户条件与具体业务授权仍由既有业务工具和回执核验，不从描述文本猜测工具权限。
 
@@ -90,6 +91,21 @@ GPU 5 运行 trainable specialist / veRL，GPU 6 运行 frozen supervisor；
 该短测回答端到端路径能否正确训练、checkpoint 是否在真实生成中生效；
 8 条开发任务适合定位接口问题，后续效果应使用固定更大开发集对照。
 
+### 启动记录
+
+- `specialists_rollout_contract_short_20261117_r1`：实际 Qwen3-8B 基线阶段暴露上述
+  历史消息回写问题，主动停止，0 次更新；轨迹已导出，拥有的 GPU 进程已释放。
+- `specialists_rollout_contract_short_20261117_r2`：代码提交 `e0a7328`；GPU 5、6 被
+  `edit_reward_probe_20261030` 任务占用，资源预检终止，未加载本轮模型。
+- 后续使用新标签 `specialists_rollout_contract_short_20261117_r3` 排队：保持原空余显存
+  门槛（训练卡 23500 MiB、冻结模型卡 22000 MiB），最长等卡 120 分钟；取得卡后开始
+  独立的 55 分钟运行预算。CPU 等卡期间不加载 CUDA，不重启前两轮。
+
+查看：`bash scripts/agent_rl.sh watch --tag specialists_rollout_contract_short_20261117_r3`。
+停止：`bash scripts/agent_rl.sh stop --tag specialists_rollout_contract_short_20261117_r3`。
+所有状态、进程身份、源代码快照及日志在
+`/data/zjr/enterprise_kb_agent/rl/outputs/specialists_rollout_contract_short_20261117_r3`。
+
 ## 常用命令
 
 从 Tracker 执行，所有新增数据、模型、缓存及临时目录均在 `/data/zjr`：
@@ -115,6 +131,7 @@ CUDA_VISIBLE_DEVICES=5 /data/zjr/enterprise_kb_agent/rl/envs/trainer/bin/python 
   --output /data/zjr/enterprise_kb_agent/rl/models/<sft_policy>
 
 bash scripts/agent_rl.sh launch --tag <sft_then_rl_run> --gpus 5,6 \
+  --gpu-wait-minutes 120 \
   --train-role specialists --adv-estimator reinforce_plus_plus \
   --policy-model /data/zjr/enterprise_kb_agent/rl/models/<sft_policy> \
   --steps 4 --batch-size 4 --group-size 2 --val-limit 32 --val-before-train

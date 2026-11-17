@@ -77,3 +77,17 @@ def test_delegation_capability_is_persisted_across_interruption_and_resume(tmp_p
         assert port.writes == 0 and 'change' not in child.bindings[0]
     finally:
         engine.close()
+
+
+def test_invalid_model_task_arguments_return_feedback_without_crashing_the_runtime(tmp_path):
+    root = ScriptModel(replies=[call('task', {'subagent_type': {'wrong':'type'},
+        'description': 'Read the status.', 'allowed_write_tools': []}, 'invalid'),
+        answer('I need to correct the specialist selection.')])
+    port = Port()
+    engine = NativeHarness(model=root, port=port, workspace=tmp_path, namespace='invalid', bind_user_request=True)
+    try:
+        assert engine.invoke('Check status.', 'request') == 'I need to correct the specialist selection.'
+        assert 'subagent_type must be a string' in str(root.seen[1])
+        assert port.writes == 0 and len(root.seen) == 2
+    finally:
+        engine.close()

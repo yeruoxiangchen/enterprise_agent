@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from contextlib import ExitStack
 import fcntl
 import hashlib
 import json
@@ -33,9 +34,46 @@ def free_port():
         return sock.getsockname()[1]
 
 
+def acquire_gpu_leases(devices, root, *, wait_minutes, report, snapshot_fn=None):
+    """Wait for the existing free-memory thresholds without loading CUDA.
+
+    A new, named run may opt in to waiting. Failed/stopped runs are retained;
+    this helper does not restart them or stop another project's processes.
+    """
+    from crm_bench_services import gpu_snapshot
+    snapshot_fn = snapshot_fn or gpu_snapshot
+    deadline = time.monotonic() + wait_minutes*60
+    while True:
+        snapshot, leases, blocked = snapshot_fn(), [], {}
+        for gpu in devices:
+            required = 23500 if gpu == devices[0] else 22000
+            if snapshot[gpu]['free_mib'] < required:
+                blocked[gpu] = {'required_free_mib': required, 'available_free_mib': snapshot[gpu]['free_mib']}
+        with ExitStack() as pending:
+            if not blocked:
+                for gpu in devices:
+                    lease = pending.enter_context((root/f'gpu-{gpu}.lock').open('a'))
+                    leases.append(lease)
+                    try:
+                        fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        blocked[gpu] = {'reason': 'leased_by_another_rl_job'}
+                        break
+            if not blocked:
+                pending.pop_all()  # ownership transfers to run_job's finally
+                return leases, snapshot
+        if wait_minutes <= 0:
+            raise RuntimeError('GPU preflight failed: '+json.dumps(blocked))
+        if time.monotonic() >= deadline:
+            raise TimeoutError('GPU wait budget reached: '+json.dumps(blocked))
+        report(stage='waiting_for_gpus', gpu_snapshot=snapshot, blocked_gpus=blocked,
+               gpu_wait_minutes=wait_minutes)
+        time.sleep(min(5, max(.01, deadline-time.monotonic())))
+
+
 def run_job(args):
     import httpx
-    from crm_bench_services import ModelServices, gpu_snapshot
+    from crm_bench_services import ModelServices
     folder=DATA_ROOT/'outputs'/args.tag
     folder.mkdir(parents=True,exist_ok=True)
     status={'pid':os.getpid(),'start_ticks':identity(os.getpid()),'status':'running',
@@ -81,14 +119,10 @@ def run_job(args):
         devices=args.gpus.split(',')
         if len(devices)!=2 or len(set(devices))!=2 or not all(d.isdigit() for d in devices):
             raise ValueError('Specify two distinct physical GPU indices')
-        snapshot=gpu_snapshot()
-        for gpu in devices:
-            lock=(DATA_ROOT/f'gpu-{gpu}.lock').open('w')
-            fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-            leases.append(lock)
-            required=23500 if gpu==devices[0] else 22000
-            if snapshot[gpu]['free_mib']<required:
-                raise RuntimeError(f'GPU {gpu} needs {required}MiB free; available {snapshot[gpu]["free_mib"]}')
+        leases,snapshot=acquire_gpu_leases(devices,DATA_ROOT,
+            wait_minutes=args.gpu_wait_minutes,report=save)
+        deadline=time.monotonic()+args.max_minutes*60
+        save(compute_budget_started_at=time.time())
         save(stage='start_frozen_specialist',gpu_snapshot=snapshot)
         services.start('actor',devices[1],memory_fraction=.78,max_model_len=8192)
         async def ready():
@@ -205,6 +239,8 @@ def main():
     parser.add_argument('command',choices=('prepare','launch','_run','status','watch','stop'))
     parser.add_argument('--tag',default='supervisor_grpo_short_20261116')
     parser.add_argument('--gpus',default='5,6')
+    parser.add_argument('--gpu-wait-minutes',type=float,default=0,
+                        help='Opt-in GPU queue budget before the separate compute time budget')
     parser.add_argument('--train-role',choices=('supervisor','specialists'),default='supervisor')
     parser.add_argument('--policy-model',default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
@@ -218,7 +254,7 @@ def main():
     parser.add_argument('--max-minutes',type=float,default=90)
     args=parser.parse_args()
     if (args.steps<1 or args.batch_size<1 or args.group_size<2 or args.max_minutes<=0
-            or args.val_limit<0 or args.checkpoint_interval<0):
+            or args.val_limit<0 or args.checkpoint_interval<0 or args.gpu_wait_minutes<0):
         parser.error('Use positive steps/batch/time and at least two trajectories per task')
     if Path(args.tag).name!=args.tag or args.tag in ('.','..'):
         parser.error('Use a plain run tag')
