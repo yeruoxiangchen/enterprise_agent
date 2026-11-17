@@ -1,7 +1,7 @@
 """Native task compatibility and upstream, root-only execution review."""
 import pytest
 
-from kb.harness.native import NativeHarness
+from kb.harness.native import NativeHarness, NativeApprovalRequired
 from kb.harness.contracts import ToolOutcome
 from test_deep_harness import ScriptModel, Port, call
 from test_native_harness import answer
@@ -123,4 +123,30 @@ def test_routing_failure_survives_restart_and_does_not_leak_to_the_next_request(
         assert engine.invoke('Close the status.','r')=='Closed.' and port.writes==1
         assert engine.invoke('Describe current status.','next')=='It is Closed.'
         assert not engine.routing_errors() and len(reviewer.seen)==2
+    finally:engine.close()
+
+
+@pytest.mark.parametrize('decision,writes',[('approve',1),('reject',0)])
+def test_root_error_recovery_preserves_forked_human_confirmation(tmp_path,decision,writes):
+    root=ScriptModel(replies=[call('task',{'subagent_type':'missing',
+        'description':'Change status after confirmation.'},'invalid'),answer('I will delegate.'),
+        call('task',{'subagent_type':'service__execute','description':'Change status after confirmation.'},'task'),
+        answer('The reviewed operation is handled.')])
+    child=ScriptModel(replies=[call('change',{'value':'Closed'},'write'),answer('The review is handled.')])
+    reviewer=ScriptModel(replies=[grade(False),grade(True)])
+    port=Port()
+    engine=NativeHarness(model=root,role_models={'*':child,'reviewer':reviewer},port=port,
+        workspace=tmp_path,namespace='confirm',fork_subagents=True,bind_user_request=True,
+        delegation_protocol='native',completion_review='errors',
+        interrupt_on={'change':{'allowed_decisions':['approve','reject']}})
+    try:
+        with pytest.raises(NativeApprovalRequired):
+            engine.invoke('Change the status only after my confirmation.','r')
+        assert port.writes==0 and len(engine.review_evaluations)==1
+        assert engine.invoke('Change the status only after my confirmation.','r',
+            decisions=[{'type':decision}])=='The reviewed operation is handled.'
+        assert port.writes==writes and len(engine.review_evaluations)==2
+        calls=engine.calls
+        assert engine.invoke('Change the status only after my confirmation.','r')=='The reviewed operation is handled.'
+        assert port.writes==writes and engine.calls==calls
     finally:engine.close()

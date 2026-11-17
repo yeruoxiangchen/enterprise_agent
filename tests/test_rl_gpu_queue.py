@@ -38,3 +38,17 @@ def test_conflicting_second_lease_releases_the_first(tmp_path):
                 snapshot_fn=lambda:{'5':{'free_mib':24126},'6':{'free_mib':24126}})
         with (tmp_path/'gpu-5.lock').open('a') as released:
             fcntl.flock(released,fcntl.LOCK_EX|fcntl.LOCK_NB)
+
+
+@pytest.mark.parametrize('arguments,protocol,review',[
+    ([], 'native', 'errors'),
+    (['--delegation-protocol','explicit','--completion-review','none'],'explicit','none')])
+def test_new_rl_jobs_use_repaired_profile_with_explicit_historical_replay(monkeypatch,arguments,protocol,review):
+    from kb.rl.control import main
+    captured=[]
+    monkeypatch.setattr('sys.argv',['agent_rl','_run',*arguments])
+    monkeypatch.setattr('kb.rl.control.run_job',lambda args:captured.append(args))
+    main()
+    assert len(captured)==1
+    assert captured[0].delegation_protocol==protocol
+    assert captured[0].completion_review==review

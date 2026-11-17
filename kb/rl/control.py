@@ -246,8 +246,10 @@ def main():
     parser.add_argument('--gpu-wait-minutes',type=float,default=0,
                         help='Opt-in GPU queue budget before the separate compute time budget')
     parser.add_argument('--train-role',choices=('supervisor','specialists'),default='supervisor')
-    parser.add_argument('--delegation-protocol',choices=('explicit','native'),default='explicit')
-    parser.add_argument('--completion-review',choices=('none','errors','always'),default='none')
+    parser.add_argument('--delegation-protocol',choices=('explicit','native'),default='native',
+                        help='Native task API with scoped observation/execution roles; explicit replays the old adapter')
+    parser.add_argument('--completion-review',choices=('none','errors','always'),default='errors',
+                        help='Frozen root-only reviewer after actual routing errors')
     parser.add_argument('--policy-model',default='/data/zjr/enterprise_kb_agent/models/Qwen3-8B')
     parser.add_argument('--adv-estimator',choices=('grpo','reinforce_plus_plus'),default='grpo')
     parser.add_argument('--steps',type=int,default=2)

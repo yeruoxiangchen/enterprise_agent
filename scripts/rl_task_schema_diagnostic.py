@@ -98,7 +98,8 @@ async def run(args):
     root.mkdir(parents=True,exist_ok=False)
     state = {'status':'running','stage':'preflight','pid':os.getpid(),
         'start_ticks':identity(os.getpid()),'started_at':time.time(),'completed':0,
-        'total':16 if args.mode=='schema_ab' else 32 if args.mode=='supervisor_validation' else 40,
+        'total':(8 if args.mode=='supervisor_fresh8' else 16 if args.mode=='schema_ab' else
+                 32 if args.mode=='supervisor_validation' else 40),
         'gpu':args.gpu,'max_minutes':args.max_minutes,'resources_released':False}
     deadline = time.monotonic()+args.max_minutes*60
 
@@ -121,13 +122,18 @@ async def run(args):
 
     all_samples=[json.loads(line)for line in (DATA_ROOT/'datasets/business-v4/dev.jsonl').read_text().splitlines()]
     samples=all_samples[:8]
+    if args.mode=='supervisor_fresh8':
+        samples=all_samples[args.validation_offset:args.validation_offset+8]
+        if len(samples)!=8 or len({s['id']for s in samples})!=8:
+            raise ValueError('Select eight distinct additional development tasks')
     if args.mode=='supervisor_validation':
         samples=all_samples[:8]+all_samples[args.validation_offset:args.validation_offset+8]
         if len(samples)!=16 or len({s['id']for s in samples})!=16:
             raise ValueError('Select eight distinct extra development tasks')
     specialist_temperature=(args.specialist_temperature if args.specialist_temperature is not None else
-        0. if args.mode=='supervisor_validation' else .7)
-    definitions=([('explicit',original,'explicit',False),('native_scoped',original,'native','errors')]
+        0. if args.mode in ('supervisor_validation','supervisor_fresh8') else .7)
+    definitions=([('native_scoped',original,'native','errors')]if args.mode=='supervisor_fresh8'else
+        [('explicit',original,'explicit',False),('native_scoped',original,'native','errors')]
         if args.mode=='supervisor_validation' else
         [('current_enum',original,'explicit',False),('no_enum',no_enum,'explicit',False)]
         if args.mode=='schema_ab' else
@@ -142,7 +148,9 @@ async def run(args):
         'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'tasks':[{'id':s['id'],'sha256':pack_task(s)['task_sha256']}for s in
                  (all_samples[:16]if args.mode=='supervisor_repair' else samples)],
-        'selection':('Preset profiles; first eight plus eight extra fixed development tasks, no within-run selection.'
+        'selection':('Preset repaired profile; eight additional development tasks, no within-run selection.'
+            if args.mode=='supervisor_fresh8'else
+            'Preset profiles; first eight plus eight extra fixed development tasks, no within-run selection.'
             if args.mode=='supervisor_validation'else
             'Select a native profile on the first eight, break pass-count ties by tokens; evaluate next eight independently.')})
     try:
@@ -203,7 +211,7 @@ if __name__=='__main__':
     parser.add_argument('--tag',default='task_schema_ab8_20261117_r1')
     parser.add_argument('--gpu',default='5')
     parser.add_argument('--max-minutes',type=float,default=22)
-    parser.add_argument('--mode',choices=('schema_ab','supervisor_repair','supervisor_validation'),default='schema_ab')
+    parser.add_argument('--mode',choices=('schema_ab','supervisor_repair','supervisor_validation','supervisor_fresh8'),default='schema_ab')
     parser.add_argument('--specialist-temperature',type=float,default=None)
     parser.add_argument('--validation-offset',type=int,default=24)
     args=parser.parse_args()
