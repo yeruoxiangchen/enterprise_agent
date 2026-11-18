@@ -109,3 +109,42 @@ bash scripts/agent_rl.sh bootstrap launch --tag supervisor_sft_rl_20261117_r2 \
 8类业务覆盖检查通过。与离线恢复的数据逐条核对input_ids和completion_mask完全一致。
 当前等待GPU5、6；等卡期间不加载CUDA模型，保留原显存门槛。
 监视／停止使用上方 r2 命令，计算预算120分钟，初始等卡另计。
+
+### 2026-11-18：释放空闲服务，切换GPU0、7
+
+r2已因GPU5、6等卡预算耗尽退出，SFT和RL均未启动，旧运行及其失败记录保留。
+检查CamCat模型服务无活动连接、日志最近约10小时无新增后，按用户要求停止
+planning-model、visual-model、local-models三个systemd服务，释放约79 GiB显存。
+网页、数据库及文件保留。停止回执和恢复命令记录在
+`/data/zjr/camcat_studio/checks/gpu_pause_20261118.json`。
+
+新运行 `supervisor_sft_rl_20261118_r3`，队列PID `740683`，GPU0、7。
+两卡资源检查通过，复用r1采集记录得到72条去重SFT目标，已启动主管基础模型加载。
+计划沿用16次SFT更新、16题开发验证和2次RL更新，计算预算120分钟。
+输出：`/data/zjr/enterprise_kb_agent/rl/outputs/supervisor_sft_rl_20261118_r3`。
+
+```bash
+bash scripts/agent_rl.sh bootstrap watch --tag supervisor_sft_rl_20261118_r3
+bash scripts/agent_rl.sh bootstrap stop --tag supervisor_sft_rl_20261118_r3
+```
+
+### 2026-11-18：r3本机请求代理错误与r4恢复
+
+r3在两台vLLM服务就绪后的首个baseline请求返回HTTP 502，已完成模型调用0、
+业务工具调用0、SFT/RL更新0，GPU进程均已释放。终端设置了HTTP(S)代理，
+未设置NO_PROXY；baseline默认ChatOpenAI客户端把127.0.0.1请求发给了代理。
+采集客户端显式使用trust_env=False，因此r1采集未受此问题影响。
+
+修复`scripts/rl_env.sh`，合并保留已有NO_PROXY/no_proxy并补齐127.0.0.1、
+localhost和::1，远程代理设置保留。实际本地HTTP契约测试先复现同类502，
+修复后3项通过，覆盖同步/异步ChatOpenAI、localhost/127.0.0.1、已有配置保留
+及重复加载。该修改只调整进程网络环境，原执行代码和72条原始token监督保持不变。
+
+新运行`supervisor_sft_rl_20261118_r4`，队列PID`773018`，GPU0、7，
+计算上限120分钟，复用r1数据。环境回执及脚本快照已存入本轮输出：
+`/data/zjr/enterprise_kb_agent/rl/outputs/supervisor_sft_rl_20261118_r4/network-fix.json`。
+
+```bash
+bash scripts/agent_rl.sh bootstrap watch --tag supervisor_sft_rl_20261118_r4
+bash scripts/agent_rl.sh bootstrap stop --tag supervisor_sft_rl_20261118_r4
+```
