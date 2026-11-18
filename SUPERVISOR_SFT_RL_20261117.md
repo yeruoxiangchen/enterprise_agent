@@ -148,3 +148,35 @@ localhost和::1，远程代理设置保留。实际本地HTTP契约测试先复�
 bash scripts/agent_rl.sh bootstrap watch --tag supervisor_sft_rl_20261118_r4
 bash scripts/agent_rl.sh bootstrap stop --tag supervisor_sft_rl_20261118_r4
 ```
+
+### 2026-11-18：r4结束与结果审阅
+
+SFT完成16次更新，训练耗时287.9秒；RL完成2次实际优化器更新，训练前后各评测16题。
+两项训练及评测均已结束，本轮GPU0、7进程和租约已释放。
+自动汇总曾因runner环境没有safetensors/torch报错；已改为使用现有trainer环境，
+并在CPU上补完原始结果核对。原失败状态保存在`status-before-review-recovery.json`，
+恢复依据与报告哈希在`review-recovery.json`；训练和推理均未重跑。
+当前父队列状态为`complete_review_required`，完成表示计算和审阅文件齐备。
+
+|阶段|开发集通过|成功率|
+|---|---:|---:|
+|原始Qwen3-8B主管|15/16|93.75%|
+|SFT后主管|15/16|93.75%|
+|SFT＋2步RL后主管|14/16|87.50%|
+
+RL同题对照为改善0题、退步1题、持平15题。新增失败为存在开放依赖时尝试删除，
+原有未分配工单上的条件反转、禁止改派尝试仍存在。禁止操作受后端拦截，
+评分同时检查尝试行为。RL同一服务链路下，平均耗时24.30→36.37秒，
+p95为51.81→94.96秒，平均token为16545.88→16874.81。
+
+32条RL训练轨迹中27条通过业务评分，覆盖6/8类；close和delete_no_permission未进入
+这两步采样。第1次更新有3469个非零优势token，梯度范数0.152914；
+第2次更新的16条轨迹全部成功，优势token为0，策略梯度损失0，仍有KL梯度。
+实际采样策略版本0、1、2均已核对，64/64轨迹奖励与token归因一致，开发题进入优化器0条。
+
+结论：本轮未取得质量提升，RL权重不替换现有应用版本。下一步先检查困难分支的
+训练覆盖与有效奖励批次，再开展小规模更新验证。
+
+完整对照与逐题失败详情：
+`/data/zjr/enterprise_kb_agent/rl/outputs/supervisor_sft_rl_20261118_r4_rl/comparison.md`、
+`review.json`、`failure-details.json`。

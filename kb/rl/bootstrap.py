@@ -196,7 +196,8 @@ class Job:
                     if state['status']!='complete_review_required':raise RuntimeError('RL job failed; inspect child status and logs')
                     break
             time.sleep(5)
-        self.command('review_rl',[RUNNER,'-B','-m','kb.rl.review','--run-dir',DATA_ROOT/'outputs'/self.rl_tag])
+        # Adapter inspection uses torch and safetensors from the training environment.
+        self.command('review_rl',[TRAINER,'-B','-m','kb.rl.review','--run-dir',DATA_ROOT/'outputs'/self.rl_tag])
         self.save('complete',status='complete_review_required')
     def stop_child(self):
         if self.active and self.active.poll()is None:

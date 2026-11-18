@@ -224,8 +224,10 @@ def review(folder):
             'model_tool_schemas':[event['data']['tools'] for event in events if event['kind']=='model_request'],
             'actual_tool_calls':row['audit'],'conversation':row['turns'],'error':row['error']})
     write_json(folder/'failure-details.json',failures)
+    role_description={'supervisor':'主管 LoRA；固定专家与复核器',
+                      'specialists':'专家共享 LoRA；固定主管与复核器'}[state['train_role']]
     lines=['# 业务 Agent RL 同题对照复测','',
-        f'数据：{state["dataset"]}；专家共享 LoRA；固定主管；上游 REINFORCE++。',
+        f'数据：{state["dataset"]}；{role_description}；上游 {state["adv_estimator"]}。',
         f'训练 {state["steps"]} 轮，{len(training)} 条真实轨迹；完整开发集 {len(expected)} 题，训练前后各一次。','',
         '|任务类别|训练前|训练后|','|---|---:|---:|']
     for name,group in report['families'].items():
