@@ -17,6 +17,8 @@ def draft_ticket(db, user, run_id, title, description):
     run = db.one('SELECT * FROM runs WHERE id=? AND user_id=?', (run_id, user['id']))
     if not run or run['cancel_requested']:
         raise ValueError('问答不存在或已取消')
+    if db.one("SELECT 1 FROM events WHERE run_id=? AND kind='incident_request'", (run_id,)):
+        raise ValueError('本次操作为只读排查，请另行确认办理工单')
     with db.connect() as c:
         # One immutable draft per request: replay cannot duplicate a side effect.
         c.execute('INSERT OR IGNORE INTO service_tickets VALUES(?,?,?,?,?,?,?,?,?,?)',

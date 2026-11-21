@@ -229,6 +229,8 @@ class ApplicationPort:
         self.current_state_observed_at=None
         self._ticket_observation_versions={}
         self.attachments=db.all('SELECT incident_id,digest FROM run_incidents WHERE run_id=?',(run_id,))
+        review = db.one("SELECT payload FROM events WHERE run_id=? AND kind='incident_diagnosis' ORDER BY id DESC LIMIT 1", (run_id,))
+        self.diagnosis = {item['id']: item for item in json.loads(review['payload'])['observations']} if review else {}
 
     def input_context(self):
         from kb import incidents
@@ -243,8 +245,12 @@ class ApplicationPort:
             'JOIN runs r ON r.id=ri.run_id WHERE r.conversation_id='
             '(SELECT conversation_id FROM runs WHERE id=?) AND r.user_id=? ORDER BY r.created_at DESC LIMIT 8',
             (self.run_id,self.user['id']))
-        return {'authenticated_user':self.user,'accessible_base_ids':self.base_ids,
+        context = {'authenticated_user':self.user,'accessible_base_ids':self.base_ids,
                 'incident_inputs':result,'conversation_incident_inputs':prior}
+        if self.diagnosis:
+            context['incident_intent'] = ('Read-only troubleshooting. Use read_incident for the reliable readings '
+                'and employee corrections, then give document-backed advice without asking for general OCR confirmation.')
+        return context
 
     def bind_journal(self,journal):
         self.journal=journal
@@ -432,7 +438,12 @@ class ApplicationPort:
                 evidence.append({'source':label,**actual})
             return ToolOutcome({'evidence':evidence,'warnings':warnings})
         if name=='read_incident':
-            value=json.loads(incidents.owned(self.db,self.user,arguments['incident_id'])['payload'])
+            value=incidents.recognize(self.db,self.settings,self.user,arguments['incident_id'])
+            review = self.diagnosis.get(value['id'])
+            if review:
+                value = {**{k:value[k] for k in ('id','kind','filename','digest')},
+                         'fields':incidents.reliable_readings(review),
+                         'employee_corrections':review['answers']}
             self.observed_incidents[value['id']]=value
             self.receipts.append({'action':'incident','incident_id':value['id'],'digest':value['digest']})
             return ToolOutcome(value)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import fcntl
 import hashlib
 import io
 import json
@@ -20,9 +21,10 @@ MAX_BYTES = 5 * 1024 * 1024
 TEXT_TYPES = {'.txt', '.log', '.md'}
 IMAGE_TYPES = {'.png', '.jpg', '.jpeg', '.webp'}
 PATTERNS = {
-    'error_code': re.compile(r'\b(?:HTTP\s*[45]\d{2}|(?:ERR|ERROR)_[A-Z0-9_]+|0x[0-9a-f]{4,16}|[A-Z][A-Za-z]+Error)\b', re.I),
-    'environment': re.compile(r'\b(?:Windows\s*(?:10|11)|Ubuntu\s*\d{2}\.\d{2}|macOS(?:\s*\d+(?:\.\d+)*)?|Linux)\b', re.I),
-    'software': re.compile(r'\b(?:VPN|SSH|Docker|Nginx|Chrome|Firefox|Python|Java|MySQL|Redis|PostgreSQL)\b', re.I),
+    'error_code': re.compile(r'\b(?:HTTP\s*[:：]?\s*[45]\d{2}|(?:ERR|ERROR)_[A-Z0-9_]+|0x[0-9a-f]{4,16}|'
+                             r'EACCES|ENOENT|ENOSPC|ECONNRESET|ETIMEDOUT|[A-Z][A-Za-z]+Error)\b', re.I | re.ASCII),
+    'environment': re.compile(r'\b(?:Windows\s*(?:10|11)|Ubuntu\s*\d{2}\.\d{2}|macOS(?:\s*\d+(?:\.\d+)*)?|Linux)\b', re.I | re.ASCII),
+    'software': re.compile(r'\b(?:VPN|SSH|Docker|Nginx|Chrome|Firefox|Python|Java|MySQL|Redis|PostgreSQL)\b', re.I | re.ASCII),
     'symptom': re.compile(r'Permission denied|Connection refused|Connection timed out|Out of memory|'
                           r'Authentication failed|Access denied|certificate verify failed|连接超时|拒绝连接|内存不足', re.I),
 }
@@ -35,19 +37,159 @@ def redact(text):
 
 
 def grounded_fields(lines):
-    fields, seen = [], set()
+    fields = {}
     for line in lines:
         for kind, pattern in PATTERNS.items():
             for match in pattern.finditer(line['text']):
                 value = match.group()
                 key = (kind, value.casefold())
-                if key in seen:
+                scores = [c for a, b, c in line.get('word_scores', ())
+                          if a < match.end() and b > match.start()]
+                confidence = min(scores) if scores else line.get('confidence')
+                if key in fields and (confidence or 0) <= (fields[key]['confidence'] or 0):
                     continue
-                seen.add(key)
-                fields.append({'kind': kind, 'value': value, 'source_line': line['number'],
+                fields[key] = {'kind': kind, 'value': value, 'source_line': line['number'],
                     'span': [match.start(), match.end()], 'box': line.get('box'),
-                    'confidence': line.get('confidence')})
-    return fields[:80]
+                    'confidence': confidence}
+    return list(fields.values())[:80]
+
+
+# Both OCR engines report percentages. Only uncertainty about the requested
+# detail or the fault itself warrants interrupting an investigation.
+OCR_READABLE = 80
+FIELD_LABELS = {'error_code': '错误码', 'symptom': '报错原文或故障现象',
+                'environment': '操作系统及版本', 'software': '软件名称'}
+FIELD_QUESTIONS = {
+    'error_code': re.compile(r'错误码|状态码|报错码|error code|status code|HTTP\s*(?:码|代码)', re.I),
+    'environment': re.compile(r'操作系统|系统版本|适用.*命令|哪个系统|哪种系统|系统.*命令', re.I),
+    'software': re.compile(r'哪个软件|什么软件|软件名称|哪个应用', re.I),
+}
+FAULT_TEXT = re.compile(
+    r'\b(?:cannot|unable to|could not|not found|invalid|exception|failed|denied|refused|timed out|'
+    r'unreachable|unavailable|unauthorized|forbidden|expired|locked|missing)\b'
+    r'|\b(?:error|fatal|panic)\s*[:：]\s*\S|(?:报错|错误)\s*[:：]\s*\S|失败|打不开|超时|拒绝|不足'
+    r'|找不到|未找到|不兼容|未连接|已断开|崩溃|闪退|白屏|黑屏|卡死|无响应|未授权|已过期|被锁定|空间已满'
+    r'|(?:无法|不能|未能)(?:登录|启动|访问|联网|连接|打开|安装|运行|加载|上传|下载|同步)', re.I | re.ASCII)
+PARTIAL_HTTP = re.compile(r'\bHTTP\s*[:：]?\s*[45][0-9OoIl?？]{1,2}(?![a-z0-9])', re.I | re.ASCII)
+UNKNOWN_REPLY = re.compile(r'^(?:我?(?:也|暂时)?(?:不清楚|不知道|看不清(?:楚)?|不确定|无法辨认)|unknown)[。.!！]?$', re.I)
+GENERIC_FAILURE = re.compile(r'(?:(?:request|operation|action) failed|(?:请求|操作|执行)失败)[.!。！]?', re.I)
+MISSING_CODE_MENTION = re.compile(r'(?:没(?:有|显示|看到)|看不清|不知道)(?:具体的?)?(?:错误码|状态码|报错码)'
+                                  r'|(?:错误码|状态码|报错码)(?:看不清|没显示|不清楚|不知道)')
+
+
+def incident_observations(item):
+    fields = list(item['fields'])
+    fault_lines = {f['source_line'] for f in fields if f['kind'] in ('error_code', 'symptom')}
+    for line in item['lines']:
+        partial = PARTIAL_HTTP.search(line['text'])
+        if partial and not PATTERNS['error_code'].fullmatch(partial.group()):
+            fields.append({'kind': 'error_code', 'value': partial.group(),
+                           'source_line': line['number'], 'illegible': True})
+            fault_lines.add(line['number'])
+        if line['number'] not in fault_lines and FAULT_TEXT.search(line['text']):
+            fields.append({'kind': 'symptom', 'value': line['text'][:180],
+                           'source_line': line['number'], 'confidence': line.get('confidence')})
+    return [{'kind': f['kind'], 'value': f['value'], 'source_line': f['source_line'],
+             'certain': not f.get('illegible') and (item['kind'] == 'log' or
+                         (f.get('confidence') or 0) >= OCR_READABLE)} for f in fields]
+
+
+def diagnosis_review(incidents, question, replies):
+    """Decide once for the question, using all attachments and employee-supplied details."""
+    items = [{'id': item['id'], 'filename': item['filename'], 'observed': incident_observations(item),
+              'answers': replies[item['id']]} for item in incidents]
+    diagnosis = {'question': question, 'observations': items}
+    supplied = {k for k, pattern in PATTERNS.items() if pattern.search(question)}
+    if FAULT_TEXT.search(question):
+        supplied.add('symptom')
+    if re.search(r'还是|不确定|看不清|\bor\b', question, re.I | re.ASCII):
+        supplied -= {k for k, p in FIELD_QUESTIONS.items() if p.search(question)}
+        if len(set(PATTERNS['error_code'].findall(question))) > 1:
+            supplied.discard('error_code')
+    known = supplied | {k for item in items for k in item['answers']}
+    known.update(f['kind'] for item in items for f in item['observed']
+                 if f['certain'] and not GENERIC_FAILURE.fullmatch(f['value'].strip()))
+    intent = MISSING_CODE_MENTION.sub('', question)
+    requested = [k for k, p in FIELD_QUESTIONS.items() if p.search(intent)]
+    missing = next((k for k in requested if k not in known), None)
+    if not missing and not requested and not known.intersection(('error_code', 'symptom')):
+        unclear_code = any(f['kind'] == 'error_code' for item in items for f in item['observed'])
+        missing = 'error_code' if unclear_code and intent == question else 'symptom'
+    if missing:
+        item = next((i for i in items if any(f['kind'] == missing for f in i['observed'])), items[0])
+        candidates = list(dict.fromkeys(f['value'] for f in item['observed'] if f['kind'] == missing))[:3]
+        hint = '（识别为' + ' / '.join(candidates) + '）' if candidates else ''
+        return diagnosis, {'incident_id': item['id'], 'field': missing,
+                           'prompt': f'请补充{FIELD_LABELS[missing]}{hint}，以便选择排查步骤。'}
+    return diagnosis, None
+
+
+def reliable_readings(item):
+    return [f for f in item['observed'] if f['certain'] and f['kind'] not in item['answers']]
+
+
+def prepare_diagnosis(db, cfg, run_id):
+    """Claim a queued intake, publish its readings, then dispatch through the ordinary agent."""
+    last = db.one("SELECT id,kind,payload FROM events WHERE run_id=? AND kind IN "
+                  "('incident_request','incident_diagnosis') ORDER BY id DESC LIMIT 1", (run_id,))
+    if not last or last['kind'] != 'incident_request':
+        return False
+    request = json.loads(last['payload'])
+    if not db.execute("UPDATE runs SET status='running',updated_at=? WHERE id=? AND status='queued' "
+                      "AND cancel_requested=0 AND (SELECT MAX(id) FROM events WHERE run_id=? AND kind IN "
+                      "('incident_request','incident_diagnosis'))=?", (time.time(),run_id,run_id,last['id'])):
+        return True
+    db.event(run_id, 'incident_worker_started', {})
+    error, prompt, diagnosis = None, None, None
+    try:
+        run = db.one('SELECT user_id FROM runs WHERE id=?',(run_id,))
+        links = db.all('SELECT incident_id,digest FROM run_incidents WHERE run_id=? ORDER BY rowid',(run_id,))
+        if set(request['answers']) != {link['incident_id'] for link in links} or not links:
+            raise ValueError('附件已变更，请重新上传后排查。')
+        items = []
+        for link in links:
+            item = recognize(db,cfg,{'id':run['user_id']},link['incident_id'])
+            if item['digest'] != link['digest']:
+                raise ValueError('附件已变更，请重新上传后排查。')
+            items.append(item)
+        diagnosis, prompt = diagnosis_review(items, request['question'], request['answers'])
+        question = request['question']
+        supplied = [f'{FIELD_LABELS[k]}：{v}' for answers in request['answers'].values() for k,v in answers.items()]
+        if supplied:
+            question += '\n员工补充：' + '；'.join(supplied)
+        if cfg.agent_policy != 'business_native_v1':
+            terms = [f['value'] for item in diagnosis['observations'] for f in reliable_readings(item)]
+            if terms:
+                question += '\n材料识别：' + '；'.join(dict.fromkeys(terms))[:800]
+    except (ValueError, LookupError, OSError) as exc:
+        error = str(exc) if isinstance(exc, ValueError) else '故障材料读取失败，请重新上传。'
+    except Exception:
+        import logging
+        logging.exception('Failed to read incident for run %s',run_id)
+        error = '故障材料读取失败，请稍后重试。'
+    now = time.time()
+    with db.connect() as c:
+        c.execute('BEGIN IMMEDIATE')
+        def event(kind,payload):
+            c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',(run_id,kind,encode(payload),now))
+        if c.execute('SELECT cancel_requested FROM runs WHERE id=?',(run_id,)).fetchone()[0]:
+            c.execute("UPDATE runs SET status='cancelled',updated_at=? WHERE id=?",(now,run_id))
+            event('cancelled',{})
+            return True
+        if error:
+            c.execute("UPDATE runs SET status='error',error=?,updated_at=? WHERE id=?", (error,now,run_id))
+            event('error', {'message':error})
+            return True
+        if prompt:
+            diagnosis['clarification'] = prompt
+        event('incident_diagnosis', diagnosis)
+        if prompt:
+            c.execute("UPDATE runs SET status='clarify',answer=?,updated_at=? WHERE id=?",(prompt['prompt'],now,run_id))
+            return True
+        # Each existing agent runtime atomically claims its input from queued.
+        # Persisting the review first also makes this hand-off restartable.
+        c.execute("UPDATE runs SET status='queued',question=?,updated_at=? WHERE id=?",(question,now,run_id))
+    return False
 
 
 def _tesseract_lines(path, cfg):
@@ -81,15 +223,22 @@ def _tesseract_lines(path, cfg):
             left = min(int(w['left']) for w in words); top = min(int(w['top']) for w in words)
             right = max(int(w['left']) + int(w['width']) for w in words)
             bottom = max(int(w['top']) + int(w['height']) for w in words)
-            lines.append({'number': len(lines) + 1, 'text': redact(' '.join(w['text'] for w in words)),
+            raw = ' '.join(w['text'] for w in words)
+            text = redact(raw)
+            scores = []
+            if text == raw:
+                offset = 0
+                for w in words:
+                    end = offset + len(w['text'])
+                    scores.append((offset, end, float(w['conf'])))
+                    offset = end + 1
+            lines.append({'number': len(lines) + 1, 'text': text, 'word_scores': scores,
                           'box': [left, top, right, bottom], 'ocr_pass': source,
                           'confidence': round(sum(float(w['conf']) for w in words) / len(words), 2)})
         return lines, rows
     lines, _ = parse_tsv(process.stdout, 'primary')
     lines.sort(key=lambda line: (line['box'][1], line['box'][0]))
     for index, line in enumerate(lines): line['number'] = index + 1
-    if not lines:
-        raise ValueError('未识别到清晰文字，请裁剪报错区域或上传日志')
     return lines
 
 
@@ -116,8 +265,6 @@ def image_lines(path, cfg):
             lines=json.loads(process.stdout)
         except json.JSONDecodeError:
             raise ValueError('截图识别结果无效，请检查CPU OCR组件')from None
-        if not lines:
-            raise ValueError('未识别到清晰文字，请裁剪报错区域或上传日志')
         for line in lines:
             line['text']=redact(line['text'])
         return lines
@@ -132,7 +279,7 @@ def image_lines(path, cfg):
             return _tesseract_lines(legacy,cfg)
 
 
-def analyze(db, cfg, user, filename, data):
+def analyze(db, cfg, user, filename, data, defer_ocr=False):
     filename = Path(filename.replace('\\', '/')).name[:120]
     suffix = Path(filename).suffix.lower()
     if suffix not in TEXT_TYPES | IMAGE_TYPES:
@@ -159,7 +306,7 @@ def analyze(db, cfg, user, filename, data):
                     normalized = Path(temporary)/'image.png'; image.save(normalized)
                     # The region detector sees the source colors and original
                     # line positions; the legacy backend handles its own raster.
-                    lines = image_lines(normalized, cfg)
+                    lines = [] if defer_ocr else image_lines(normalized, cfg)
                     saved.write_bytes(normalized.read_bytes())
         except ImportError:
             raise ValueError('截图处理组件尚未安装，请先上传文字日志') from None
@@ -180,17 +327,40 @@ def analyze(db, cfg, user, filename, data):
             raise ValueError('日志需包含有效文字且不超过3000行')
         saved.write_text(text)
     saved.chmod(0o600)
+    result = {'id': ident, 'filename': filename, 'digest': hashlib.sha256(saved.read_bytes()).hexdigest(),
+              'kind': 'screenshot' if dimensions else 'log', 'dimensions': dimensions,
+              'ocr_pending': bool(dimensions and defer_ocr),
+              'analysis_seconds': round(time.monotonic() - started, 4)}
+    result.update(recognized_fields(lines))
+    db.execute('INSERT INTO incident_evidence(id,user_id,payload,created_at) VALUES(?,?,?,?)',
+               (ident, user['id'], encode(result), time.time()))
+    return result
+
+
+def recognized_fields(lines):
     fields = grounded_fields(lines)
     selected = lambda kind: list(dict.fromkeys(f['value'] for f in fields if f['kind'] == kind))
     title = ' / '.join(selected('software')[:2] + (selected('error_code') or selected('symptom'))[:1]) or '待补充的故障信息'
     description = '\n'.join(f"第{f['source_line']}行 · {f['kind']}：{f['value']}" for f in fields) or '请补充故障现象和发生环境。'
-    result = {'id': ident, 'filename': filename, 'digest': hashlib.sha256(saved.read_bytes()).hexdigest(),
-              'kind': 'screenshot' if dimensions else 'log', 'dimensions': dimensions,
-              'lines': lines, 'fields': fields, 'suggested_title': title[:120],
-              'suggested_description': description[:2600],
-              'analysis_seconds': round(time.monotonic() - started, 4)}
-    db.execute('INSERT INTO incident_evidence(id,user_id,payload,created_at) VALUES(?,?,?,?)',
-               (ident, user['id'], encode(result), time.time()))
+    return {'lines':lines, 'fields':fields, 'suggested_title':title[:120], 'suggested_description':description[:2600]}
+
+
+def recognize(db, cfg, user, ident):
+    result = json.loads(owned(db,user,ident)['payload'])
+    if not result.get('ocr_pending'):
+        return result
+    path = cfg.root/'uploads/incidents'/(ident+'.png')
+    with path.open('rb') as image:
+        # A draft preview and a worker can ask for the same file concurrently.
+        fcntl.flock(image, fcntl.LOCK_EX)
+        result = json.loads(owned(db,user,ident)['payload'])
+        if result.get('ocr_pending'):
+            started = time.monotonic()
+            result.update(recognized_fields(image_lines(path,cfg)))
+            result['ocr_pending'] = False
+            result['analysis_seconds'] = round(result['analysis_seconds'] + time.monotonic()-started,4)
+            db.execute('UPDATE incident_evidence SET payload=? WHERE id=? AND user_id=?',
+                       (encode(result),ident,user['id']))
     return result
 
 
@@ -213,6 +383,8 @@ def confirm_draft(db, user, ident, digest, title, description, confirmed):
         if not row:
             raise LookupError('故障材料不存在或不属于当前用户')
         evidence = json.loads(row['payload'])
+        if evidence.get('ocr_pending'):
+            raise ValueError('请先读取并核对故障信息')
         if evidence['digest'] != digest:
             raise ValueError('材料版本已变化，请重新核对')
         full_description = description + f'\n\n故障材料：{ident}；SHA256：{digest}'

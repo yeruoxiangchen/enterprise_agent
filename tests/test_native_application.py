@@ -177,3 +177,21 @@ def test_unmet_output_contract_stops_after_one_repair_instead_of_delivering_succ
     result=ask(client,db,cfg,base,'请根据知识库排查VPN认证故障。',knowledge_grounded=True)
     assert result['status']=='error'and result['error']=='NativeOutputContractError',result
     assert not result['can_resume']and not result['answer']
+
+
+def test_read_only_diagnosis_delegates_to_evidence_and_cites_advice(system, monkeypatch):
+    from kb.incidents import analyze
+    cfg, db, client, base, _, _, member = system
+    doc = upload(system, 'VPN 返回 HTTP 403 时，请核对该账号是否具备访问权限。','VPN权限.md')
+    incident = analyze(db,cfg,member,'vpn.log',b'VPN HTTP 403')
+    model = ScriptModel(replies=[
+        call('task', {'subagent_type':'evidence','description':'读取故障附件并查询维护手册。'}, 'delegate'),
+        call('read_incident', {'incident_id':incident['id']}, 'read'),
+        call('search_documents', {'query':'VPN HTTP 403 访问权限'}, 'search'),
+        answer('请核对账号访问权限。'), answer('请先核对账号访问权限。')])
+    configure(cfg,monkeypatch,model)
+    login(client)
+    run = ask(client,db,cfg,base,'我应该先检查什么？',incident_ids=[incident['id']],read_only_incident=True)
+    assert run['status'] == 'answered' and run['citations'][0]['document_id'] == doc['id']
+    assert [e['payload']['name'] for e in run['events'] if e['kind'] == 'tool_effect'] == ['read_incident','search_documents']
+    assert client.get('/api/tickets').json() == []

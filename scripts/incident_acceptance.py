@@ -104,8 +104,8 @@ def main():
                 gold = {normalized(pair) for pair in expected}
                 lines = {line['number']: line['text'] for line in evidence['lines']}
                 grounded = all(lines[f['source_line']][f['span'][0]:f['span'][1]] == f['value'] for f in evidence['fields'])
-                query = '请根据知识库帮助我排查：' + '；'.join(f['value'] for f in evidence['fields'])
-                request = client.post('/api/chat', json={'question': query, 'base_ids': [base]})
+                request = client.post('/api/chat', json={'question': '这个故障应该怎样排查？',
+                    'base_ids': [base], 'incident_ids': [evidence['id']], 'read_only_incident': True})
                 assert request.status_code == 202, request.text
                 run_id = request.json()['run_id']; Harness(db, cfg).execute(run_id)
                 answer = client.get('/api/runs/'+run_id).json()

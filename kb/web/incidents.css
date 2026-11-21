@@ -8,3 +8,12 @@
 .incident-lines {max-height:260px;overflow:auto;white-space:pre-wrap;font-size:13px}
 .incident-review {display:flex;align-items:center;gap:8px;margin-top:14px}
 .incident-review input {width:auto;margin:0}
+.incident-readout, .incident-followup {
+  margin:10px 0;padding:10px 14px;border-left:3px solid #78a58a;
+  background:#f3f7f2;font-size:13px;overflow-wrap:anywhere
+}
+.incident-readout strong {display:block}
+.incident-followup label, #incident-dialog > label {display:block;margin:10px 0 4px;font-weight:600}
+#incident-answer, #incident-query {width:100%}
+#incident-question, #incident-ticket-options {margin-top:12px}
+#incident-ticket-options summary {cursor:pointer}

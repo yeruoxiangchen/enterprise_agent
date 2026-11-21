@@ -1,8 +1,46 @@
 const $ = (q) => document.querySelector(q);
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let me, bases = [], conversationId = null, activeRun = null, feedbackRun = null, currentTab = 'chat', toastTimer;
-let pendingIncidentIds = [];
-const statuses = {queued:'等待入库',processing:'正在处理',ready:'已就绪',error:'处理失败',answered:'已完成',partial_success:'部分完成',insufficient:'资料不足',clarify:'待补充信息',running:'执行中',cancelled:'已停止'};
+let pendingIncident = null, stream = null, chatVersion = 0;
+const incidentLabels = {error_code:'错误码', symptom:'故障现象', environment:'运行环境', software:'软件'};
+function clearIncidentFollowup() {
+  pendingIncident = null;
+  $('#question').disabled = false;
+  $('#incident-answer').required = false;
+  $('#incident-followup').classList.add('hidden');
+  $('#incident-answer').value = '';
+}
+function resetChatInput() {
+  chatVersion++;
+  stream?.close(); stream = null;
+  clearIncidentFollowup();
+  $('#question').value = '';
+  document.dispatchEvent(new Event('reset-incident'));
+}
+function renderIncidentReadings(element, diagnosis) {
+  element.replaceChildren();
+  for (const item of diagnosis?.observations || []) {
+    const title = document.createElement('strong');
+    title.textContent = '系统读到 · ' + item.filename;
+    const readings = document.createElement('div');
+    const values = item.observed.map(f => f.value + (f.certain ? '' : '（识别不清）'));
+    readings.textContent = values.slice(0,8).join(' · ') || '未读到可用于判断的报错文字。';
+    element.append(title, readings);
+    if (values.length > 8) {
+      const more = document.createElement('details'), summary = document.createElement('summary');
+      summary.textContent = '查看其余 ' + (values.length - 8) + ' 项';
+      more.append(summary, values.slice(8).join(' · '));
+      element.append(more);
+    }
+    for (const [field, value] of Object.entries(item.answers)) {
+      const correction = document.createElement('div');
+      correction.textContent = '员工补充 · ' + incidentLabels[field] + '：' + value;
+      element.append(correction);
+    }
+  }
+  element.classList.toggle('hidden', !element.childElementCount);
+}
+const statuses = {queued:'排队中',processing:'正在处理',ready:'已就绪',error:'处理失败',answered:'已完成',partial_success:'部分完成',insufficient:'资料不足',clarify:'待补充信息',running:'执行中',cancelled:'已停止'};
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.remove('hidden'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.add('hidden'), 4500); }
 async function api(path, options = {}) {
   const headers = {'X-KB-Client':'web', ...(options.headers || {})};
@@ -11,7 +49,12 @@ async function api(path, options = {}) {
   if (!response.ok) { const error = await response.json().catch(() => ({})); if (response.status === 401 && path !== '/login') showLogin(); throw new Error(typeof error.detail === 'string' ? error.detail : '请求失败，请检查输入后重试'); }
   return response.json();
 }
-function showLogin() { $('#workspace').classList.add('hidden'); $('#login-view').classList.remove('hidden'); me = null; }
+function showLogin() {
+  resetChatInput(); activeRun = null; conversationId = null; setBusy(false);
+  $('#chat-messages').innerHTML = welcomeMarkup;
+  showEvidence({});
+  $('#workspace').classList.add('hidden'); $('#login-view').classList.remove('hidden'); me = null;
+}
 function date(value) { return new Date(value * 1000).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 async function enter() {
   me = await api('/me'); $('#login-view').classList.add('hidden'); $('#workspace').classList.remove('hidden');
@@ -21,6 +64,10 @@ async function enter() {
   $('#mode-hint').textContent = me.workflow === 'business_multi' ? '技术支持 · 制度流程 · 服务办理；工单需确认提交' : me.workflow === 'fixed_rag' ? '先检索相关资料，再生成带来源的回答；资料不足时说明不足' : me.mode === 'agent' ? '根据已读取的文档生成回答' : '当前提供原文摘录，未启用模型生成';
   $('#ticket-nav').classList.remove('hidden');
   await Promise.all([refreshBases(), refreshHistory()]);
+  const saved = sessionStorage.getItem('kb-current-chat:'+me.id);
+  if (saved && [...document.querySelectorAll('[data-conversation]')].some(b => b.dataset.conversation === saved)) {
+    await openConversation(saved);
+  }
 }
 async function refreshBases() {
   bases = await api('/bases');
@@ -41,25 +88,33 @@ async function tab(name) {
   if (name === 'tickets') await refreshTickets();
 }
 const welcomeMarkup = $('#chat-messages').innerHTML;
-function newChat() { conversationId = null; activeRun = null; pendingIncidentIds = []; $('#chat-messages').innerHTML = welcomeMarkup; setBusy(false); showEvidence({citations:[], events:[]}); tab('chat').catch(e=>toast(e.message)); $('#question').focus(); }
-function setBusy(value) { $('#send').disabled = value; $('#cancel-run').classList.toggle('hidden', !value); }
+function newChat() { sessionStorage.removeItem('kb-current-chat:'+me.id); resetChatInput(); conversationId = null; activeRun = null; $('#chat-messages').innerHTML = welcomeMarkup; setBusy(false); showEvidence({citations:[], events:[]}); tab('chat').catch(e=>toast(e.message)); $('#question').focus(); }
+function setBusy(value) {
+  $('#send').disabled = value;
+  $('#incident-open').disabled = value;
+  $('#incident-detach').disabled = value;
+  $('#cancel-run').classList.toggle('hidden', !value || !activeRun);
+}
 function message(question, run) {
   const block = document.createElement('div'); block.dataset.runBlock = run.id;
   block.innerHTML = `<div class="message user">${escape(question)}</div><div class="message answer"><div class="message-label">✦ 知页 <span class="muted">· ${escape(statuses[run.status] || run.status)}</span></div><div class="answer-body"></div><div class="answer-actions"></div></div>`;
+  const readout = document.createElement('div'); readout.className = 'incident-readout';
+  block.querySelector('.answer-body').before(readout);
   fillMessage(block, run); $('#chat-messages').append(block); return block;
 }
 function fillMessage(block, run) {
   const body = block.querySelector('.answer-body'), actions = block.querySelector('.answer-actions');
+  renderIncidentReadings(block.querySelector('.incident-readout'), run.diagnosis);
   block.querySelector('.message-label').innerHTML = `✦ 知页 <span class="muted">· ${escape(statuses[run.status] || run.status)}</span>`;
   body.classList.toggle('working', ['queued','running'].includes(run.status));
-  body.textContent = run.answer || run.error || (run.status === 'cancelled' ? '已停止本次任务。' : '正在检索资料，整理可用证据…');
+  body.textContent = run.answer || run.error || (run.status === 'cancelled' ? '已停止本次任务。' : run.status === 'queued' ? '问题已保存，正在等候排查。' : '正在排查并查找相关资料…');
   actions.innerHTML = `<button data-inspect="${escape(run.id)}">来源与过程 ↗</button>` + (run.answer ? `<button data-feedback="${escape(run.id)}">评价回答</button>` : '');
   if (run.can_resume) actions.innerHTML += `<button data-resume="${escape(run.id)}">继续未完成步骤</button>`;
 }
 function showEvidence(run) {
   $('#sources').innerHTML = (run.citations || []).map(s => `<button class="source-card" data-document="${escape(s.document_id)}" data-chunk="${s.id}"><strong>[${escape(s.label)}] ${escape(s.filename)}</strong><small>${escape(s.base_name)}${s.page ? ' · 第 '+s.page+' 页' : ''}</small><p>${escape(s.text.slice(0,120))}…</p></button>`).join('') || '<div class="empty-small">尚未引用资料</div>';
   const names = {search:'检索资料',read_chunk:'读取原文',list_documents:'查看文档',finish:'提交答案'};
-  const internalEvents = new Set(['business_context','model_request','model_response','native_graph_returned']);
+  const internalEvents = new Set(['business_context','model_request','model_response','native_graph_returned','incident_request','incident_diagnosis']);
   $('#trace').innerHTML = (run.events || []).filter(e => !internalEvents.has(e.kind)).map(e => {
     let title = e.kind, detail = '';
     const domains = {technical:'技术支持',policy:'制度流程',service:'服务办理'};
@@ -71,6 +126,8 @@ function showEvidence(run) {
     if (e.kind === 'business_completed') { title='领域处理完成'; detail=domains[e.payload.domain]+' · '+(statuses[e.payload.status]||e.payload.status); }
     if (e.kind === 'business_model') { title='模型处理'; detail='累计 '+e.payload.calls+' 次请求'; }
     if (e.kind === 'ticket_draft') { title='工单草稿待确认'; detail=e.payload.title; }
+    if (e.kind === 'queued') title = '任务已保存，等待处理';
+    if (e.kind === 'incident_worker_started') title = '开始读取故障材料';
     if (e.kind === 'started') { title = e.payload.resumed ? '恢复任务' : '开始任务'; detail = e.payload.mode === 'agent' ? '模型问答' : '原文检索'; }
     if (e.kind === 'tool') { title = names[e.payload.name] || e.payload.name; const r = e.payload.result; detail = r.error || (r.results ? `找到 ${r.results.length} 条候选片段` : r.filename || '已完成'); if (r.warnings?.length) detail += '；' + r.warnings.join('；'); }
     if (e.kind === 'model') { title = '模型处理'; detail = `第 ${e.payload.turn} 轮`; }
@@ -90,22 +147,74 @@ function showEvidence(run) {
     return `<div class="trace-item"><b>${escape(title)}</b><small>${escape(detail)}</small></div>`;
   }).join('') || '<p class="muted small">暂无执行记录</p>';
 }
-async function monitor(runId, selectedConversation) {
+function showIncidentFollowup(run) {
+  const prompt = run.diagnosis?.clarification;
+  if (run.status !== 'clarify' || !prompt) return;
+  pendingIncident = {id:prompt.incident_id, field:prompt.field, runId:run.id};
+  $('#question').disabled = true;
+  $('#incident-answer').required = true;
+  $('#incident-followup-label').textContent = prompt.prompt;
+  $('#incident-followup').classList.remove('hidden');
+  $('#incident-answer').focus();
+}
+function monitor(runId, selectedConversation, after=0, snapshot=null) {
+  stream?.close();
   activeRun = runId; setBusy(true);
-  try {
-    while (conversationId === selectedConversation && activeRun === runId) {
-      const run = await api('/runs/' + runId);
-      if (conversationId !== selectedConversation || activeRun !== runId) break;
-      const block = document.querySelector(`[data-run-block="${runId}"]`); if (block) fillMessage(block, run); showEvidence(run);
-      if (!['queued','running'].includes(run.status)) { activeRun = null; setBusy(false); await refreshHistory(); break; }
-      await new Promise(r=>setTimeout(r,700));
+  const source = new EventSource('/api/runs/'+runId+'/events?after='+after);
+  stream = source;
+  const run = snapshot || {id:runId, status:'queued', events:[]};
+  const block = document.querySelector('[data-run-block="'+runId+'"]');
+  function selected() { return stream === source && conversationId === selectedConversation; }
+  function render(data) { if (block) fillMessage(block,data); showEvidence(data); }
+  function finish(data) {
+    if (!selected()) return;
+    source.close(); stream = null; activeRun = null; setBusy(false);
+    render(data); showIncidentFollowup(data);
+    refreshHistory().catch(e=>toast(e.message));
+  }
+  source.onopen = () => { if (selected()) render(run); };
+  source.onmessage = event => {
+    if (!selected()) return;
+    const entry = JSON.parse(event.data);
+    entry.id = Number(event.lastEventId);
+    if (entry.id <= (run.events.at(-1)?.id || 0)) return;
+    run.events.push(entry);
+    if (entry.kind === 'incident_diagnosis') run.diagnosis = entry.payload;
+    if (!['queued','incident_request'].includes(entry.kind)) run.status = 'running';
+    render(run);
+  };
+  source.addEventListener('done', event => finish(JSON.parse(event.data)));
+  source.onerror = async () => {
+    if (!selected()) return;
+    if (source.readyState === EventSource.CONNECTING) {
+      if (block) block.querySelector('.answer-body').textContent = '正在重新连接任务进度…';
+      return;
     }
-  } catch (e) { if (activeRun === runId) { activeRun = null; setBusy(false); } toast(e.message); }
+    try {
+      const latest = await api('/runs/'+runId);
+      if (!selected()) return;
+      if (['queued','running'].includes(latest.status)) monitor(runId,selectedConversation,latest.events.at(-1)?.id || 0,latest);
+      else finish(latest);
+    } catch (error) {
+      if (selected()) { source.close(); stream=null; activeRun=null; setBusy(false); toast(error.message); }
+    }
+  };
 }
 async function openConversation(id) {
-  activeRun = null; setBusy(false); conversationId = id; const data = await api('/conversations/' + id); if (conversationId !== id) return;
+  resetChatInput();
+  activeRun = null; setBusy(false); conversationId = id;
+  const data = await api('/conversations/' + id); if (conversationId !== id) return;
+  sessionStorage.setItem('kb-current-chat:'+me.id,id);
   await tab('chat'); $('#chat-messages').innerHTML = ''; data.runs.forEach(run => message(run.question,run));
-  const last = data.runs.at(-1); if (last) { showEvidence(await api('/runs/' + last.id)); if (['queued','running'].includes(last.status)) monitor(last.id,id); }
+  const last = data.runs.at(-1);
+  if (last) {
+    const detail = await api('/runs/'+last.id);
+    if (conversationId !== id) return;
+    fillMessage(document.querySelector('[data-run-block="'+last.id+'"]'),detail);
+    showEvidence(detail);
+    if (['queued','running'].includes(detail.status)) monitor(last.id,id,detail.events.at(-1)?.id || 0,detail);
+    else showIncidentFollowup(detail);
+  }
   $('#chat-messages').scrollTop = $('#chat-messages').scrollHeight;
 }
 async function refreshDocuments() {
@@ -120,9 +229,38 @@ async function source(id, chunk) {
 }
 async function refreshFeedback() { const rows = await api('/feedback'); $('#feedback-list').innerHTML = rows.map(f => `<article class="feedback-card"><small>${escape(f.username)} · ${date(f.created_at)} · ${f.rating === 1 ? '有帮助' : '需要改进'}</small><h3>${escape(f.question)}</h3><pre>${escape(f.answer)}</pre><p>${escape(f.comment || '未填写补充说明')}</p></article>`).join('') || '<p class="muted">还没有用户反馈。</p>'; }
 $('#login-form').addEventListener('submit',async e=>{e.preventDefault(); const button=e.target.querySelector('button');button.disabled=true; $('#login-error').textContent=''; try{await api('/login',{method:'POST',body:Object.fromEntries(new FormData(e.target))});e.target.reset();await enter();}catch(err){$('#login-error').textContent=err.message;}finally{button.disabled=false;}});
-$('#logout').addEventListener('click',async()=>{try{await api('/logout',{method:'POST'});activeRun=null;pendingIncidentIds=[];showLogin();}catch(e){toast(e.message);}});
+$('#logout').addEventListener('click',async()=>{try{await api('/logout',{method:'POST'});showLogin();}catch(e){toast(e.message);}});
 $('#new-chat').addEventListener('click',newChat);
-$('#question-form').addEventListener('submit',async e=>{e.preventDefault(); const question=$('#question').value.trim();if(!question||activeRun)return;setBusy(true);try{const result=await api('/chat',{method:'POST',body:{question,conversation_id:conversationId,base_ids:$('#chat-base').value?[$('#chat-base').value]:[],incident_ids:pendingIncidentIds,knowledge_grounded:pendingIncidentIds.length>0}});pendingIncidentIds=[];conversationId=result.conversation_id;$('#welcome')?.remove();message(question,{id:result.run_id,status:'queued'});$('#question').value='';$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;await refreshHistory();monitor(result.run_id,conversationId);}catch(err){setBusy(false);toast(err.message);}});
+$('#incident-detach').addEventListener('click', () => { clearIncidentFollowup(); $('#question').focus(); });
+$('#question-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const question = $('#question').value.trim(), incident = pendingIncident, version = chatVersion;
+  if ($('#send').disabled || (!incident?.runId && !question)) return;
+  const base = $('#chat-base').value;
+  setBusy(true);
+  try {
+    const result = incident?.runId
+      ? await api('/runs/'+incident.runId+'/clarification', {method:'POST', body:{
+          incident_id:incident.id, field:incident.field, value:$('#incident-answer').value.trim()}})
+      : await api('/chat', {method:'POST', body:{
+          question, conversation_id:conversationId, base_ids:base ? [base] : [],
+          incident_ids:incident ? [incident.id] : [], read_only_incident:!!incident}});
+    if (version !== chatVersion) return;
+    clearIncidentFollowup();
+    conversationId = result.conversation_id;
+    sessionStorage.setItem('kb-current-chat:'+me.id,conversationId);
+    $('#welcome')?.remove();
+    const queued = {id:result.run_id, status:'queued', events:[]};
+    if (incident?.runId) fillMessage(document.querySelector('[data-run-block="'+result.run_id+'"]'),queued);
+    else message(question,queued);
+    $('#question').value = '';
+    $('#chat-messages').scrollTop = $('#chat-messages').scrollHeight;
+    monitor(result.run_id,conversationId,result.after || 0,queued);
+    refreshHistory().catch(e=>toast(e.message));
+  } catch (error) {
+    if (version === chatVersion) { setBusy(false); toast(error.message); }
+  }
+});
 $('#question').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#question-form').requestSubmit();}});
 $('#cancel-run').addEventListener('click',async()=>{if(activeRun){try{await api('/runs/'+activeRun+'/cancel',{method:'POST'});toast('已请求停止，正在结束当前步骤');}catch(e){toast(e.message);}}});
 $('#document-base').addEventListener('change',()=>refreshDocuments().catch(e=>toast(e.message)));

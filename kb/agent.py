@@ -163,6 +163,9 @@ class Harness:
         raise ValueError("未知工具")
 
     def execute(self, run_id):
+        from .incidents import prepare_diagnosis
+        if prepare_diagnosis(self.db, self.settings, run_id):
+            return
         if self.settings.agent_policy == 'business_native_v1':
             from .harness.native_application import execute
             return execute(self, run_id)
@@ -263,8 +266,23 @@ class Harness:
             self.db.event(run_id, "error", {"message": error})
 
     def extractive(self, run, state):
-        result = self.tool("search", {"query": run["question"]}, state)
-        self.db.event(run["id"], "tool", {"name": "search", "result": result})
+        queries = [run['question']]
+        review = self.db.one("SELECT payload FROM events WHERE run_id=? AND kind='incident_diagnosis' ORDER BY id DESC LIMIT 1", (run['id'],))
+        if review:
+            from .incidents import reliable_readings
+            diagnosis = json.loads(review['payload'])
+            items = diagnosis['observations']
+            terms = [v for item in items for v in item['answers'].values()]
+            terms.extend(f['value'] for item in items for f in reliable_readings(item))
+            readings = ' '.join(dict.fromkeys(terms))[:300]
+            queries = [(readings + ' ' + diagnosis['question']).strip()[:500]]
+            if readings:
+                queries.append(readings)
+        for query in queries:
+            result = self.tool("search", {"query": query}, state)
+            self.db.event(run["id"], "tool", {"name": "search", "result": result})
+            if result["results"]:
+                break
         if not result["results"]:
             self.finish(run, state, "当前资料中没有检索到足够相关的证据。请补充文档或提供更具体的关键词。", [], "insufficient")
             return

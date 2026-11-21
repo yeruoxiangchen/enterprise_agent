@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sqlite3
 import time
+from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Depends, File, Form, HTTPException, Request, Response, UploadFile
@@ -47,12 +48,19 @@ class DomainBinding(BaseModel):
     domain: str
 
 
+class IncidentAnswer(BaseModel):
+    incident_id: str
+    field: Literal['error_code', 'symptom', 'environment', 'software']
+    value: str = Field(min_length=1, max_length=240)
+
+
 class Question(BaseModel):
     question: str = Field(min_length=1, max_length=3000)
     conversation_id: str | None = None
     base_ids: list[str] = Field(default_factory=list, max_length=50)
     incident_ids: list[str] = Field(default_factory=list,max_length=8)
     knowledge_grounded: bool = False
+    read_only_incident: bool = False
 
 
 class Feedback(BaseModel):
@@ -82,6 +90,7 @@ def create_app(settings=None, start_workers=True):
             raise RuntimeError("同一数据目录只能运行一个应用进程；请使用 --workers 1") from None
         db.initialize()
         workers = Workers(db, cfg)
+        app.state.workers = workers
         app.state.db, app.state.settings = db, cfg
         if start_workers:
             workers.start()
@@ -230,11 +239,11 @@ def create_app(settings=None, start_workers=True):
             raise HTTPException(409, str(exc)) from None
 
     @app.post('/api/incident-evidence', status_code=201)
-    async def incident_upload(file: UploadFile = File(...), user=Depends(current_user)):
+    async def incident_upload(file: UploadFile = File(...), defer_ocr: bool = False, user=Depends(current_user)):
         from .incidents import analyze, MAX_BYTES
         try:
             data = await file.read(MAX_BYTES + 1)
-            return await asyncio.to_thread(analyze, db, cfg, user, file.filename or '', data)
+            return await asyncio.to_thread(analyze, db, cfg, user, file.filename or '', data, defer_ocr)
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from None
         finally:
@@ -247,6 +256,16 @@ def create_app(settings=None, start_workers=True):
             return json.loads(owned(db, user, evidence_id)['payload'])
         except LookupError as exc:
             raise HTTPException(404, str(exc)) from None
+
+    @app.post('/api/incident-evidence/{evidence_id}/recognize')
+    def incident_recognize(evidence_id: str, user=Depends(current_user)):
+        from .incidents import recognize
+        try:
+            return recognize(db,cfg,user,evidence_id)
+        except LookupError as exc:
+            raise HTTPException(404,str(exc)) from None
+        except ValueError as exc:
+            raise HTTPException(400,str(exc)) from None
 
     @app.get('/api/incident-evidence/{evidence_id}/image')
     def incident_image(evidence_id: str, user=Depends(current_user)):
@@ -334,8 +353,14 @@ def create_app(settings=None, start_workers=True):
             raise HTTPException(404, "会话不存在")
         row["messages"] = db.all("SELECT * FROM messages WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
         row["runs"] = db.all("SELECT id,status,answer,citations,error,question,created_at,state,cancel_requested FROM runs WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
+        observations = {e['run_id']: json.loads(e['payload']) for e in db.all(
+            "SELECT e.run_id,e.payload FROM events e JOIN runs r ON r.id=e.run_id "
+            "WHERE r.conversation_id=? AND e.kind='incident_diagnosis' ORDER BY e.id", (conversation_id,))}
         from .business_status import can_resume_for
         for run in row["runs"]:
+            if run['id'] in observations:
+                run['diagnosis'] = observations[run['id']]
+                run['question'] = run['diagnosis']['question']
             run['can_resume'] = can_resume_for(run, cfg.agent_policy)
             run.pop('state')
             run["citations"] = json.loads(run["citations"])
@@ -356,6 +381,9 @@ def create_app(settings=None, start_workers=True):
         conversation_id = payload.conversation_id or uid()
         if payload.conversation_id and not db.one("SELECT id FROM conversations WHERE id=? AND user_id=?", (conversation_id, user["id"])):
             raise HTTPException(404, "会话不存在")
+        question = payload.question.strip()
+        if payload.read_only_incident and not incidents:
+            raise HTTPException(422, '截图或日志排查需要随问题附上故障材料')
         now, run_id = time.time(), uid()
         try:
             with db.connect() as c:
@@ -364,15 +392,55 @@ def create_app(settings=None, start_workers=True):
                     raise HTTPException(409, "此会话还有任务正在执行，请等待或取消")
                 if not payload.conversation_id:
                     c.execute("INSERT INTO conversations VALUES(?,?,?,?)", (conversation_id, user["id"], payload.question[:45], now))
-                c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), conversation_id, "user", payload.question, run_id, now))
-                initial_state={'input_contract':{'knowledge_grounded':payload.knowledge_grounded}} if cfg.agent_policy=='business_native_v1' else {}
+                c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), conversation_id, "user", question, run_id, now))
+                initial_state={'input_contract':{'knowledge_grounded':payload.knowledge_grounded or payload.read_only_incident}} if cfg.agent_policy=='business_native_v1' else {}
                 c.execute("INSERT INTO runs(id,conversation_id,user_id,question,base_ids,mode,status,state,created_at,updated_at) VALUES(?,?,?,?,?,?,'queued',?,?,?)",
-                          (run_id, conversation_id, user["id"], payload.question, encode(ids), cfg.mode, encode(initial_state), now, now))
+                          (run_id, conversation_id, user["id"], question, encode(ids), cfg.mode, encode(initial_state), now, now))
                 c.executemany('INSERT INTO run_incidents VALUES(?,?,?)',
                     [(run_id,item['id'],item['digest'])for item in incidents])
+                if payload.read_only_incident:
+                    intake = {'question': question, 'answers': {item['id']: {} for item in incidents}}
+                    c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',
+                              (run_id,'incident_request',encode(intake),now))
+                c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',
+                          (run_id,'queued','{}',now))
         except sqlite3.IntegrityError:
             raise HTTPException(409, "会话状态冲突，请刷新后重试") from None
-        return {"run_id": run_id, "conversation_id": conversation_id}
+        app.state.workers.notify_run()
+        return {"run_id": run_id, "conversation_id": conversation_id, "status":"queued"}
+
+    @app.post('/api/runs/{run_id}/clarification', status_code=202)
+    def answer_clarification(run_id: str, reply: IncidentAnswer, user=Depends(current_user)):
+        from .incidents import FIELD_LABELS, UNKNOWN_REPLY
+        run = own_run(user, run_id)
+        value = reply.value.strip()
+        if not value:
+            raise HTTPException(422, '请填写所询问的字段')
+        with db.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            latest = c.execute("SELECT e.payload FROM events e JOIN runs r ON r.id=e.run_id "
+                "WHERE r.id=? AND r.status='clarify' AND e.kind='incident_diagnosis' ORDER BY e.id DESC LIMIT 1",
+                (run_id,)).fetchone()
+            diagnosis = json.loads(latest['payload']) if latest else {}
+            prompt = diagnosis.get('clarification', {})
+            if (prompt.get('incident_id'),prompt.get('field')) != (reply.incident_id,reply.field):
+                raise HTTPException(409, '这项追问已经更新，请查看当前任务')
+            if c.execute("SELECT 1 FROM runs WHERE conversation_id=? AND id<>? AND status IN ('queued','running')",
+                         (run['conversation_id'],run_id)).fetchone():
+                raise HTTPException(409, '此会话还有任务正在执行，请稍后补充')
+            answers = {item['id']:item['answers'] for item in diagnosis['observations']}
+            if not UNKNOWN_REPLY.fullmatch(value):
+                answers[reply.incident_id][reply.field] = value
+            now = time.time()
+            c.execute('INSERT INTO messages VALUES(?,?,?,?,?,?)',
+                      (uid(),run['conversation_id'],'user',f'{FIELD_LABELS[reply.field]}：{value}',run_id,now))
+            c.execute("UPDATE runs SET status='queued',answer=NULL,updated_at=? WHERE id=?", (now,run_id))
+            c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',
+                      (run_id,'incident_request',encode({'question':diagnosis['question'],'answers':answers}),now))
+            cursor = c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',
+                               (run_id,'queued','{}',now)).lastrowid
+        app.state.workers.notify_run()
+        return {'run_id':run_id, 'conversation_id':run['conversation_id'], 'status':'queued', 'after':cursor}
 
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str, user=Depends(current_user)):
@@ -385,6 +453,9 @@ def create_app(settings=None, start_workers=True):
         run["events"] = db.all("SELECT id,kind,payload,created_at FROM events WHERE run_id=? ORDER BY id", (run_id,))
         for event in run["events"]:
             event["payload"] = json.loads(event["payload"])
+            if event['kind'] == 'incident_diagnosis':
+                run['diagnosis'] = event['payload']
+                run['question'] = run['diagnosis']['question']
         return run
 
     @app.post('/api/runs/{run_id}/resume')
@@ -404,13 +475,20 @@ def create_app(settings=None, start_workers=True):
             c.execute("UPDATE runs SET status='queued',error=NULL,state=?,updated_at=? WHERE id=?",
                       (encode(state), time.time(), run_id))
         db.event(run_id, 'business_resumed', {'reuse_completed_tasks': True})
+        app.state.workers.notify_run()
         return {'run_id': run_id, 'conversation_id': run['conversation_id'], 'status': 'queued'}
 
     @app.get("/api/runs/{run_id}/events")
     def stream_events(run_id: str, request: Request, after: int = 0, user=Depends(current_user)):
         own_run(user, run_id)
+        try:
+            cursor = max(0, after, int(request.headers.get('last-event-id', '0')))
+            if cursor > 2**63 - 1:
+                raise ValueError
+        except ValueError:
+            raise HTTPException(400, '无效的事件编号') from None
         async def events():
-            last = after
+            last = cursor
             for _ in range(600):
                 if await request.is_disconnected():
                     break
@@ -420,8 +498,10 @@ def create_app(settings=None, start_workers=True):
                     yield f"id: {last}\ndata: {encode({'kind':row['kind'], 'payload':json.loads(row['payload'])})}\n\n"
                 state = db.one("SELECT status FROM runs WHERE id=?", (run_id,))
                 if state["status"] not in {"queued", "running"}:
-                    yield f"event: done\ndata: {encode(state)}\n\n"
-                    break
+                    final = run_detail(run_id, user)
+                    if final["status"] not in {"queued", "running"}:
+                        yield f"event: done\ndata: {encode(final)}\n\n"
+                        break
                 yield ": heartbeat\n\n"
                 await asyncio.sleep(.5)
         return StreamingResponse(events(), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"})

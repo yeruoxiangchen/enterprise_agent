@@ -36,10 +36,10 @@ def main():
             expect(page.locator('#mode-badge')).to_have_text('多 Agent 企业服务')
             me=context.request.get(args.url+'/api/me').json()
             assert me['agent_policy']=='business_native_v1'
-        def ask(text):
-            start=time.monotonic();page.locator('#question').fill(text)
+        def ask(text, *, attachment=False):
+            start=time.monotonic();page.locator('#incident-query' if attachment else '#question').fill(text)
             with page.expect_response(lambda r:r.url.endswith('/api/chat')and r.request.method=='POST')as pending:
-                page.locator('#send').click()
+                page.locator('#incident-question' if attachment else '#send').click()
             assert pending.value.status==202,pending.value.text()
             ident=pending.value.json()['run_id']
             expect(page.locator('#send')).to_be_enabled(timeout=240000)
@@ -62,10 +62,10 @@ def main():
             login('member')
             page.locator('#incident-open').click()
             page.locator('#incident-file').set_input_files(root/'inputs/vpn.png')
-            expect(page.locator('#incident-fields')).to_contain_text('401',timeout=60000)
+            expect(page.locator('#incident-progress')).to_contain_text('已上传',timeout=60000)
             page.screenshot(path=str(output/'01_screenshot.png'),full_page=True)
-            page.locator('#incident-reviewed').check();page.locator('#incident-question').click()
-            consultation=ask('请先读取刚上传的故障截图，再查询VPN认证失败的处理建议，标注资料依据。先不要生成工单。')
+            consultation=ask('请根据截图和知识库给我 VPN 认证失败的排查建议。', attachment=True)
+            expect(page.locator('.incident-readout')).to_contain_text('401')
             assert consultation['citations']and not tickets()
             assert any(e['kind']=='tool_effect'and e['payload']['name']=='read_incident'for e in consultation['events'])
             checks['screenshot_retrieval_without_unrequested_write']=True
