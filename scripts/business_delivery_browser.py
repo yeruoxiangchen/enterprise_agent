@@ -40,7 +40,7 @@ def main():
                 page.locator('#send').click()
             assert response.value.status == 202
             saved = response.value.json()
-            expect(page.locator('#send')).to_be_enabled(timeout=300000)
+            expect(page.locator('#question-form')).to_have_attribute('aria-busy', 'false', timeout=300000)
             # DOM completion and API state must refer to this exact invocation.
             run_response = context.request.get(url+'/api/runs/'+saved['run_id'])
             assert run_response.ok

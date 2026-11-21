@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import asyncio
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -8,6 +9,7 @@ import sqlite3
 import time
 from typing import Literal
 from urllib.parse import urlsplit
+from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import FastAPI, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -55,7 +57,8 @@ class IncidentAnswer(BaseModel):
 
 
 class Question(BaseModel):
-    question: str = Field(min_length=1, max_length=3000)
+    question: str = Field(default="", max_length=3000)
+    client_message_id: str | None = Field(default=None, pattern=r'^[0-9a-f]{32}$')
     conversation_id: str | None = None
     base_ids: list[str] = Field(default_factory=list, max_length=50)
     incident_ids: list[str] = Field(default_factory=list,max_length=8)
@@ -118,7 +121,7 @@ def create_app(settings=None, start_workers=True):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "same-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
         return response
@@ -348,11 +351,18 @@ def create_app(settings=None, start_workers=True):
 
     @app.get("/api/conversations/{conversation_id}")
     def conversation(conversation_id: str, user=Depends(current_user)):
+        from .incidents import message_attachments
         row = db.one("SELECT * FROM conversations WHERE id=? AND user_id=?", (conversation_id, user["id"]))
         if not row:
             raise HTTPException(404, "会话不存在")
         row["messages"] = db.all("SELECT * FROM messages WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
         row["runs"] = db.all("SELECT id,status,answer,citations,error,question,created_at,state,cancel_requested FROM runs WHERE conversation_id=? ORDER BY created_at", (conversation_id,))
+        questions, attachments = {}, {}
+        for message in row['messages']:
+            if message['role'] == 'user':
+                questions.setdefault(message['run_id'], message['content'])
+        for item in message_attachments(db, user, conversation_id=conversation_id):
+            attachments.setdefault(item.pop('run_id'), []).append(item)
         observations = {e['run_id']: json.loads(e['payload']) for e in db.all(
             "SELECT e.run_id,e.payload FROM events e JOIN runs r ON r.id=e.run_id "
             "WHERE r.conversation_id=? AND e.kind='incident_diagnosis' ORDER BY e.id", (conversation_id,))}
@@ -360,7 +370,8 @@ def create_app(settings=None, start_workers=True):
         for run in row["runs"]:
             if run['id'] in observations:
                 run['diagnosis'] = observations[run['id']]
-                run['question'] = run['diagnosis']['question']
+            run['question'] = questions.get(run['id'], run['question'])
+            run['incident_inputs'] = attachments.get(run['id'], [])
             run['can_resume'] = can_resume_for(run, cfg.agent_policy)
             run.pop('state')
             run["citations"] = json.loads(run["citations"])
@@ -368,42 +379,61 @@ def create_app(settings=None, start_workers=True):
 
     @app.post("/api/chat", status_code=202)
     def chat(payload: Question, user=Depends(current_user)):
-        if not payload.question.strip():
-            raise HTTPException(400, "问题不能为空")
+        question = payload.question.strip()
+        if not question and not payload.incident_ids:
+            raise HTTPException(400, "请输入消息或添加附件")
         ids = base_access(user, payload.base_ids)
-        from .incidents import owned
+        from .incidents import owned, requests_support_advice
         try:
             incidents=[json.loads(owned(db,user,ident)['payload'])for ident in dict.fromkeys(payload.incident_ids)]
         except LookupError:
             raise HTTPException(404,'故障材料不存在或不属于当前用户')from None
-        if not ids:
+        if not ids and not incidents and cfg.agent_policy not in ('business_native_v1', 'business_deep_v1'):
             raise HTTPException(400, "请先创建可访问的知识库并上传文档")
         conversation_id = payload.conversation_id or uid()
         if payload.conversation_id and not db.one("SELECT id FROM conversations WHERE id=? AND user_id=?", (conversation_id, user["id"])):
             raise HTTPException(404, "会话不存在")
-        question = payload.question.strip()
+        agent_question = question or '请阅读随消息发送的附件，说明其中能辨认的内容。'
         if payload.read_only_incident and not incidents:
             raise HTTPException(422, '截图或日志排查需要随问题附上故障材料')
         now, run_id = time.time(), uid()
+        queued_event = {}
+        if payload.client_message_id:
+            run_id = uuid5(NAMESPACE_URL, f"kb-chat/{user['id']}/{payload.client_message_id}").hex
+            queued_event['request_digest'] = hashlib.sha256(payload.model_dump_json().encode()).hexdigest()
         try:
             with db.connect() as c:
                 c.execute("BEGIN IMMEDIATE")
+                if payload.client_message_id:
+                    previous = c.execute("SELECT r.conversation_id,r.status,e.payload FROM runs r JOIN events e ON e.run_id=r.id "
+                                         "WHERE r.user_id=? AND r.id=? AND e.kind='queued' ORDER BY e.id LIMIT 1",
+                                         (user['id'], run_id)).fetchone()
+                    if previous:
+                        if json.loads(previous['payload']) != queued_event:
+                            raise HTTPException(409, '该消息已发送，内容已变更')
+                        return {'run_id':run_id, 'conversation_id':previous['conversation_id'], 'status':previous['status']}
                 if c.execute("SELECT id FROM runs WHERE conversation_id=? AND status IN ('queued','running')", (conversation_id,)).fetchone():
                     raise HTTPException(409, "此会话还有任务正在执行，请等待或取消")
                 if not payload.conversation_id:
-                    c.execute("INSERT INTO conversations VALUES(?,?,?,?)", (conversation_id, user["id"], payload.question[:45], now))
+                    title = question or incidents[0]['filename']
+                    c.execute("INSERT INTO conversations VALUES(?,?,?,?)", (conversation_id, user["id"], title[:45], now))
                 c.execute("INSERT INTO messages VALUES(?,?,?,?,?,?)", (uid(), conversation_id, "user", question, run_id, now))
-                initial_state={'input_contract':{'knowledge_grounded':payload.knowledge_grounded or payload.read_only_incident}} if cfg.agent_policy=='business_native_v1' else {}
+                initial_state = {}
+                if cfg.agent_policy == 'business_native_v1':
+                    grounded = payload.knowledge_grounded or payload.read_only_incident or bool(
+                        incidents and ids and requests_support_advice(question))
+                    initial_state = {'input_contract': {'knowledge_grounded': grounded}}
                 c.execute("INSERT INTO runs(id,conversation_id,user_id,question,base_ids,mode,status,state,created_at,updated_at) VALUES(?,?,?,?,?,?,'queued',?,?,?)",
-                          (run_id, conversation_id, user["id"], question, encode(ids), cfg.mode, encode(initial_state), now, now))
+                          (run_id, conversation_id, user["id"], agent_question, encode(ids), cfg.mode, encode(initial_state), now, now))
                 c.executemany('INSERT INTO run_incidents VALUES(?,?,?)',
                     [(run_id,item['id'],item['digest'])for item in incidents])
-                if payload.read_only_incident:
-                    intake = {'question': question, 'answers': {item['id']: {} for item in incidents}}
+                if payload.read_only_incident or (incidents and cfg.agent_policy not in ('business_native_v1', 'business_deep_v1')):
+                    event = 'incident_request' if payload.read_only_incident else 'attachment_request'
+                    intake = {'question': agent_question, 'answers': {item['id']: {} for item in incidents}}
                     c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',
-                              (run_id,'incident_request',encode(intake),now))
+                              (run_id,event,encode(intake),now))
                 c.execute('INSERT INTO events(run_id,kind,payload,created_at) VALUES(?,?,?,?)',
-                          (run_id,'queued','{}',now))
+                          (run_id,'queued',encode(queued_event),now))
         except sqlite3.IntegrityError:
             raise HTTPException(409, "会话状态冲突，请刷新后重试") from None
         app.state.workers.notify_run()
@@ -444,10 +474,14 @@ def create_app(settings=None, start_workers=True):
 
     @app.get("/api/runs/{run_id}")
     def run_detail(run_id: str, user=Depends(current_user)):
+        from .incidents import message_attachments
         run = own_run(user, run_id)
         from .business_status import can_resume_for
         run['can_resume'] = can_resume_for(run, cfg.agent_policy)
-        run['incident_inputs']=db.all('SELECT incident_id,digest FROM run_incidents WHERE run_id=?',(run_id,))
+        run['incident_inputs'] = message_attachments(db, user, run_id=run_id)
+        original = db.one("SELECT content FROM messages WHERE run_id=? AND role='user' ORDER BY created_at LIMIT 1", (run_id,))
+        if original:
+            run['question'] = original['content']
         run.pop("state")
         run["citations"] = json.loads(run["citations"])
         run["events"] = db.all("SELECT id,kind,payload,created_at FROM events WHERE run_id=? ORDER BY id", (run_id,))
@@ -455,7 +489,6 @@ def create_app(settings=None, start_workers=True):
             event["payload"] = json.loads(event["payload"])
             if event['kind'] == 'incident_diagnosis':
                 run['diagnosis'] = event['payload']
-                run['question'] = run['diagnosis']['question']
         return run
 
     @app.post('/api/runs/{run_id}/resume')

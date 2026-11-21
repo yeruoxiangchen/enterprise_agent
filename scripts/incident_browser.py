@@ -38,39 +38,60 @@ def main():
             expect(page.locator('#username')).to_have_text(user)
         login('member')
         existing_tickets = context.request.get(args.url+'/api/tickets').json()
+        form = page.locator('#question-form')
+        question_input = page.locator('#question')
+        picker = page.locator('#incident-file')
+        send = page.locator('#send')
+        def send_message():
+            with page.expect_response(lambda r: r.url.endswith('/api/chat') and r.request.method == 'POST') as pending:
+                send.click()
+            assert pending.value.status == 202, pending.value.text()
+            request = pending.value.json()
+            expect(form).to_have_attribute('aria-busy', 'false', timeout=60000)
+            return request
         question = 'SSH 登录这台机器时应该先检查哪一项？'
-        page.locator('#question').fill(question)
-        page.locator('#incident-open').click()
-        page.locator('#incident-file').set_input_files(root/'inputs/ssh.png')
-        expect(page.locator('#incident-result')).to_be_visible(timeout=60000)
-        expect(page.locator('#incident-progress')).to_contain_text('已上传')
-        page.locator('#incident-image').evaluate('(image) => image.decode()')
-        image_box = page.locator('#incident-image').bounding_box()
-        regions_box = page.locator('#incident-regions').bounding_box()
-        assert all(abs(image_box[key]-regions_box[key]) < 1 for key in ['x', 'y', 'width', 'height'])
+        question_input.fill(question)
+        with page.expect_file_chooser() as chooser:
+            page.locator('#incident-open').click()
+        chooser.value.set_files(root/'inputs/ssh.png')
+        expect(question_input).to_have_value(question)
+        preview = page.locator('#attachments img')
+        preview.evaluate('(image) => image.decode()')
+        expect(page.locator('dialog[open]')).to_have_count(0)
         page.screenshot(path=str(output/'01-screenshot-evidence.png'))
-        expect(page.locator('#incident-query')).to_have_value(question)
-        expect(page.locator('#incident-reviewed')).not_to_be_checked()
-        with page.expect_response(lambda r: r.url.endswith('/api/chat') and r.request.method == 'POST') as pending:
-            page.locator('#incident-question').click()
-        assert pending.value.status == 202, pending.value.text()
-        run = pending.value.json()
-        expect(page.locator('.incident-readout')).to_contain_text('Permission denied',timeout=60000)
-        expect(page.locator('.message.user')).to_have_text(question)
-        expect(page.locator('#send')).to_be_enabled(timeout=60000)
+        # Failure after upload must keep the draft and reuse the uploaded file on retry.
+        uploads = []
+        page.on('request', lambda r: uploads.append(r.url) if '/api/incident-evidence?' in r.url else None)
+        saved_runs = []
+        def drop_receipt(route):
+            accepted = route.fetch()
+            assert accepted.status == 202, accepted.text()
+            saved_runs.append(accepted.json()['run_id'])
+            route.fulfill(status=503, content_type='application/json', body='{"detail":"暂时不可用"}')
+        page.route('**/api/chat', drop_receipt, times=1)
+        send.click()
+        expect(page.locator('#toast')).to_contain_text('暂时不可用')
+        expect(question_input).to_have_value(question)
+        expect(preview).to_be_visible()
+        run = send_message()
+        assert len(uploads) == 1 and saved_runs == [run['run_id']]
+        bubble = page.locator('.message.user').last
+        expect(bubble).to_contain_text(question)
+        expect(bubble.locator('.attachment-chip')).to_have_text('ssh.png')
         lookup = context.request.get(args.url+'/api/runs/'+run['run_id']).json()
         assert lookup['status'] == 'answered' and lookup['citations'], lookup
+        assert len(context.request.get(args.url+'/api/tickets').json()) == len(existing_tickets)
         page.screenshot(path=str(output/'02-knowledge-lookup.png'))
-        page.locator('#incident-open').click()
-        page.locator('#incident-ticket-options > summary').click()
-        expect(page.locator('#incident-fields')).to_contain_text('Permission denied',timeout=60000)
-        page.locator('#incident-draft').click()
-        expect(page.locator('#toast')).to_contain_text('请先核对')
-        page.locator('#incident-reviewed').check()
-        with page.expect_response(lambda r: '/api/incident-evidence/' in r.url and r.url.endswith('/draft')) as draft:
-            page.locator('#incident-draft').click()
-        assert draft.value.status == 201
-        ticket = draft.value.json(); card = page.locator('[data-ticket-id="'+ticket['id']+'"]')
+        # This fixture has no LLM. Seed a reviewed draft through the supported API to
+        # exercise the member/admin views. The native browser suite also creates it in chat.
+        evidence = lookup['incident_inputs'][0]
+        draft = context.request.post(args.url+'/api/incident-evidence/'+evidence['incident_id']+'/draft',
+            data={'confirmed':True, 'digest':evidence['digest'], 'title':'SSH 连接失败',
+                  'description':'Ubuntu SSH Permission denied，请核对账户权限。'})
+        assert draft.status == 201, draft.text()
+        ticket = draft.json()
+        page.locator('#ticket-nav').click()
+        card = page.locator('[data-ticket-id="'+ticket['id']+'"]')
         expect(card).to_contain_text('待确认'); card.scroll_into_view_if_needed()
         page.screenshot(path=str(output/'03-reviewed-draft.png'))
         card.locator('[data-ticket-action=submit]').click()
@@ -87,34 +108,24 @@ def main():
         card = page.locator('[data-ticket-id="'+ticket['id']+'"]')
         expect(card).to_contain_text('连接恢复'); card.scroll_into_view_if_needed()
         page.screenshot(path=str(output/'05-member-followup.png'))
-        # The cropped screen shows the VPN client but omits its status code.
-        fixture = context.new_page()
-        fixture.set_content('<div style="padding:24px;font:44px sans-serif">VPN</div>')
-        cropped = fixture.locator('div').screenshot()
-        fixture.close()
         page.locator('#new-chat').click()
-        page.locator('#incident-open').click()
-        page.locator('#incident-file').set_input_files({'name':'cropped.png','mimeType':'image/png','buffer':cropped})
-        expect(page.locator('#incident-result')).to_be_visible(timeout=60000)
-        page.locator('#incident-query').fill('这个错误码应该怎样处理？')
-        with page.expect_response(lambda r: r.url.endswith('/api/chat') and r.request.method == 'POST') as missing:
-            page.locator('#incident-question').click()
-        intake = missing.value.json()
-        assert missing.value.status == 202 and intake['status'] == 'queued'
-        expect(page.locator('#incident-followup-label')).to_contain_text('错误码',timeout=60000)
+        expect(send).to_be_disabled()
+        picker.set_input_files(root/'inputs/ssh.png')
+        page.get_by_role('button', name='移除 ssh.png').click()
+        expect(send).to_be_disabled()
+        picker.set_input_files(root/'inputs/ssh.png')
+        image_only = send_message()
+        link = page.locator('.message.user .attachment-chip')
+        expect(link).to_have_text('ssh.png')
         page.reload()
-        expect(page.locator('#incident-answer')).to_be_visible()
-        expect(page.locator('#incident-followup-label')).to_contain_text('错误码')
-        page.locator('#incident-answer').fill('HTTP 403')
-        with page.expect_response(lambda r: r.url.endswith('/clarification') and r.request.method == 'POST') as corrected:
-            page.locator('#send').click()
-        assert corrected.value.status == 202 and corrected.value.json()['run_id'] == intake['run_id']
-        expect(page.locator('.incident-readout')).to_contain_text('员工补充 · 错误码：HTTP 403',timeout=60000)
-        expect(page.locator('#send')).to_be_enabled(timeout=60000)
-        ident = corrected.value.json()['conversation_id']
-        page.reload()
-        expect(page.locator('[data-conversation="'+ident+'"]')).to_be_visible()
-        expect(page.locator('.incident-readout')).to_contain_text('HTTP 403')
+        expect(link).to_have_text('ssh.png')
+        link.locator('img').evaluate('(image) => image.decode()')
+        expect(page.locator('.message.user')).to_have_text('ssh.png')
+        question_input.fill('HTTP 403 应该怎么处理？')
+        followup = send_message()
+        assert followup['conversation_id'] == image_only['conversation_id']
+        expect(page.locator('.message.user').last).to_have_text('HTTP 403 应该怎么处理？')
+        expect(page.locator('.message.user').last.locator('.attachment-chip')).to_have_count(0)
         assert len(context.request.get(args.url+'/api/tickets').json()) == len(existing_tickets) + 1
         assert any(run['run_id']+'/events?' in url for url in streams)
         assert not errors, errors

@@ -38,6 +38,28 @@ def test_owned_evidence_cannot_be_read_or_used_by_another_member(system):
     assert response.status_code == 404
 
 
+def test_attachment_only_turn_has_original_history_and_owned_previews(system):
+    cfg, db, client, base, *_ = system
+    upload(system, 'SSH 登录遇到 Permission denied 应检查公钥。', 'SSH.md')
+    item = upload_incident(system).json()
+    assert client.post('/api/chat', json={'question':'  '}).status_code == 400
+    accepted = client.post('/api/chat', json={'incident_ids':[item['id']], 'base_ids':[base]})
+    assert accepted.status_code == 202
+    run_id, conversation_id = accepted.json()['run_id'], accepted.json()['conversation_id']
+    Harness(db, cfg).execute(run_id)
+    detail = client.get('/api/runs/'+run_id).json()
+    history = client.get('/api/conversations/'+conversation_id).json()
+    assert history['title'] == item['filename']
+    assert detail['question'] == history['runs'][0]['question'] == history['messages'][0]['content'] == ''
+    assert detail['incident_inputs'] == history['runs'][0]['incident_inputs'] == [
+        dict(incident_id=item['id'], digest=item['digest'], filename=item['filename'], kind='log')]
+    assert detail['status'] == 'answered' and detail['citations']
+    assert client.get('/api/tickets').json() == []
+    login(client, 'second')
+    assert client.get('/api/conversations/'+conversation_id).status_code == 404
+    assert client.post('/api/chat', json={'incident_ids':[item['id']]}).status_code == 404
+
+
 def test_reviewed_draft_is_atomic_idempotent_and_uses_existing_lifecycle(system):
     evidence = upload_incident(system).json(); client = system[2]
     endpoint = '/api/incident-evidence/'+evidence['id']+'/draft'

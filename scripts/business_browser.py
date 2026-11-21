@@ -30,7 +30,7 @@ with sync_playwright() as p:
         browser.close();print('截图已更新');raise SystemExit(0)
     page.locator('#question').fill('请生成报障工单草稿：浏览器联调电脑是Windows系统，开机出现蓝屏，已经重启仍然失败。')
     page.locator('#send').click()
-    expect(page.locator('#send')).to_be_enabled(timeout=240000)
+    expect(page.locator('#question-form')).to_have_attribute('aria-busy', 'false', timeout=240000)
     expect(page.locator('.answer-body').last).to_contain_text('草稿')
     page.locator('[data-inspect]').last.click()
     expect(page.locator('#trace')).to_contain_text('服务办理')

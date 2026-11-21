@@ -274,7 +274,7 @@ class Harness:
             items = diagnosis['observations']
             terms = [v for item in items for v in item['answers'].values()]
             terms.extend(f['value'] for item in items for f in reliable_readings(item))
-            readings = ' '.join(dict.fromkeys(terms))[:300]
+            readings = (' '.join(dict.fromkeys(terms)) or diagnosis.get('attachment_text', ''))[:300]
             queries = [(readings + ' ' + diagnosis['question']).strip()[:500]]
             if readings:
                 queries.append(readings)

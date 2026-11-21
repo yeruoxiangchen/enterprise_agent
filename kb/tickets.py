@@ -12,6 +12,7 @@ def get_ticket(db, user, ticket_id):
 
 
 def draft_ticket(db, user, run_id, title, description):
+    """Persist one draft per run. The calling agent interprets the employee's request."""
     if not title.strip() or len(title) > 120 or not description.strip() or len(description) > 3000:
         raise ValueError('标题需1–120字，问题描述需1–3000字')
     run = db.one('SELECT * FROM runs WHERE id=? AND user_id=?', (run_id, user['id']))

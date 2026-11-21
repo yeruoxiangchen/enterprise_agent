@@ -1,19 +1,14 @@
-.incident-picture {max-height:320px;overflow:auto;border:1px solid #dce6dc;border-radius:10px}
-.incident-picture figure {position:relative;margin:0}
-.incident-picture img {display:block;width:100%;height:auto}
-.incident-picture svg {position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.incident-fields {display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
-.incident-fields p {margin:0;padding:8px 10px;background:#f1f6ed;border-radius:8px;font-size:13px}
-.incident-fields small {display:block;color:#627565;margin-top:3px}
-.incident-lines {max-height:260px;overflow:auto;white-space:pre-wrap;font-size:13px}
-.incident-review {display:flex;align-items:center;gap:8px;margin-top:14px}
-.incident-review input {width:auto;margin:0}
-.incident-readout, .incident-followup {
-  margin:10px 0;padding:10px 14px;border-left:3px solid #78a58a;
-  background:#f3f7f2;font-size:13px;overflow-wrap:anywhere
-}
+.attachment-list {display:flex;flex-wrap:wrap;gap:6px;white-space:normal}
+.attachment-list:empty {display:none}
+#attachments:not(:empty) {margin-bottom:10px}
+.attachment-chip {display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0;padding:4px 8px;border:1px solid #d2dfd0;border-radius:8px;background:#f5f8f2;color:#344b38;font-size:12px}
+.attachment-chip > span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attachment-chip img {width:64px;height:44px;flex:none;object-fit:contain;border-radius:4px}
+.message.user a.attachment-chip {text-decoration:none}
+.message.user .attachment-chip img {width:72px;height:52px;object-fit:contain}
+.attachment-chip button {background:transparent;color:inherit;border:0;padding:3px 6px;line-height:1;font-size:18px}
+.attachment-add {background:transparent;color:#3e6048;border:1px solid #d1dfd0;border-radius:8px;padding:6px 10px;font-size:12px}
+.attachment-add:hover:enabled {background:#edf4e9}
+.message.user .attachment-list:not(:last-child) {margin-bottom:7px}
+.incident-readout {margin:10px 0;padding:10px 14px;border-left:3px solid #78a58a;background:#f3f7f2;font-size:13px;overflow-wrap:anywhere}
 .incident-readout strong {display:block}
-.incident-followup label, #incident-dialog > label {display:block;margin:10px 0 4px;font-weight:600}
-#incident-answer, #incident-query {width:100%}
-#incident-question, #incident-ticket-options {margin-top:12px}
-#incident-ticket-options summary {cursor:pointer}

@@ -72,9 +72,18 @@ FAULT_TEXT = re.compile(
     r'|(?:无法|不能|未能)(?:登录|启动|访问|联网|连接|打开|安装|运行|加载|上传|下载|同步)', re.I | re.ASCII)
 PARTIAL_HTTP = re.compile(r'\bHTTP\s*[:：]?\s*[45][0-9OoIl?？]{1,2}(?![a-z0-9])', re.I | re.ASCII)
 UNKNOWN_REPLY = re.compile(r'^(?:我?(?:也|暂时)?(?:不清楚|不知道|看不清(?:楚)?|不确定|无法辨认)|unknown)[。.!！]?$', re.I)
+SUPPORT_ADVICE = re.compile(
+    r'排查|排障|故障处理|解决办法|恢复访问|(?:怎么|如何|怎样|应该|先).{0,12}(?:处理|修复|解决|恢复|检查)'
+    r'|\btroubleshoot\b|\bhow (?:do I|to|can I) (?:fix|restore|resolve)\b', re.I)
 GENERIC_FAILURE = re.compile(r'(?:(?:request|operation|action) failed|(?:请求|操作|执行)失败)[.!。！]?', re.I)
 MISSING_CODE_MENTION = re.compile(r'(?:没(?:有|显示|看到)|看不清|不知道)(?:具体的?)?(?:错误码|状态码|报错码)'
                                   r'|(?:错误码|状态码|报错码)(?:看不清|没显示|不清楚|不知道)')
+
+
+def requests_support_advice(question):
+    if re.search(r'(?:不必|不用|不要|无需)(?:再)?(?:查|检索|参考|排查)|只(?:需|要)?(?:转录|读图|识别)', question):
+        return False
+    return bool(SUPPORT_ADVICE.search(question))
 
 
 def incident_observations(item):
@@ -131,13 +140,13 @@ def reliable_readings(item):
 def prepare_diagnosis(db, cfg, run_id):
     """Claim a queued intake, publish its readings, then dispatch through the ordinary agent."""
     last = db.one("SELECT id,kind,payload FROM events WHERE run_id=? AND kind IN "
-                  "('incident_request','incident_diagnosis') ORDER BY id DESC LIMIT 1", (run_id,))
-    if not last or last['kind'] != 'incident_request':
+                  "('incident_request','attachment_request','incident_diagnosis') ORDER BY id DESC LIMIT 1", (run_id,))
+    if not last or last['kind'] == 'incident_diagnosis':
         return False
     request = json.loads(last['payload'])
     if not db.execute("UPDATE runs SET status='running',updated_at=? WHERE id=? AND status='queued' "
                       "AND cancel_requested=0 AND (SELECT MAX(id) FROM events WHERE run_id=? AND kind IN "
-                      "('incident_request','incident_diagnosis'))=?", (time.time(),run_id,run_id,last['id'])):
+                      "('incident_request','attachment_request','incident_diagnosis'))=?", (time.time(),run_id,run_id,last['id'])):
         return True
     db.event(run_id, 'incident_worker_started', {})
     error, prompt, diagnosis = None, None, None
@@ -153,12 +162,17 @@ def prepare_diagnosis(db, cfg, run_id):
                 raise ValueError('附件已变更，请重新上传后排查。')
             items.append(item)
         diagnosis, prompt = diagnosis_review(items, request['question'], request['answers'])
+        if last['kind'] == 'attachment_request':
+            prompt = None
         question = request['question']
         supplied = [f'{FIELD_LABELS[k]}：{v}' for answers in request['answers'].values() for k,v in answers.items()]
         if supplied:
             question += '\n员工补充：' + '；'.join(supplied)
         if cfg.agent_policy != 'business_native_v1':
             terms = [f['value'] for item in diagnosis['observations'] for f in reliable_readings(item)]
+            if not terms and last['kind'] == 'attachment_request':
+                terms = [line['text'] for item in items for line in item['lines'][:8]]
+                diagnosis['attachment_text'] = ' '.join(terms)[:800]
             if terms:
                 question += '\n材料识别：' + '；'.join(dict.fromkeys(terms))[:800]
     except (ValueError, LookupError, OSError) as exc:
@@ -369,6 +383,18 @@ def owned(db, user, ident):
     if not row:
         raise LookupError('故障材料不存在或不属于当前用户')
     return row
+
+
+def message_attachments(db, user, *, conversation_id=None, run_id=None):
+    """Return display metadata only for messages and files owned by the reader."""
+    scope = 'r.id=?' if run_id is not None else 'r.conversation_id=?'
+    grouping = '' if run_id is not None else 'r.id AS run_id,'
+    return db.all(
+        f"SELECT {grouping} i.incident_id,i.digest,json_extract(e.payload,'$.filename') AS filename,"
+        "json_extract(e.payload,'$.kind') AS kind FROM run_incidents i JOIN runs r ON r.id=i.run_id "
+        "JOIN incident_evidence e ON e.id=i.incident_id AND e.user_id=r.user_id "
+        f"WHERE r.user_id=? AND {scope} ORDER BY i.rowid",
+        (user['id'], run_id if run_id is not None else conversation_id))
 
 
 def confirm_draft(db, user, ident, digest, title, description, confirmed):
